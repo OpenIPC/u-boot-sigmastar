@@ -1,0 +1,45 @@
+menu "DFU support"
+
+config DFU
+	bool
+
+config DFU_FUNCTION
+	bool "Enable USB DFU gadget"
+	depends on USB_GADGET
+	default y if CMD_DFU
+	select DFU
+	select USBDOWNLOAD_GADGET
+	help
+	  This enables the USB part of the dfu gadget.
+
+if DFU
+config DFU_MMC
+	bool "MMC back end for DFU"
+	help
+	  This option enables using DFU to read and write to MMC based storage.
+
+config DFU_NAND
+	bool "NAND back end for DFU"
+	depends on CMD_MTDPARTS || MS_SPINAND
+	help
+	  This option enables using DFU to read and write to NAND based
+	  storage.
+
+config DFU_BUF_ADDR
+	hex "Define NAND UBI buffer address"
+	depends on DFU_NAND
+	default 0x21000000 if DFU_NAND
+
+config DFU_RAM
+	bool "RAM back end for DFU"
+	help
+	  This option enables using DFU to read and write RAM on the target.
+
+config DFU_SF
+	bool "SPI flash back end for DFU"
+	help
+	  This option enables using DFU to read and write to SPI flash based
+	  storage.
+
+endif
+endmenu

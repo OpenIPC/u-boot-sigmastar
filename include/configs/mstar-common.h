@@ -52,6 +52,9 @@
 
 #endif
 
+#define XSTR(s) STR(s)
+#define STR(s) #s
+
 #ifndef PRODUCT_NAME
 #define PRODUCT_NAME "ssc335"
 #endif
@@ -69,7 +72,7 @@
     "mtdpartsnand=setenv mtdparts nand:256k(boot),768k(wtf),3072k(kernel),10240k(rootfs),-(rootfs_data)\0" \
     "mtdpartsnor8m=setenv mtdparts NOR_FLASH:256k(boot),64k(env),2048k(kernel),5120k(rootfs),-(rootfs_data)\0" \
     "mtdpartsnor16m=setenv mtdparts NOR_FLASH:256k(boot),64k(env),3072k(kernel),10240k(rootfs),-(rootfs_data)\0" \
-    "nfsroot=/srv/nfs/"PRODUCT_NAME"\0" \
+    "nfsroot=/srv/nfs/"XSTR(PRODUCT_NAME)"\0" \
     "bootargsnfs=mem=\${osmem} console=ttyS0,115200 panic=20 root=/dev/nfs rootfstype=nfs ip=${ipaddr}:::255.255.255.0::eth0 nfsroot=${serverip}:${nfsroot},v3,nolock rw\0" \
     "bootargsubi=mem=\${osmem} console=ttyS0,115200 panic=20 init=/init root=ubi0:rootfs rootfstype=ubifs ubi.mtd=3,2048 mtdparts=\${mtdparts}\0" \
     "bootnfs=setenv setargs setenv bootargs ${bootargsnfs}; run setargs; tftpboot ${baseaddr} uImage.${soc}; bootm ${baseaddr}\0" \
@@ -80,7 +83,7 @@
     "setnor8m=run mtdpartsnor8m; setenv bootcmd ${bootcmdnor}; saveenv; reset\0" \
     "setnor16m=run mtdpartsnor16m; setenv bootcmd ${bootcmdnor}; saveenv; reset\0" \
     "osmem=32M\0" \
-    "soc="PRODUCT_NAME
+    "soc="XSTR(PRODUCT_NAME)
 
 #endif
 

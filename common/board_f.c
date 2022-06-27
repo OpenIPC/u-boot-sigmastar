@@ -214,7 +214,7 @@ static int show_dram_config(void)
 	size = gd->ram_size;
 #endif
 
-	//print_size(size, "");
+	print_size(size, "");
 	board_add_ram_info(0);
 	putc('\n');
 

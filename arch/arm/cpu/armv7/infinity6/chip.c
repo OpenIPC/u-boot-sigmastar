@@ -79,7 +79,9 @@ int arch_cpu_init(void)
 // we borrow the DRAN init to do the devinfo setting...
 int dram_init(void)
 {
-    gd->ram_size=CONFIG_UBOOT_RAM_SIZE;
+    gd->ram_size=get_ram_size(
+		(void *)CONFIG_SYS_SDRAM_BASE,
+		PHYS_SDRAM_1_SIZE);
 
     return 0;
 }
@@ -300,6 +302,9 @@ int board_late_init(void)
     }
     printf("*******************************************\n");
     */
+    char msize[128];
+    sprintf(msize, "%dM", gd->ram_size/1024/1024);
+    setenv("totalmem", msize);
     return 0;
 }
 #endif

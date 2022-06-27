@@ -82,7 +82,7 @@
  */
 #define CONFIG_NR_DRAM_BANKS	1   /* we have 1 bank of DRAM */
 #define PHYS_SDRAM_1		0x20000000	/* SDRAM Bank #1 */
-#define PHYS_SDRAM_1_SIZE	0x04000000	/* 64 MB */
+#define PHYS_SDRAM_1_SIZE	0x08000000	/* 128 MB */
 
 /*Enable watchdog*/
 /*#define CONFIG_HW_WATCHDOG 1*/

@@ -26,7 +26,7 @@ make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
 
 ./make_boot.sh 6b0
 
-mv u-boot.xz.img.bin output/u-boot-${soc}.bin
+cp u-boot.xz.img.bin output/u-boot-${soc}.bin
 mv BOOT.bin output/boot-${soc}.bin
 
 done

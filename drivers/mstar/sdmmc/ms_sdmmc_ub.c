@@ -458,15 +458,15 @@ static int mmc_core_init(struct mmc *mmc)
 //###########################################################################################################
 #elif (D_PROJECT == D_PROJECT__iNF6E)
 //###########################################################################################################
-    if(1)
+    if(eSlot == 0)
     {
-        pr_sd_main("_[sdmmc_%u] [sdio ip]\n", (U32_T)eSlot);
+        pr_sd_main("_[sdmmc_%u] [sdio ip-sd]\n", (U32_T)eSlot);
         _SetPAD(eSlot, EV_IP_FCIE1, EV_PFCIE5_SDIO, EV_PAD1);
     }
     else
     {
-        pr_sd_main("_[sdmmc_%u] [fcie ip]\n", (U32_T)eSlot);
-        _SetPAD(eSlot, EV_IP_FCIE2, EV_PFCIE5_FCIE, EV_PAD2);
+        pr_sd_main("_[sdmmc_%u] [fcie ip-sdio]\n", (U32_T)eSlot);
+        _SetPAD(eSlot, EV_IP_FCIE2, EV_PFCIE5_SDIO, C_SDIO_PAD_SELECT);
     }
 #endif
 
@@ -547,7 +547,7 @@ static int ms_sdmmc_init_slot(unsigned int slotNo)
 
 #endif
 
-    gu32_DevSlotDev[get_mmc_num()]= slotNo;
+    gu32_DevSlotDev[get_mmc_num() - 1]= slotNo;
 
     return 0;
 
@@ -559,8 +559,12 @@ static int ms_sdmmc_probe(bd_t *bis)
 {
     unsigned int slotNo = 0;
     int ret = 0, tret = 0;
-
-    for(slotNo=0; slotNo<V_SDMMC_CARDNUMS; slotNo++)
+#if (D_PROJECT == D_PROJECT__iNF6E)
+#ifdef CONFIG_MS_EMMC
+    slotNo = 1;
+#endif
+#endif
+    for(slotNo = slotNo; slotNo<V_SDMMC_CARDNUMS; slotNo++)
     {
 
         ret = ms_sdmmc_init_slot(slotNo);

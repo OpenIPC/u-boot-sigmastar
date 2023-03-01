@@ -450,7 +450,7 @@ int get_partition_info(block_dev_desc_t *dev_desc, int part,
 
 #ifdef CONFIG_EMMC_PARTITION
 	case PART_TYPE_EMMC:
-	    if (get_partition_info_emmc(dev_desc,part,info) == 0) {
+	    if (get_partition_info_emmc(dev_desc,part - 1,info) == 0) {
 	    	PRINTF ("## Valid EMMC partition found ##\n");
 	        return (0);
 	    }

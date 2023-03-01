@@ -34,6 +34,7 @@ extern "C"
 #define MID_MXIC        0xC2
 #define MID_TOSHIBA     0x98
 #define MID_XTX         0x0B
+#define MID_FORESEE     0xCD
 
 #define SPINAND_READ_SUBPAGE 1
 
@@ -48,9 +49,7 @@ typedef enum _SPINAND_ERROR_NUM
     ERR_SPINAND_W_FAIL,
     ERR_SPINAND_INVALID,
     ERR_SPINAND_UNKNOWN_ID,
-    ERR_SPINAND_ECC_1_3_CORRECTED,
-    ERR_SPINAND_ECC_4_6_CORRECTED,
-    ERR_SPINAND_ECC_7_8_CORRECTED,
+    ERR_SPINAND_ECC_BITFLIP,
     ERR_SPINAND_ECC_ERROR,
 } SPINAND_FLASH_ERRNO_e;
 
@@ -176,12 +175,10 @@ extern void HAL_SPINAND_DieSelect(U8 u8Die);
                 #define E_FAIL                   (0x01 << 2)
                 #define P_FAIL                   (0x01 << 3)
                 #define ECC_STATUS_PASS          (0x00 << 4)
-                #define ECC_1_3_CORRECTED                (0x01 << 4)
-                #define ECC_NOT_CORRECTED               (0x02 << 4)
-                #define ECC_4_6_CORRECTED                (0x03 << 4)
-                #define ECC_7_8_CORRECTED                (0x05 << 4)
-                #define SPI_NAND_STAT_OIP              (0x1)
-                #define LUT_FULL                       (0x01 << 6)
+                #define ECC_STATUS_BITFLIP       (0x01 << 4)
+                #define ECC_STATUS_ERR           (0x02 << 4)
+                #define SPI_NAND_STAT_OIP        (0x01 << 0)
+                #define LUT_FULL                 (0x01 << 6)
         #define SPI_NAND_REG_FUT                 0xD0
 #define SPI_NAND_CMD_SF                          0x1F
 #define SPI_NAND_CMD_BE                          0xD8

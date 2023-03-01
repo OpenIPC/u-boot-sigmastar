@@ -28,3 +28,4 @@ obj-$(CONFIG_SSTAR_JPD) += jpd/
 obj-$(CONFIG_SSTAR_RGN) += rgn/
 obj-$(CONFIG_SSTAR_MSPI) += spi/
 obj-$(CONFIG_SSTAR_INI_PARSER) += iniparser/
+obj-$(CONFIG_SSTAR_PWM) += pwm/

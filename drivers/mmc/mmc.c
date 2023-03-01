@@ -21,6 +21,7 @@
 
 static struct list_head mmc_devices;
 static int cur_dev_num = -1;
+int gu32_EmmcPartitionAccess = 0;
 
 __weak int board_mmc_getwp(struct mmc *mmc)
 {
@@ -558,6 +559,7 @@ static int mmc_set_capacity(struct mmc *mmc, int part_num)
 		return -1;
 	}
 
+    gu32_EmmcPartitionAccess = part_num;
 	mmc->block_dev.lba = lldiv(mmc->capacity, mmc->read_bl_len);
 
 	return 0;
@@ -1494,22 +1496,22 @@ int mmc_initialize(bd_t *bis)
 	INIT_LIST_HEAD (&mmc_devices);
 	cur_dev_num = 0;
 
-	if (board_mmc_init(bis) < 0)
-	{
-		cpu_mmc_init(bis);
-	}
-#ifndef CONFIG_SPL_BUILD
-	print_mmc_devices(',');
-#endif
-
 //iantest
 #ifdef CONFIG_MS_EMMC
-//	if(ms_devinfo_boot_type() == DEVINFO_BOOT_TYPE_EMMC)
-	{
+    //  if(ms_devinfo_boot_type() == DEVINFO_BOOT_TYPE_EMMC)
+    {
         board_emmc_init(bis);
-		print_mmc_devices(',');
-	}
+    }
 #endif
+
+    if (board_mmc_init(bis) < 0)
+    {
+        cpu_mmc_init(bis);
+    }
+#ifndef CONFIG_SPL_BUILD
+    print_mmc_devices(',');
+#endif
+
 	do_preinit();
 //iantest
 	return 0;
@@ -1533,7 +1535,7 @@ int emmc_initialize(bd_t *bis)
 /*
  * This function changes the size of boot partition and the size of rpmb
  * partition present on EMMC devices.
- * EXT_CSD[168] which is RPMB_SIZE_MULT 
+ * EXT_CSD[168] which is RPMB_SIZE_MULT
  * EXT_CSD[226] which is BOOT_SIZE_MULT
  *
  * Input Parameters:

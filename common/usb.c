@@ -1188,10 +1188,23 @@ int usb_new_device(struct usb_device *dev)
 #endif
 
 	if (parent) {
+		int port = -1, i;
+		for (i = 0; i < parent->maxchild; i++)
+		{
+			if (parent->children[i] == dev) {
+				port = i;
+				break;
+			}
+		}
+		if (port < 0)
+		{
+			printf("%s cannot locate device's port.\n", __func__);
+			return 1;
+		}
 		/* reset the port for the second time */
-		err = hub_port_reset(dev->parent, dev->portnr - 1, &portstatus);
+		err = hub_port_reset(dev->parent, port, &portstatus);
 		if (err < 0) {
-			printf("\n     Couldn't reset port %i\n", dev->portnr);
+			printf("\n     Couldn't reset port %i\n", port);
 			return 1;
 		}
 	}

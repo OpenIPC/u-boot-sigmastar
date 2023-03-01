@@ -266,7 +266,7 @@
 #endif
 
 #ifdef CONFIG_MS_EMMC
-    #ifndef CONFIG_MS_SAVE_ENV_IN_ISP_FLASH
+    #ifdef CONFIG_MS_SAVE_ENV_IN_EMMC
         #define CONFIG_ENV_IS_IN_MMC       1
         #define CONFIG_SYS_MMC_ENV_DEV     0
         #define CONFIG_MS_EMMC_DEV_INDEX   1

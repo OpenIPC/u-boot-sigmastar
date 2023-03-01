@@ -21,10 +21,14 @@
 #include "../../../../../disk/part_emmc.h"
 extern int add_emmc_partitions(block_dev_desc_t *dev_desc, disk_partition_t *info);
 
+static int gu32_Emmc_Index = 0;
+extern int gu32_EmmcPartitionAccess;
+
+
 #if defined(UNIFIED_eMMC_DRIVER) && UNIFIED_eMMC_DRIVER
 
 static U32 eMMC_ReadPartitionInfo_Ex(void);
-static U32 eMMC_GetPartitionIndex(U16 u16_PartType, 
+static U32 eMMC_GetPartitionIndex(U16 u16_PartType,
                                   U32 u32_LogicIdx,
                                   volatile U16 *pu16_PartIdx);
 
@@ -302,8 +306,8 @@ U32 eMMC_WriteCIS(eMMC_CIS_t *ptCISData)
         printf("%X, ", *(((U8 *)(ptCISData) + u16_i)));
     }
     #endif
-    
-    
+
+
     eMMC_debug(eMMC_DEBUG_LEVEL_HIGH, 1, "\n");
     u32_err = eMMC_CheckCIS(ptCISData);
     if(eMMC_ST_SUCCESS != u32_err)
@@ -330,25 +334,25 @@ U32 eMMC_WriteCIS(eMMC_CIS_t *ptCISData)
     memcpy(gau8_eMMC_PartInfoBuf, pPartInfo, eMMC_SECTOR_512BYTE);
     eMMC_FATAutoSize();
     eMMC_debug(0,1,"Total Sec: %Xh, FAT Sec: %Xh \n", g_eMMCDrv.u32_SEC_COUNT, g_eMMCDrv.u32_FATSectorCnt);
-    
+
     for(u16_i=0; u16_i<eMMC_CIS_PNI_BLK_CNT; u16_i++)
     {
         u32_err = eMMC_CMD24(eMMC_PNI_BLK_0+u16_i, (U8*)pPartInfo);
         if(eMMC_ST_SUCCESS != u32_err)
         {
             eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,
-                "eMMC Err: write PNI %u fail, %Xh\n", 
+                "eMMC Err: write PNI %u fail, %Xh\n",
                 u16_i, u32_err);
             return u32_err;
         }
     }
-    
+
     printf("write PNI in Blk2 and Blk3 OK\r\n");
 
     // write linux partition info
     #if defined(eMMC_FCIE_LINUX_DRIVER) && eMMC_FCIE_LINUX_DRIVER
     eMMC_SearchDevNodeStartSector();
-    
+
     u32_err = eMMC_ErasePartition(eMMC_PART_DEV_NODE);
     if(u32_err){
         eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: erase PART_DEV_NODE fail: %Xh \n", u32_err);
@@ -377,9 +381,9 @@ U32 eMMC_ReadCIS(eMMC_CIS_t *ptCISData)
     U16 u16_i;
     eMMC_NNI_t *peMMCInfo = (eMMC_NNI_t*)&ptCISData->au8_eMMC_nni[0];
     eMMC_PNI_t *pPartInfo = (eMMC_PNI_t*)&ptCISData->au8_eMMC_pni[0];
-    
+
     eMMC_debug(eMMC_DEBUG_LEVEL_HIGH, 1, "\n");
-    
+
     // read NNI in Blk0 and Blk1
     for(u16_i=0; u16_i<eMMC_CIS_NNI_BLK_CNT; u16_i++)
     {
@@ -387,7 +391,7 @@ U32 eMMC_ReadCIS(eMMC_CIS_t *ptCISData)
         if(eMMC_ST_SUCCESS != u32_err)
         {
             eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,
-                "eMMC Err: read NNI %u fail, %Xh\n", 
+                "eMMC Err: read NNI %u fail, %Xh\n",
                 u16_i, u32_err);
             continue;
         }
@@ -403,7 +407,7 @@ U32 eMMC_ReadCIS(eMMC_CIS_t *ptCISData)
         if(eMMC_ST_SUCCESS != u32_err)
         {
             eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,
-                "eMMC Err: read PNI %u fail, %Xh\n", 
+                "eMMC Err: read PNI %u fail, %Xh\n",
                 u16_i, u32_err);
             continue;
         }
@@ -411,8 +415,8 @@ U32 eMMC_ReadCIS(eMMC_CIS_t *ptCISData)
     }
     if(eMMC_CIS_PNI_BLK_CNT == u16_i)
         return eMMC_ST_ERR_CIS_PNI_NONA;
-    
-    memcpy(gau8_eMMC_PartInfoBuf, pPartInfo, eMMC_SECTOR_512BYTE);  
+
+    memcpy(gau8_eMMC_PartInfoBuf, pPartInfo, eMMC_SECTOR_512BYTE);
     eMMC_FATAutoSize();
     return u32_err;
 }
@@ -434,7 +438,7 @@ U32 eMMC_DumpPartitionInfo(void)
             return u32_err;
         }
     }
-    
+
     eMMC_debug(eMMC_DEBUG_LEVEL,1,"ChkSum:       %08Xh \n", pPartInfo->u32_ChkSum);
     eMMC_debug(eMMC_DEBUG_LEVEL,1,"SpareByteCnt: %04Xh \n", pPartInfo->u16_SpareByteCnt);
     eMMC_debug(eMMC_DEBUG_LEVEL,1,"PageByteCnt:  %04Xh \n", pPartInfo->u16_PageByteCnt);
@@ -445,7 +449,7 @@ U32 eMMC_DumpPartitionInfo(void)
 
     u32_PniBlkByteCnt = pPartInfo->u16_PageByteCnt * pPartInfo->u16_BlkPageCnt;
     u32_PniBlkCnt = 0;
-    
+
     for(u16_i=0; u16_i<pPartInfo->u16_PartCnt; u16_i++)
     {
         eMMC_debug(eMMC_DEBUG_LEVEL,1,"\n");
@@ -454,13 +458,13 @@ U32 eMMC_DumpPartitionInfo(void)
         eMMC_debug(eMMC_DEBUG_LEVEL,1,"BlkCnt:      %04Xh \n", pPartInfo->records[u16_i].u16_BlkCnt);
         eMMC_debug(eMMC_DEBUG_LEVEL,1,"PartType:    %04Xh \n", pPartInfo->records[u16_i].u16_PartType);
         eMMC_debug(eMMC_DEBUG_LEVEL,1,"BackupBlkCnt:%04Xh \n", pPartInfo->records[u16_i].u16_BackupBlkCnt);
-        
+
         if(u16_i < pPartInfo->u16_PartCnt-1)
         {
-            eMMC_debug(eMMC_DEBUG_LEVEL,1,"Capacity:    %u KB\n",  
+            eMMC_debug(eMMC_DEBUG_LEVEL,1,"Capacity:    %u KB\n",
                 (u32_PniBlkByteCnt * pPartInfo->records[u16_i].u16_BlkCnt)>>10);
 
-            u32_PniBlkCnt += pPartInfo->records[u16_i].u16_BlkCnt + 
+            u32_PniBlkCnt += pPartInfo->records[u16_i].u16_BlkCnt +
                              pPartInfo->records[u16_i].u16_BackupBlkCnt;
         }
     }
@@ -596,9 +600,9 @@ U32 eMMC_ReadPartitionInfo(U8 *pu8_Data)
         }
     }
 
-    memcpy(pu8_Data, gau8_eMMC_PartInfoBuf, 0x200); 
-    
-    return eMMC_ST_SUCCESS; 
+    memcpy(pu8_Data, gau8_eMMC_PartInfoBuf, 0x200);
+
+    return eMMC_ST_SUCCESS;
 }
 
 #if 0
@@ -860,7 +864,7 @@ U32 eMMC_WritePartition(U16 u16_PartType,
     u32_PartSecCnt = pPartInfo->records[u16_PartIdx].u16_BlkCnt * pPartInfo->u16_BlkPageCnt;
 
     printf("u32_PartSecCnt : %X\r\n", u32_PartSecCnt);
-    
+
     if(u32_StartSector > u32_PartSecCnt || u32_SectorCnt > u32_PartSecCnt ||
         (u32_StartSector+u32_SectorCnt) > u32_PartSecCnt)
     {
@@ -870,7 +874,7 @@ U32 eMMC_WritePartition(U16 u16_PartType,
     }
 
     // write data
-    
+
     U32 u32tmp;
     u32tmp = pPartInfo->records[u16_PartIdx].u16_StartBlk*
                pPartInfo->u16_BlkPageCnt+
@@ -976,7 +980,7 @@ U32 eMMC_ErasePartition(U16 u16_PartType)
             * (pPartInfo->u16_PageByteCnt>>eMMC_SECTOR_512BYTE_BITS)
             * pPartInfo->u16_BlkPageCnt;
 
-        printf("u32_eMMCEndBlk : %X\r\n", u32_eMMCEndBlk); 
+        printf("u32_eMMCEndBlk : %X\r\n", u32_eMMCEndBlk);
 
         u32_err = eMMC_EraseBlock(u32_eMMCStartBlk, u32_eMMCEndBlk-1);
         if(eMMC_ST_SUCCESS != u32_err)
@@ -1353,7 +1357,7 @@ U32 eMMC_ReadBootPart(U8* pu8_DataBuf, U32 u32_DataByteCnt, U32 u32_BlkAddr, U8 
 void eMMC_DumpDriverStatus(void)
 {
     eMMC_debug(eMMC_DEBUG_LEVEL,1,"eMMC Status:\n");
-    
+
     // ------------------------------------------------------
     // helpful debug info
     // ------------------------------------------------------
@@ -1362,13 +1366,13 @@ void eMMC_DumpDriverStatus(void)
     #else
     eMMC_debug(eMMC_DEBUG_LEVEL,1,"  MIU Mode\n");
     #endif
-    
+
     #if defined(ENABLE_eMMC_INTERRUPT_MODE)&&ENABLE_eMMC_INTERRUPT_MODE
     eMMC_debug(eMMC_DEBUG_LEVEL,1,"  Interrupt Mode\n");
     #else
     eMMC_debug(eMMC_DEBUG_LEVEL,1,"  Polling Mode\n");
     #endif
-    
+
     #if defined(FICE_BYTE_MODE_ENABLE)&&FICE_BYTE_MODE_ENABLE
     eMMC_debug(eMMC_DEBUG_LEVEL,1,"  FCIE Byte Mode\n");
     #else
@@ -1401,17 +1405,17 @@ void eMMC_DumpDriverStatus(void)
 
     switch(g_eMMCDrv.u32_DrvFlag & DRV_FLAG_SPEED_MASK)
     {
-        case DRV_FLAG_SPEED_HIGH: 
+        case DRV_FLAG_SPEED_HIGH:
             eMMC_debug(eMMC_DEBUG_LEVEL,1,"  HIGH");
             break;
-        case DRV_FLAG_SPEED_HS200: 
+        case DRV_FLAG_SPEED_HS200:
             eMMC_debug(eMMC_DEBUG_LEVEL,1,"  HS200");
             break;
         default:
             eMMC_debug(eMMC_DEBUG_LEVEL,1,"  LOW");
     }
-    eMMC_debug(eMMC_DEBUG_LEVEL,0," bus speed\n");  
-    
+    eMMC_debug(eMMC_DEBUG_LEVEL,0," bus speed\n");
+
 }
 
 
@@ -1424,6 +1428,11 @@ U32 eMMC_Init(void)
         eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: eMMC_Init_Ex fail: %Xh\n", u32_err);
 
     return u32_err;
+}
+
+U32 eMMC_Get_Dev_Index(void)
+{
+    return gu32_Emmc_Index;
 }
 
 #ifdef CONFIG_GENERIC_MMC
@@ -1457,9 +1466,9 @@ static ulong eMMC_bwrite(int dev_num, ulong start, lbaint_t blkcnt, const void *
 {
     U32 u32_Err, u32_blkcnt, u32_start = start;
     U8* pu8_src = (U8*) src;
-    
+
     u32_blkcnt = blkcnt;
-    
+
     u32_Err = eMMC_WriteData(pu8_src, u32_blkcnt << 9, u32_start);
 
     if (u32_Err == eMMC_ST_SUCCESS)
@@ -1487,13 +1496,15 @@ int eMMC_mmc_Init(struct mmc* mmc)
 //  sprintf(mmc->cfg->name, "Mstar-eMMC");
     mmc->has_init = 1;
     mmc->capacity = (u64)g_eMMCDrv.u32_SEC_COUNT << 9;
-    
+    mmc->capacity_boot =  (u64)g_eMMCDrv.u32_BOOT_SEC_COUNT << 9;
+    mmc->capacity_user =  mmc->capacity;
+
 
     eMMC_GetExtCSD((U8*)mmc->ext_csd);
 
     mmc->high_capacity = g_eMMCDrv.u8_IfSectorMode;
     mmc->bus_width = g_eMMCDrv.u8_BUS_WIDTH << 1;
-    
+
     switch (g_eMMCDrv.u8_SPEC_VERS) {
         case 0:
             mmc->version = MMC_VERSION_1_2;
@@ -1556,6 +1567,7 @@ int eMMC_mmc_Init(struct mmc* mmc)
         //printf("[%s]\t slc mode is unsupported\n",__func__);
     }
 
+    gu32_EmmcPartitionAccess = mmc->ext_csd[EXT_CSD_PART_CONF] & 0x3;
 
     {
         U16 u16_i;
@@ -1579,6 +1591,8 @@ int eMMC_mmc_Init(struct mmc* mmc)
     mmc->block_dev.blksz = 512;
     mmc->block_dev.lba = g_eMMCDrv.u32_SEC_COUNT;
     mmc->block_dev.part_type = PART_TYPE_EMMC;
+    gu32_Emmc_Index = mmc->block_dev.dev;
+
     sprintf(mmc->block_dev.vendor, "Man %06x Snr %08x", mmc->cid[0] >> 8,
             (mmc->cid[2] << 8) | (mmc->cid[3] >> 24));
     sprintf(mmc->block_dev.product, "%c%c%c%c%c", mmc->cid[0] & 0xff,
@@ -1679,7 +1693,7 @@ int board_emmc_init(bd_t *bis)
     struct mmc* mmc = NULL;
     struct mmc_config* mmc_cfg=NULL;
     printf("board_emmc_init\r\n");
-    
+
 //  mmc = malloc(sizeof(struct mmc));
 //  if (!mmc)
 //      return -ENOMEM;
@@ -1727,7 +1741,7 @@ int board_emmc_init(bd_t *bis)
 #define eMMC_NOT_READY_MARK    ~(('e'<<24)|('M'<<16)|('M'<<8)|'C')
 static U32 sgu32_IfReadyGuard = eMMC_NOT_READY_MARK;
 
-static U32 eMMC_Init_Ex(void) 
+static U32 eMMC_Init_Ex(void)
 {
     U32 u32_err;
     U16 i;
@@ -1742,27 +1756,27 @@ static U32 eMMC_Init_Ex(void)
     eMMC_hw_timer_delay(HW_TIMER_DELAY_1us);
     REG_FCIE_CLRBIT(FCIE_BOOT_CONFIG, BIT3);
 #endif
-    
+
     // ---------------------------------
     u32_err = eMMC_CheckAlignPack(eMMC_CACHE_LINE);
     if(u32_err)
         goto  LABEL_INIT_END;
 
     memset((void*)&g_eMMCDrv, '\0', sizeof(eMMC_DRIVER));
-    
+
     // ---------------------------------
     // init platform & FCIE
-    eMMC_PlatformInit();   
-    
+    eMMC_PlatformInit();
+
     eMMC_RST_L();
-    
-    eMMC_hw_timer_delay(HW_TIMER_DELAY_1ms);    
-    
+
+    eMMC_hw_timer_delay(HW_TIMER_DELAY_1ms);
+
     g_eMMCDrv.u8_BUS_WIDTH = BIT_SD_DATA_WIDTH_1;
     g_eMMCDrv.u16_Reg10_Mode = BIT_SD_DEFAULT_MODE_REG;
-    eMMC_RST_H(); 
-    
-    u32_err = eMMC_FCIE_Init();   
+    eMMC_RST_H();
+
+    u32_err = eMMC_FCIE_Init();
     if(u32_err)
         goto  LABEL_INIT_END;
 
@@ -1786,7 +1800,7 @@ static U32 eMMC_Init_Ex(void)
         printf((" %2X"), g_eMMCDrv.au8_CID[i]);
     }
     printf("\r\n");
-    
+
     g_eMMCDrv.u8_IDByteCnt = eMMC_ID_DEFAULT_BYTE_CNT;
     // add a 11-th byte for number of GB
     g_eMMCDrv.au8_ID[eMMC_ID_FROM_CID_BYTE_CNT] =
@@ -1813,7 +1827,7 @@ U32 eMMC_Init_Device(void)
     #if IF_DETECT_eMMC_DDR_TIMING
     static U8 su8_IfNotBuildDDR=0;
     #endif
-    
+
     #if defined(eMMC_RSP_FROM_RAM) && eMMC_RSP_FROM_RAM
     eMMC_debug(eMMC_DEBUG_LEVEL_LOW,1,"eMMC Info: Rsp from RAM\n");
     g_eMMCDrv.u32_DrvFlag |= DRV_FLAG_RSPFROMRAM_SAVE;
@@ -1826,17 +1840,17 @@ U32 eMMC_Init_Device(void)
     if(u32_err)
     {
         eMMC_printf("eMMC Err: Identify fail, %X\r\n", u32_err);
-        goto LABEL_INIT_END; 
+        goto LABEL_INIT_END;
     }
-    
-    eMMC_clock_setting(FCIE_SLOW_CLK);      
-    
+
+    eMMC_clock_setting(FCIE_SLOW_CLK);
+
     // determine device parameters, from CSD
     u32_err = eMMC_CSD_Config();
     if(eMMC_ST_SUCCESS != u32_err)
         goto  LABEL_INIT_END;
 
-    // setup eMMC device    
+    // setup eMMC device
     // CMD7
     u32_err = eMMC_CMD3_CMD7(g_eMMCDrv.u16_RCA, 7);
     if(eMMC_ST_SUCCESS != u32_err)
@@ -1848,12 +1862,12 @@ U32 eMMC_Init_Device(void)
     if(eMMC_ST_SUCCESS != u32_err)
             goto  LABEL_INIT_END;
     #endif
-    
+
     // determine device parameters, from Ext_CSD
     u32_err = eMMC_ExtCSD_Config();
     if(eMMC_ST_SUCCESS != u32_err)
         goto  LABEL_INIT_END;
-    
+
     // ---------------------------------
     eMMC_pads_switch(FCIE_eMMC_SDR);
     u32_err = eMMC_SetBusWidth(EMMC_WORKING_BUS_CFG, 0); //1, 4, 8
@@ -1863,7 +1877,7 @@ U32 eMMC_Init_Device(void)
     u32_err = eMMC_SetBusSpeed(eMMC_SPEED_HIGH);
     if(eMMC_ST_SUCCESS != u32_err)
         goto  LABEL_INIT_END;
-        
+
     eMMC_clock_setting(FCIE_DEFAULT_CLK);
 
     //eMMC_DumpDriverStatus();
@@ -1878,17 +1892,17 @@ U32 eMMC_Init_Device(void)
             su8_IfNotBuildDDR = 1;
             eMMC_FCIE_BuildDDRTimingTable();
         }
-        #endif      
+        #endif
     }
     #else
         #if defined(eMMC_RSP_FROM_RAM) && eMMC_RSP_FROM_RAM
         eMMC_CMD18(0, gau8_eMMC_SectorBuf, 1); // get CMD12 Rsp
-        #endif  
+        #endif
     #endif
 
     //eMMC_dump_mem(g_eMMCDrv.au8_AllRsp, 0x100);
     g_eMMCDrv.u32_DrvFlag |= DRV_FLAG_INIT_DONE;
-    
+
     #if defined(eMMC_BURST_LEN_AUTOCFG) && eMMC_BURST_LEN_AUTOCFG
     u32_err = eMMC_LoadBurstLenTable();
     if(eMMC_ST_SUCCESS != u32_err)
@@ -1903,8 +1917,8 @@ U32 eMMC_Init_Device(void)
             eMMC_DumpBurstLenTable();
     }
     #endif
-    
-    
+
+
     LABEL_INIT_END:
 
     return u32_err;
@@ -1925,6 +1939,26 @@ void eMMC_ResetReadyFlag(void)
     sgu32_IfReadyGuard = eMMC_NOT_READY_MARK;
 }
 
+static U32 eMMC_GetPartSecCount(void)
+{
+    U32 u32_PartSecCount = 0;
+
+    switch(gu32_EmmcPartitionAccess)
+    {
+        case 0:
+            u32_PartSecCount = g_eMMCDrv.u32_SEC_COUNT;
+            break;
+        case 1:
+        case 2:
+            u32_PartSecCount = g_eMMCDrv.u32_BOOT_SEC_COUNT;
+            break;
+
+        default:
+            eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC partition[%d] cannot get sector count, set default 0!\n", gu32_EmmcPartitionAccess);
+            break;
+    }
+    return u32_PartSecCount;
+}
 
 // =======================================================
 // u32_DataByteCnt: has to be 512B-boundary !
@@ -1934,11 +1968,26 @@ U32 eMMC_EraseBlock(U32 u32_eMMCBlkAddr_start, U32 u32_eMMCBlkAddr_end)
 {
     U32 u32_err, u32_SectorCnt, u32_i, u32_j;
 #if 1
+    U32 u32_PartSecCount = eMMC_GetPartSecCount();
+
+    // check if eMMC Init
+    if(eMMC_NOT_READY_MARK == sgu32_IfReadyGuard)
+    {
+        eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: not ready (init) \n");
+        return eMMC_ST_ERR_NOT_INIT;
+    }
+    if(u32_eMMCBlkAddr_end > u32_PartSecCount)
+    {
+        eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: invalid data range, erase end address: %Xh > %Xh \n",
+            u32_eMMCBlkAddr_end, u32_PartSecCount);
+        return eMMC_ST_ERR_INVALID_PARAM;
+    }
+
     if(g_eMMCDrv.u32_eMMCFlag & eMMC_FLAG_TRIM)
     {
         printf("g_eMMCDrv.u32_eMMCFlag & eMMC_FLAG_TRIM\r\n");
-        
-        u32_err =  eMMC_EraseCMDSeq(u32_eMMCBlkAddr_start, u32_eMMCBlkAddr_end); 
+
+        u32_err =  eMMC_EraseCMDSeq(u32_eMMCBlkAddr_start, u32_eMMCBlkAddr_end);
         if(eMMC_ST_SUCCESS != u32_err)
         {
             eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: EraseCMDSeq fail 0: %Xh \n", u32_err);
@@ -1948,7 +1997,7 @@ U32 eMMC_EraseBlock(U32 u32_eMMCBlkAddr_start, U32 u32_eMMCBlkAddr_end)
     else
     {
         printf("g_eMMCDrv.u32_eMMCFlag & eMMC_FLAG_TRIM == 0\r\n");
-        
+
         for(u32_i=0; u32_i<eMMC_SECTOR_BUF_BYTECTN; u32_i++)
             gau8_eMMC_SectorBuf[u32_i] = g_eMMCDrv.u8_ErasedMemContent;
 
@@ -2013,31 +2062,31 @@ U32 eMMC_EraseBlock(U32 u32_eMMCBlkAddr_start, U32 u32_eMMCBlkAddr_end)
     LABEL_END_OF_ERASE:
     return u32_err;
 #else
-    
-    
+
+
     eMMC_PNI_t *pPartInfo = (eMMC_PNI_t*)gau8_eMMC_PartInfoBuf;
-    
+
     for(u32_i=0; u32_i<eMMC_SECTOR_BUF_BYTECTN; u32_i++)
         gau8_eMMC_SectorBuf[u32_i] = g_eMMCDrv.u8_ErasedMemContent;
     //u32_eMMCBlkAddr_start /= pPartInfo->u16_BlkPageCnt; //g_eMMCDrv.u32_EraseUnitSize;
     //u32_eMMCBlkAddr_end = (u32_eMMCBlkAddr_end + 1) /pPartInfo->u16_BlkPageCnt; //g_eMMCDrv.u32_EraseUnitSize;
-    
+
     printf("erase u32_eMMCBlkAddr_start : %X, u32_eMMCBlkAddr_end : %X\r\n", u32_eMMCBlkAddr_start, u32_eMMCBlkAddr_end);
 
-    
+
         while(u32_eMMCBlkAddr_start < u32_eMMCBlkAddr_end)
         {
             u32_j = ((u32_eMMCBlkAddr_end-u32_eMMCBlkAddr_start)<<eMMC_SECTOR_512BYTE_BITS)>eMMC_SECTOR_BUF_BYTECTN?
                 eMMC_SECTOR_BUF_BYTECTN:((u32_eMMCBlkAddr_end-u32_eMMCBlkAddr_start)<<eMMC_SECTOR_512BYTE_BITS);
             printf("eMMC_WriteData u32_eMMCBlkAddr_start : %X, u32_j : %X\r\n", u32_eMMCBlkAddr_start, u32_j);
-            u32_err = eMMC_WriteData(gau8_eMMC_SectorBuf, u32_j, u32_eMMCBlkAddr_start); 
+            u32_err = eMMC_WriteData(gau8_eMMC_SectorBuf, u32_j, u32_eMMCBlkAddr_start);
             if(eMMC_ST_SUCCESS != u32_err){
                 eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: WriteData fail 1, %Xh\n", u32_err);
                 return u32_err;
             }
             u32_eMMCBlkAddr_start += u32_j>>eMMC_SECTOR_512BYTE_BITS;
-        }   
-    
+        }
+
 #endif
 }
 
@@ -2045,8 +2094,9 @@ U32 eMMC_WriteData(U8* pu8_DataBuf, U32 u32_DataByteCnt, U32 u32_BlkAddr)
 {
     U32 u32_err=eMMC_ST_SUCCESS;
     volatile U16 u16_BlkCnt;
+    U32 u32_PartSecCount = eMMC_GetPartSecCount();
 
-    // check if eMMC Init 
+    // check if eMMC Init
     if(eMMC_NOT_READY_MARK == sgu32_IfReadyGuard)
     {
         eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: eMMC not ready (init) \n");
@@ -2064,10 +2114,10 @@ U32 eMMC_WriteData(U8* pu8_DataBuf, U32 u32_DataByteCnt, U32 u32_BlkAddr)
         eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: data not 512B boundary \n");
         return eMMC_ST_ERR_INVALID_PARAM;
     }
-    if(u32_BlkAddr + (u32_DataByteCnt>>9) > g_eMMCDrv.u32_SEC_COUNT)
+    if(u32_BlkAddr + (u32_DataByteCnt>>9) > u32_PartSecCount)
     {
         eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: invalid data range, %Xh > %Xh \n",
-            u32_BlkAddr + (u32_DataByteCnt>>9), g_eMMCDrv.u32_SEC_COUNT);
+            u32_BlkAddr + (u32_DataByteCnt>>9), u32_PartSecCount);
         return eMMC_ST_ERR_INVALID_PARAM;
     }
 
@@ -2113,13 +2163,14 @@ U32 eMMC_ReadData(U8* pu8_DataBuf, U32 u32_DataByteCnt, U32 u32_BlkAddr)
     U32 u32_err;
     volatile U16 u16_BlkCnt;
     U8  u8_IfNotCacheLineAligned=0;
+    U32 u32_PartSecCount = eMMC_GetPartSecCount();
 
     //eMMC_debug(eMMC_DEBUG_LEVEL,1,"\n");
 
     // check if eMMC Init
     if(eMMC_NOT_READY_MARK == sgu32_IfReadyGuard)
     {
-        eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: not ready (init) \n"); 
+        eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: not ready (init) \n");
         return eMMC_ST_ERR_NOT_INIT;
     }
     // check if u32_DataByteCnt is 512B boundary
@@ -2128,10 +2179,10 @@ U32 eMMC_ReadData(U8* pu8_DataBuf, U32 u32_DataByteCnt, U32 u32_BlkAddr)
         eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: data not 512B boundary \n");
         return eMMC_ST_ERR_INVALID_PARAM;
     }
-    if(u32_BlkAddr + (u32_DataByteCnt>>9) > g_eMMCDrv.u32_SEC_COUNT)
+    if(u32_BlkAddr + (u32_DataByteCnt>>9) > u32_PartSecCount)
     {
         eMMC_debug(eMMC_DEBUG_LEVEL_ERROR,1,"eMMC Err: invalid data range, %Xh > %Xh \n",
-            u32_BlkAddr + (u32_DataByteCnt>>9), g_eMMCDrv.u32_SEC_COUNT);
+            u32_BlkAddr + (u32_DataByteCnt>>9), u32_PartSecCount);
         return eMMC_ST_ERR_INVALID_PARAM;
     }
 
@@ -2238,7 +2289,7 @@ U32 eMMC_SearchDevNodeStartSector(void)
     g_eMMCDrv.u16_PartDevNodeSectorCnt *= pPartInfo->u16_BlkPageCnt;
 
     return eMMC_ST_SUCCESS;
-    
+
 }
 #endif
 
@@ -2273,7 +2324,7 @@ int get_NVRAM_max_part_count(void)
     //return  (pPartInfo->u16_PartCnt-1);
 //    return 0x0C;
 
-	return EMMC_RESERVED_FOR_MAP;	//the max number of eMMC UDA partitions 
+	return EMMC_RESERVED_FOR_MAP;	//the max number of eMMC UDA partitions
 }
 
 

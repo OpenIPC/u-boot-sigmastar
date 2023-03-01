@@ -29,7 +29,7 @@
 #ifndef __MS_SDMMC_UB_H
 #define __MS_SDMMC_UB_H
 
-
+#include "hal_card_base.h"
 //***********************************************************************************************************
 // Config Setting (Externel)
 //***********************************************************************************************************
@@ -208,7 +208,7 @@
     #define D_SDMMC3_PORT              EV_PFCIE5_SDIO                 //Dummy Setting
     #define D_SDMMC3_PAD               EV_PAD3                        //Dummy Setting
 
-    #define V_SDMMC_CARDNUMS           1
+    #define V_SDMMC_CARDNUMS           2
     #define V_SDMMC1_MAX_CLK           32000000
     #define V_SDMMC2_MAX_CLK           32000000
     #define V_SDMMC3_MAX_CLK           32000000                       //Dummy Setting
@@ -219,6 +219,8 @@
     #define WT_POWERON                 60 //(ms)
     #define WT_POWEROFF                80 //(ms)
 
+    //slot1 SDIO, EV_PAD2: sd1_mode1 | EV_PAD3: sd1_mode2
+    #define C_SDIO_PAD_SELECT          EV_PAD2
 //###########################################################################################################
 #elif (D_PROJECT == D_PROJECT__iNF6B0)   //For iNfinity6b0
 //###########################################################################################################

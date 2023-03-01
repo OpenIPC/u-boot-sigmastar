@@ -1119,7 +1119,7 @@ MS_BOOL HAL_SERFLASH_DetectType(void)
 
         if(_hal_SERFLASH.u32FlashSize >= 0x2000000)
         {
-            if((_hal_SERFLASH.u8MID == MID_MXIC)||(_hal_SERFLASH.u8MID == MID_GD))
+            if((_hal_SERFLASH.u8MID == MID_MXIC)||(_hal_SERFLASH.u8MID == MID_GD) || (_hal_SERFLASH.u8MID == MID_WB))
             {
                 _bHasEAR = TRUE; // support EAR mode
                 HAL_FSP_WriteExtAddrReg(0);
@@ -4053,7 +4053,11 @@ MS_BOOL HAL_FSP_WriteProtect_Area(MS_BOOL bEnableAllArea, MS_U8 u8BlockProtectBi
     if (gReadMode==E_QUAD_MODE)
         u8Status |= SF_SR_QUAD;
 
-    u8Status |= SF_SR_SRWD;
+    //u8Status |= SF_SR_SRWD;
+	if(_hal_SERFLASH.u8MID != MID_NM)
+    {
+        u8Status |= SF_SR_SRWD;
+    }
 
     if (bEnableAllArea)
         u8Status |= SERFLASH_WRSR_BLK_PROTECT;

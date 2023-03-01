@@ -37,7 +37,8 @@
 #include "../inc/hal_card_platform.h"
 #include "../inc/hal_card_timer.h"
 #include "../inc/hal_sdmmc_v5.h"
-#include "../inc/ms_sdmmc_drv.h"
+//#include "../inc/ms_sdmmc_drv.h"
+#include "../inc/ms_sdmmc_ub.h"
 
 #define PORT_FROM_KERNEL (1)
 
@@ -235,7 +236,7 @@ void Hal_CARD_InitPADPin(PADEmType ePAD, BOOL_T bTwoCard)
         CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x16), BIT07_T); //D3
         CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x17), BIT07_T); //D2
     }
-    else if (ePAD == EV_PAD2) //PAD_NAND
+    else if (ePAD == EV_PAD2) //sd1_mode: 1
     {
         //reg_sd1_pe:D3, D2, D1, D0, CMD=> pull en
         CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x27), BIT04_T); //D1
@@ -251,6 +252,23 @@ void Hal_CARD_InitPADPin(PADEmType ePAD, BOOL_T bTwoCard)
         CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x2A), BIT07_T); //CMD
         CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x2B), BIT07_T); //D3
         CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x2C), BIT07_T); //D2
+    }
+    else if (ePAD == EV_PAD3)   //sd1_mode: 2
+    {
+        //reg_sd1_pe:D3, D2, D1, D0, CMD=> pull en
+        CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x18), BIT04_T); //D1
+        CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x19), BIT04_T); //D0
+        CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1B), BIT04_T); //CMD
+        CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1C), BIT04_T); //D3
+        CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1D), BIT04_T); //D2
+
+        //reg_sd1_drv: CLK, D3, D2, D1, D0, CMD => drv: 0
+        CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x18), BIT07_T); //D1
+        CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x19), BIT07_T); //D0
+        CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1A), BIT07_T); //CLK
+        CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1B), BIT07_T); //CMD
+        CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1C), BIT07_T); //D3
+        CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1D), BIT07_T); //D2
     }
 
 }
@@ -284,8 +302,7 @@ void Hal_CARD_SetPADToPortPath(IPEmType eIP, PortEmType ePort, PADEmType ePAD, B
 #else //kernel, new setting
             //OFF:x67 [B8:B9]/[reg_sd0_mode:reg_sd0_cdz_mode]; [B13:B12]reg_sd1_mode
             //OFF:x68 [B8:B9]reg_sd1_cdz_mode
-            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT13_T | BIT12_T | BIT09_T | BIT08_T);
-            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT09_T);
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT09_T | BIT08_T);
             CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT08_T | BIT09_T);
 
             //Make sure reg_spi0_mode != 3
@@ -298,13 +315,15 @@ void Hal_CARD_SetPADToPortPath(IPEmType eIP, PortEmType ePort, PADEmType ePAD, B
     }
     else if(eIP == EV_IP_FCIE2)
     {
-        if(ePAD == EV_PAD2)  //PAD_NAND
+        if(ePAD == EV_PAD2)  //sd1_mode: 1
         {
             //SD mode
             //OFF:x67 [B8:B9]/[reg_sd0_mode:reg_sd0_cdz_mode]; [B13:B12]reg_sd1_mode
             //OFF:x68 [B9]reg_sd1_cdz_mode
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT13_T | BIT12_T);
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT09_T | BIT08_T);
             CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT12_T);
-            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT09_T); 
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT08_T);
 
             // Make sure reg_uart1_mode != 4
             if((GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x6D) & (BIT06_T | BIT05_T | BIT04_T)) == BIT06_T)
@@ -332,6 +351,17 @@ void Hal_CARD_SetPADToPortPath(IPEmType eIP, PortEmType ePort, PADEmType ePAD, B
             }
 
 
+        }
+
+        else if (ePAD == EV_PAD3)   //sd1_mode: 2
+        {
+            //SD mode
+            //OFF:x67 [B8:B9]/[reg_sd0_mode:reg_sd0_cdz_mode]; [B13:B12]reg_sd1_mode
+            //OFF:x68 [B9]reg_sd1_cdz_mode
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT13_T | BIT12_T);
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT09_T | BIT08_T);
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT13_T);
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT09_T);
         }
 
     }
@@ -364,15 +394,13 @@ void Hal_CARD_PullPADPin(PADEmType ePAD, PinPullEmType ePinPull, BOOL_T bTwoCard
 
 #if PORT_FROM_KERNEL
             #if 0
-            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_CHIPTOP_BANK, 0x08), BIT02_T | BIT03_T);         //sd mode = 0            
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_CHIPTOP_BANK, 0x08), BIT02_T | BIT03_T);         //sd mode = 0
             #else
             //OFF:x67 [B8:B9]/[reg_sd0_mode:reg_sd0_cdz_mode]; [B13:B12]reg_sd1_mode
             //OFF:x68 [B8:B9]reg_sd1_cdz_mode
-            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT13_T | BIT12_T | BIT09_T | BIT08_T);
-            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT09_T | BIT08_T);
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT09_T | BIT08_T);
             #endif
 #else
-            aaa
             CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_CHIPTOP_BANK, 0x08), BIT03_T);         //sd mode2 = 0
 #endif
                                                                                        //
@@ -436,8 +464,7 @@ void Hal_CARD_PullPADPin(PADEmType ePAD, PinPullEmType ePinPull, BOOL_T bTwoCard
             #else
             //OFF:x67 [B8:B9]/[reg_sd0_mode:reg_sd0_cdz_mode]; [B13:B12]reg_sd1_mode
             //OFF:x68 [B8:B9]reg_sd1_cdz_mode
-            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT13_T | BIT12_T | BIT09_T | BIT08_T);
-            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT08_T | BIT09_T);
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT09_T | BIT08_T);
             CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT08_T | BIT09_T);
             #endif
 #else
@@ -449,7 +476,7 @@ void Hal_CARD_PullPADPin(PADEmType ePAD, PinPullEmType ePinPull, BOOL_T bTwoCard
 #endif
         }
     }
-    else if(ePAD == EV_PAD2) //PAD_NAND
+    else if(ePAD == EV_PAD2) //sd1_mode: 1
     {
         if(ePinPull ==EV_PULLDOWN)
         {
@@ -462,7 +489,7 @@ void Hal_CARD_PullPADPin(PADEmType ePAD, PinPullEmType ePinPull, BOOL_T bTwoCard
 
             //OFF:x67 [B8:B9]/[reg_sd0_mode:reg_sd0_cdz_mode]; [B13:B12]reg_sd1_mode
             //OFF:x68 [B8:B9]reg_sd1_cdz_mode
-            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT13_T | BIT12_T | BIT09_T | BIT08_T);
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT13_T | BIT12_T);
             CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT08_T | BIT09_T);
 
 
@@ -524,6 +551,80 @@ void Hal_CARD_PullPADPin(PADEmType ePAD, PinPullEmType ePinPull, BOOL_T bTwoCard
             CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT08_T);
         }
 
+    }
+
+    else if (ePAD == EV_PAD3)   //sd1_mode: 2
+    {
+        if(ePinPull ==EV_PULLDOWN)
+        {
+            //D3, D2, D1, D0, CMD=> pull dis
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x18), BIT04_T); //D1
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x19), BIT04_T); //D0
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1B), BIT04_T); //CMD
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1C), BIT04_T); //D3
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1D), BIT04_T); //D2
+
+            //OFF:x67 [B8:B9]/[reg_sd0_mode:reg_sd0_cdz_mode]; [B13:B12]reg_sd1_mode
+            //OFF:x68 [B8:B9]reg_sd1_cdz_mode
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT13_T | BIT12_T);
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT08_T | BIT09_T);
+
+            //SD_ClK
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1A), BIT02_T);           // output mode
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1A), BIT01_T);           // output:0
+
+            //SD_CMD
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1B), BIT02_T);           // output mode
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1B), BIT01_T);           // output:0
+
+            //SD_D0
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x19), BIT02_T);           // output mode
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x19), BIT01_T);           // output:0
+
+            //SD_D1
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x18), BIT02_T);           // output mode
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x18), BIT01_T);           // output:0
+
+            //SD_D2
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1D), BIT02_T);           // output mode
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1D), BIT01_T);           // output:0
+
+            //SD_D3
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1C), BIT02_T);           // output mode
+            CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1C), BIT01_T);           // output:0
+        }
+        else if(ePinPull == EV_PULLUP)
+        {
+            //D3, D2, D1, D0, CMD=> pull en
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x18), BIT04_T); //D1
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x19), BIT04_T); //D0
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1B), BIT04_T); //CMD
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1C), BIT04_T); //D3
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1D), BIT04_T); //D2
+
+            //SD_CLK
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1A), BIT02_T); // input mode
+
+            //SD_CMD
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1B), BIT02_T); // input mode
+
+            //SD_D0
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x19), BIT02_T); // input mode
+
+            //SD_D1
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x18), BIT02_T); // input mode
+
+            //SD_D2
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1D), BIT02_T); // input mode
+
+            //SD_D3
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1C), BIT02_T); // input mode
+
+            //OFF:x67 [B8:B9]/[reg_sd0_mode:reg_sd0_cdz_mode]; [B13:B12]reg_sd1_mode
+            //OFF:x68 [B8:B9]reg_sd1_cdz_mode
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x67), BIT13_T);
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x68), BIT09_T);
+        }
     }
 }
 
@@ -719,11 +820,15 @@ void Hal_CARD_PowerOn(PADEmType ePAD, U16_T u16DelayMs)
         CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x10), BIT01_T); //reg_sd0_gpio_out_0
         #endif
     }
-    else if(ePAD==EV_PAD2) //PAD_NAND
+    else if(ePAD==EV_PAD2) //sd1_mode: 1
     {
         CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x2D), BIT02_T);   // reg_sd1_gpio_oen_7
         CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x2D), BIT01_T);   // reg_sd1_gpio_out_7
 
+    }
+    else if (ePAD == EV_PAD3) //sd1_mode: 2
+    {
+        //Constant power supply
     }
 
     Hal_Timer_mDelay(u16DelayMs);
@@ -755,11 +860,15 @@ void Hal_CARD_PowerOff(PADEmType ePAD, U16_T u16DelayMs)
         CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x10), BIT01_T); //reg_sd0_gpio_out_0
         #endif
     }
-    else if(ePAD==EV_PAD2) //PAD_NAND
+    else if(ePAD==EV_PAD2) //sd1_mode: 1
     {
         CARD_REG_CLRBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x2D), BIT02_T);   // reg_sd1_gpio_oen_7
         CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x2D), BIT01_T);   // reg_sd1_gpio_out_7
 
+    }
+    else if (ePAD == EV_PAD3) //sd1_mode: 2
+    {
+        //Constant power supply
     }
 
     Hal_Timer_mDelay(u16DelayMs);
@@ -792,9 +901,11 @@ void Hal_CARD_InitGPIO(GPIOEmType eGPIO, BOOL_T bEnable)
     }
     else if( eGPIO==EV_GPIO2 ) //EV_GPIO2 for Slot 1
     {
-        CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x26), BIT02_T); //PAD_SD1_CDZ:reg_sd0_gpio_oen_0
+        if(C_SDIO_PAD_SELECT == EV_PAD2)
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x26), BIT02_T); //PAD_SD1_CDZ:reg_sd0_gpio_oen_0
+        else
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1E), BIT02_T); //PAD_SD1_CDZ:reg_sd0_gpio_oen_0
     }
-
 }
 
 
@@ -829,8 +940,16 @@ BOOL_T Hal_CARD_GetGPIOState(GPIOEmType eGPIO)
     if( eGPIO==EV_GPIO2 ) //EV_GPIO2 for Slot 1
     {
         #if (EN_SDMMC_CDZREV)
-        CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x26), BIT02_T);    //PAD_SD1_CDZ:reg_sd1_gpio_oen_0
-        u16Reg = CARD_REG(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x26)) & BIT00_T; //PAD_SD1_CDZ:reg_sd1_gpio_in_0
+        if(C_SDIO_PAD_SELECT == EV_PAD2)
+        {
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x26), BIT02_T);    //PAD_SD1_CDZ:reg_sd1_gpio_oen_0
+            u16Reg = CARD_REG(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x26)) & BIT00_T; //PAD_SD1_CDZ:reg_sd1_gpio_in_0
+        }
+        else
+        {
+            CARD_REG_SETBIT(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1E), BIT02_T);    //PAD_SD1_CDZ:reg_sd1_gpio_oen_0
+            u16Reg = CARD_REG(GET_CARD_REG_ADDR(A_PADTOP_BANK, 0x1E)) & BIT00_T; //PAD_SD1_CDZ:reg_sd1_gpio_in_0
+        }
         #else
         u16Reg = CARD_REG(GET_CARD_REG_ADDR(A_PM_GPIO_BANK, 0x47)) & BIT02_T;
         #endif

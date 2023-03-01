@@ -412,6 +412,29 @@ int remove_emmc_partitions(block_dev_desc_t *dev_desc, disk_partition_t *info)
 }
 #endif
 
+int init_NVRAM_ddb(block_dev_desc_t *dev_desc)
+{
+
+    int ret;
+    ddesc.signature = EMMC_DRIVER_MAGIC;
+    ddesc.blk_size = 0x200;
+    ddesc.blk_count = g_eMMCDrv.u32_SEC_COUNT;
+    ret = part_emmc_write_ddb(dev_desc, &ddesc);
+    if(ret){
+    	printf("Error during write new driver description table!\n");
+    	return ret;
+    }
+
+    return 0;
+
+}
+
+int ClearDescTable(void)
+{
+    ddesc.signature = 0;
+    return 0;
+}
+
 int init_NVRAM_pdb(void)
 {
 
@@ -428,8 +451,6 @@ int init_NVRAM_pdb(void)
     return 0;
 
 }
-
-
 
 static int add_NVRAM_pdb (block_dev_desc_t *dev_desc, emmc_partition_t *pdb_p)
 {
@@ -549,17 +570,17 @@ static int add_NVRAM_pdb (block_dev_desc_t *dev_desc, emmc_partition_t *pdb_p)
 	return (0);
 #endif
 
-	int n = 1;
-	emmc_partition_t exist_pdb;
-	ulong special_start, start_block = EMMC_PARTITION_START;
+    int n = 1;
+    emmc_partition_t exist_pdb;
+    ulong special_start, start_block = EMMC_PARTITION_START;
 
-	if(pdb_p->signature != EMMC_PARTITION_MAGIC){
-			printf ("** Bad Signature: expected 0x%04x, try to write 0x%04x **\n",
-					EMMC_PARTITION_MAGIC, pdb_p->signature);
-			return (-1);
-	}
+    if(pdb_p->signature != EMMC_PARTITION_MAGIC){
+        printf ("** Bad Signature: expected 0x%04x, try to write 0x%04x **\n",
+            EMMC_PARTITION_MAGIC, pdb_p->signature);
+        return (-1);
+    }
 
-	special_start = pdb_p->start_block;
+    special_start = pdb_p->start_block;
 
 	for (;;) {
 			/*
@@ -666,37 +687,35 @@ int create_new_NVRAM_partition(block_dev_desc_t *dev_desc, disk_partition_t *inf
 	return 0;
 #endif
 
-	int ret;
-	int flag = 0;
-	emmc_driver_desc_t ddb_base;
-	emmc_partition_t pdb_base;
+    int ret;
+    int flag = 0;
+    emmc_partition_t pdb_base;
 
-	memset(&pdb_base, 0, sizeof(emmc_partition_t));
-	ddb_base.signature = EMMC_DRIVER_MAGIC;
-	ddb_base.drvr_cnt = EMMC_RESERVED_FOR_MAP;
+    memset(&pdb_base, 0, sizeof(emmc_partition_t));
 
-	flag = part_emmc_read_ddb(dev_desc, &ddesc);
-	if(flag){
-	   printf("Need write new driver description table!\n");
-	   ret = part_emmc_write_ddb(dev_desc, &ddb_base);
-	   if(ret){
-		   printf("Error during write new driver description table!\n");
-		   return ret;
-	   }
-	}
+    flag = part_emmc_read_ddb(dev_desc, &ddesc);
+    if(flag){
+       printf("Need write new driver description table!\n");
+       ret = init_NVRAM_ddb(dev_desc);
+       if(ret){
+           printf("Error during write new driver description table!\n");
+           return ret;
+       }
+    }
 
-	pdb_base.signature = EMMC_PARTITION_MAGIC;
-	strcpy((char *)pdb_base.name, (const char *)info->name);
-	pdb_base.block_count = info->size;
-	pdb_base.start_block = info->start;
+    pdb_base.signature = EMMC_PARTITION_MAGIC;
+    strcpy((char *)pdb_base.name, (const char *)info->name);
+    pdb_base.block_count = info->size;
+    pdb_base.start_block = info->start;
+    strcpy((char*)pdb_base.type, BOOT_PART_TYPE);
 
-	ret = add_NVRAM_pdb(dev_desc, &pdb_base);
-	if(ret){
-		printf("Error during create new partition record!\n");
-		return ret;
-	}
+    ret = add_NVRAM_pdb(dev_desc, &pdb_base);
+    if(ret){
+        printf("Error during create new partition record!\n");
+        return ret;
+    }
 
-	return 0;
+    return 0;
 
 }
 

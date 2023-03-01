@@ -126,26 +126,26 @@ __inline void _HalDispIrqGetTimeZoneIsrStatus(u32 *pu32Status)
 //  Global Functions
 //-------------------------------------------------------------------------------------------------
 
-bool HalDispIrqIoCtl(HalDispIrqIoCtlType_e enIoctlType, HalDispIrqType_e enIrqType, void *pCfg)
+bool HalDispIrqIoCtl(HalDispIrqIoctlConfig_t *pCfg)
 {
     bool bRet = 1;
 
-    DISP_DBG(DISP_DBG_LEVEL_IRQ, "%s %d, Ioctl:%s, IrqType:%s\n", __FUNCTION__, __LINE__, PARSING_HAL_IRQ_IOCTL(enIoctlType), PARSING_HAL_IRQ_TYPE(enIrqType));
-    switch(enIoctlType)
+    DISP_DBG(DISP_DBG_LEVEL_IRQ, "%s %d, Ioctl:%s, IrqType:%s\n", __FUNCTION__, __LINE__, PARSING_HAL_IRQ_IOCTL(pCfg->enIoctlType), PARSING_HAL_IRQ_TYPE(pCfg->enIrqType));
+    switch(pCfg->enIoctlType)
     {
         case E_HAL_DISP_IRQ_IOCTL_ENABLE:
-            _HalDispIrqEnableIsr(enIrqType, (bool *)pCfg);
+            _HalDispIrqEnableIsr(pCfg->enIrqType, (bool *)pCfg->pParam);
             break;
 
         case E_HAL_DISP_IRQ_IOCTL_GET_FLAG:
-            _HalDispIrqGetFlag(enIrqType,(u32 * )pCfg);
+            _HalDispIrqGetFlag(pCfg->enIrqType,(u32 * )pCfg->pParam);
             break;
 
         case E_HAL_DISP_IRQ_IOCTL_CLEAR:
-            _HalDispIrqClear(enIrqType);
+            _HalDispIrqClear(pCfg->enIrqType);
             break;
 
-        case E_HAL_DISP_IRQ_IOCTL_INTERNAL_SUPPORTED:
+        case E_HAL_DISP_IRQ_IOCTL_TIMEZONE_SUPPORTED:
 #if 0
             _HalDispIrqSupportedInternalIsr((bool *)pCfg);
             break;
@@ -153,32 +153,32 @@ bool HalDispIrqIoCtl(HalDispIrqIoCtlType_e enIoctlType, HalDispIrqType_e enIrqTy
         case E_HAL_DISP_IRQ_IOCTL_TIMEZONE_GET_ID:
             _HalDispIrqGetInternalIsrDeviceIdx((u8 *)pCfg);
 #else
-            _HalDispIrqSupportedTimeZonelIsr((bool *)pCfg);
+            _HalDispIrqSupportedTimeZonelIsr((bool *)pCfg->pParam);
             break;
 
-        case E_HAL_DISP_IRQ_IOCTL_INTERNAL_GET_ID:
-            _HalDispIrqGetTimeZoneIsrDeviceIdx((u8 *)pCfg);
+        case E_HAL_DISP_IRQ_IOCTL_TIMEZONE_GET_ID:
+            _HalDispIrqGetTimeZoneIsrDeviceIdx((u8 *)pCfg->pParam);
 #endif
             break;
 
-        case E_HAL_DISP_IRQ_IOCTL_INTERNAL_ENABLE:
-        case E_HAL_DISP_IRQ_IOCTL_INTERNAL_GET_FLAG:
-        case E_HAL_DISP_IRQ_IOCTL_INTERNAL_CLEAR:
+        case E_HAL_DISP_IRQ_IOCTL_TIMEZONE_ENABLE:
+        case E_HAL_DISP_IRQ_IOCTL_TIMEZONE_GET_FLAG:
+        case E_HAL_DISP_IRQ_IOCTL_TIMEZONE_CLEAR:
             bRet = FALSE;
-            DISP_ERR("%s %d, Not Support Irq Iocl:%s\n", __FUNCTION__, __LINE__,  PARSING_HAL_IRQ_IOCTL(enIoctlType));
+            DISP_ERR("%s %d, Not Support Irq Iocl:%s\n", __FUNCTION__, __LINE__,  PARSING_HAL_IRQ_IOCTL(pCfg->enIoctlType));
             break;
 
-        case E_HAL_DISP_IRQ_IOCTL_INTERNAL_GET_STATUS:
+        case E_HAL_DISP_IRQ_IOCTL_TIMEZONE_GET_STATUS:
 #if 0
             _HalDispIrqGetInternalIsrStatus((u32 *)pCfg);
 #else
-            _HalDispIrqGetTimeZoneIsrStatus((u32 *)pCfg);
+            _HalDispIrqGetTimeZoneIsrStatus((u32 * )pCfg->pParam);
 #endif
             break;
 
         default:
             bRet = FALSE;
-            DISP_ERR("%s %d, UnKnown Irq Iocl:%d\n", __FUNCTION__, __LINE__, enIoctlType);
+            DISP_ERR("%s %d, UnKnown Irq Iocl:%d\n", __FUNCTION__, __LINE__, pCfg->enIoctlType);
             break;
     }
     return bRet;

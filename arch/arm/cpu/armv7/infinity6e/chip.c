@@ -311,54 +311,47 @@ int board_late_init(void)
 #endif
 
 #ifndef CONFIG_MS_SAVE_ENV_IN_ISP_FLASH
-#if (defined(CONFIG_MS_NAND) && defined(CONFIG_MS_EMMC))
-extern void mmc_env_relocate_spec(void);
-extern void nand_env_relocate_spec(void);
-extern int mmc_env_init(void);
+#ifdef CONFIG_ENV_IS_IN_NAND
 extern int nand_env_init(void);
-extern int mmc_saveenv(void);
 extern int nand_saveenv(void);
+extern void nand_env_relocate_spec(void);
+#endif
+
+#ifdef CONFIG_ENV_IS_IN_MMC
+extern int mmc_env_init(void);
+extern int mmc_saveenv(void);
+extern void mmc_env_relocate_spec(void);
+#endif
 
 env_t *env_ptr;
 
 void env_relocate_spec(void)
 {
-	if(DEVINFO_BOOT_TYPE_EMMC==ms_devinfo_boot_type())
-	{
-		return mmc_env_relocate_spec();
-	}
-	else if(DEVINFO_BOOT_TYPE_NAND==ms_devinfo_boot_type())
-	{
-		return nand_env_relocate_spec();
-	}
+#ifdef CONFIG_ENV_IS_IN_MMC
+    mmc_env_relocate_spec();
+#elif defined(CONFIG_ENV_IS_IN_NAND)
+    nand_env_relocate_spec();
+#endif
 }
 
 
 int env_init(void)
 {
-	if(DEVINFO_BOOT_TYPE_EMMC==ms_devinfo_boot_type())
-	{
-		return mmc_env_init();
-	}
-	else if(DEVINFO_BOOT_TYPE_NAND==ms_devinfo_boot_type())
-	{
-		return nand_env_init();
-	}
-
+#ifdef CONFIG_ENV_IS_IN_MMC
+    return mmc_env_init();
+#elif defined(CONFIG_ENV_IS_IN_NAND)
+    return nand_env_init();
+#endif
 }
 
 int saveenv(void)
 {
-	if(DEVINFO_BOOT_TYPE_EMMC==ms_devinfo_boot_type())
-	{
-		return mmc_saveenv();
-	}
-	else if(DEVINFO_BOOT_TYPE_NAND==ms_devinfo_boot_type())
-	{
-		return nand_saveenv();
-	}
-}
+#ifdef CONFIG_ENV_IS_IN_MMC
+    return mmc_saveenv();
+#elif defined(CONFIG_ENV_IS_IN_NAND)
+    return nand_saveenv();
 #endif
+}
 #endif
 
 #define  reg_flush_op_on_fire           (0x1F000000 + 0x102200*2 + 0x05*4)

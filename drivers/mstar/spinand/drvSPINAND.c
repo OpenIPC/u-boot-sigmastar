@@ -256,13 +256,15 @@ MDrv_SPINAND_Init_Detect_ID:
         memcpy(tSpinandInfo, &pSpiNandDrv->tSpinandInfo, sizeof(SPINAND_FLASH_INFO_t));
     }
 
-    if(pSpiNandDrv->tSpinandInfo.au8_ID[0] == MID_GD)
+    if(pSpiNandDrv->tSpinandInfo.au8_ID[0] == MID_GD || pSpiNandDrv->tSpinandInfo.au8_ID[0] == MID_XTX)
     {
 #if defined(SUPPORT_SPINAND_QUAD) && SUPPORT_SPINAND_QUAD
-        if(pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0xD1 ||
-           pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0xD9)
+        if(pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0xD1 
+		|| pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0xD9
+		|| pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0x51
+		|| pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0xE1)
         {
-            gSpiMode = E_SPINAND_QUAD_MODE_IO;
+            gSpiMode = E_SPINAND_QUAD_MODE;
             printk("\r\n GD Quad mode enabled\r\n");
             //HAL_SPINAND_SetCKG(108);
             HAL_SPINAND_PreHandle(gSpiMode);
@@ -283,6 +285,20 @@ MDrv_SPINAND_Init_Detect_ID:
         if(u8Status & QUAD_ENABLE)
         {
             u8Status &= ~(QUAD_ENABLE);
+            HAL_SPINAND_WriteStatusRegister(u8Status, SPI_NAND_REG_FEAT);
+        }
+#endif
+    }
+
+    if (pSpiNandDrv->tSpinandInfo.au8_ID[0] == MID_FORESEE)
+    {
+#if defined(CONFIG_MS_SPINAND_QUAD_READ) || defined(CONFIG_MS_SPINAND_QUAD_WRITE)
+        U8 u8Status;
+
+        HAL_SPINAND_ReadStatusRegister(&u8Status, SPI_NAND_REG_FEAT);
+        if(!(u8Status & QUAD_ENABLE))
+        {
+            u8Status |= QUAD_ENABLE;
             HAL_SPINAND_WriteStatusRegister(u8Status, SPI_NAND_REG_FEAT);
         }
 #endif
@@ -351,21 +367,20 @@ U32 MDrv_SPINAND_ReadData(U32 u32_PageIdx, U8 *u8Data, U8 *pu8_SpareBuf, U32 u32
     {
         // Read SPINand Spare Data
         u32Ret= HAL_SPINAND_Read(pSpiNandDrv->tSpinandInfo.u16_PageByteCnt, pSpiNandDrv->tSpinandInfo.u16_SpareByteCnt, pu8_SpareBuf);
-        if(u32Ret == ERR_SPINAND_SUCCESS)
-        {
-            if(u8Status == ECC_1_3_CORRECTED)
-                u32Ret = ERR_SPINAND_ECC_1_3_CORRECTED;
-            if(u8Status == ECC_4_6_CORRECTED)
-               u32Ret = ERR_SPINAND_ECC_4_6_CORRECTED;
-            if(u8Status == ECC_7_8_CORRECTED)
-                u32Ret = ERR_SPINAND_ECC_7_8_CORRECTED;        
-            if(u8Status == ECC_NOT_CORRECTED){
-                u32Ret = ERR_SPINAND_ECC_ERROR;
-                printf("ecc error P: 0x%x\r\n", u32_PageIdx);
-            }
-        }
     }
 
+    if (u32Ret == ERR_SPINAND_SUCCESS)
+    {
+        if (u8Status & ECC_STATUS_ERR)
+        {
+            u32Ret = ERR_SPINAND_ECC_ERROR;
+            printf("ecc error P: 0x%X\r\n", u32_PageIdx);
+        }
+        else if (u8Status & ECC_STATUS_BITFLIP)
+        {
+            u32Ret = ERR_SPINAND_ECC_BITFLIP;
+        }
+    }
 
     return u32Ret;
 }
@@ -432,19 +447,19 @@ U32 MDrv_SPINAND_Read(U32 u32_PageIdx, U8 *u8Data, U8 *pu8_SpareBuf)
     // Read SPINand Spare Data
     u32Ret= HAL_SPINAND_Read(pSpiNandDrv->tSpinandInfo.u16_PageByteCnt, pSpiNandDrv->tSpinandInfo.u16_SpareByteCnt, pu8_SpareBuf);
 
-    if(u32Ret == ERR_SPINAND_SUCCESS)
+    if (u32Ret == ERR_SPINAND_SUCCESS)
     {
-        if(u8Status == ECC_1_3_CORRECTED)
-            u32Ret = ERR_SPINAND_ECC_1_3_CORRECTED;
-        if(u8Status == ECC_4_6_CORRECTED)
-           u32Ret = ERR_SPINAND_ECC_4_6_CORRECTED;
-        if(u8Status == ECC_7_8_CORRECTED)
-            u32Ret = ERR_SPINAND_ECC_7_8_CORRECTED;        
-        if(u8Status == ECC_NOT_CORRECTED){
+        if (u8Status & ECC_STATUS_ERR)
+        {
             u32Ret = ERR_SPINAND_ECC_ERROR;
-            printf("ecc error P: 0x%x\r\n", u32_PageIdx);
+            printf("ecc error P: 0x%X\r\n", u32_PageIdx);
+        }
+        else if (u8Status & ECC_STATUS_BITFLIP)
+        {
+            u32Ret = ERR_SPINAND_ECC_BITFLIP;
         }
     }
+
     return u32Ret;
 }
 

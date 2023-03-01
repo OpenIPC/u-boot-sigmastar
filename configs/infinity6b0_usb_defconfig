@@ -376,6 +376,7 @@ CONFIG_IMAGE_POSTFIX=""
 # CONFIG_SSTAR_PNL is not set
 # CONFIG_SSTAR_HDMITX is not set
 # CONFIG_SSTAR_JPD is not set
+# CONFIG_SSTAR_PWM is not set
 
 #
 # File systems

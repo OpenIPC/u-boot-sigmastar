@@ -318,11 +318,11 @@ int spi_nand_ecc_read_page_raw(struct mtd_info *mtd, struct nand_chip *chip,
     U32 ret;
     ret = MDrv_SPINAND_Read(page, (U8 *)buf, (U8 *)chip->oob_poi);
 
-    if(ret == ECC_NOT_CORRECTED)
+    if(ret == ERR_SPINAND_ECC_ERROR)
     {
         spi_nand_err("MDrv_SPINAND_Read=%x, P: 0x%x", ret, page);
     }
-    if((ret != ERR_SPINAND_SUCCESS) && (ret != ECC_NOT_CORRECTED))
+    if((ret != ERR_SPINAND_SUCCESS) && (ret != ERR_SPINAND_ECC_ERROR))
     {
         mtd->ecc_stats.corrected += 1;
     }
@@ -344,12 +344,12 @@ int spi_nand_ecc_read_page(struct mtd_info *mtd, struct nand_chip *chip,
 
     ret = MDrv_SPINAND_Read(page, (U8 *)buf, (U8 *)chip->oob_poi);
 
-    if(ret == ECC_NOT_CORRECTED)
+    if(ret == ERR_SPINAND_ECC_ERROR)
     {
         mtd->ecc_stats.failed++;
         spi_nand_err("MDrv_SPINAND_Read=%x, P: 0x%x", ret, page);
     }
-    if((ret != ERR_SPINAND_SUCCESS) && (ret != ECC_NOT_CORRECTED))
+    if((ret != ERR_SPINAND_SUCCESS) && (ret != ERR_SPINAND_ECC_ERROR))
     {
         mtd->ecc_stats.corrected += 1;
     }
@@ -370,12 +370,12 @@ int spi_nand_ecc_read_subpage(struct mtd_info *mtd, struct nand_chip *chip,
 
     ret = MDrv_SPINAND_Read_RandomIn(u32_CurRow, offs, len, buf);
 
-    if(ret == ECC_NOT_CORRECTED)
+    if(ret == ERR_SPINAND_ECC_ERROR)
     {
         mtd->ecc_stats.failed++;
         spi_nand_err("Read_RandomIn=%x, P: 0x%x", ret, page);
     }
-    if((ret != ERR_SPINAND_SUCCESS) && (ret != ECC_NOT_CORRECTED))
+    if((ret != ERR_SPINAND_SUCCESS) && (ret != ERR_SPINAND_ECC_ERROR))
     {
         mtd->ecc_stats.corrected += 1;
     }

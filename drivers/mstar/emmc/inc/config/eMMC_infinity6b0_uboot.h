@@ -159,6 +159,12 @@
 #define BIT_SD_MODE_MASK                (BIT3|BIT2)
 #define BIT_SD_MODE_1                   (BIT2)
 
+#define reg_sd_padpin_pull              GET_REG_ADDR(PAD_CHIPTOP_REG, 0X32)
+#define BIT_SD_PADPIN_MASK              (BIT12|BIT11|BIT10|BIT9|BIT8)
+
+#define reg_sdio_padpin_pull              GET_REG_ADDR(PAD_CHIPTOP_REG, 0X31)
+#define BIT_SDIO_PADPIN_MASK              (BIT4|BIT3|BIT2|BIT1|BIT0)
+
 #define reg_sdio_config                 GET_REG_ADDR(PAD_CHIPTOP_REG, 0x08)
 #define BIT_SDIO_MODE_MASK              (BIT8) //[B9:B8]reg_sd1_cdz_mode
 #define BIT_SD1_MODE_1                  (BIT8)

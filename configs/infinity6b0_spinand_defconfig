@@ -401,6 +401,7 @@ CONFIG_IMAGE_POSTFIX="_spinand"
 # CONFIG_SSTAR_JPD is not set
 # CONFIG_SSTAR_RGN is not set
 # CONFIG_SSTAR_MSPI is not set
+CONFIG_SSTAR_PWM=y
 
 #
 # File systems

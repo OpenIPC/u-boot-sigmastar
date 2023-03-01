@@ -1,16 +1,33 @@
-/* Copyright (c) 2018-2019 Sigmastar Technology Corp.
- All rights reserved.
+/*
+ Copyright (c) 2000-2011 by Nicolas Devillard.
+ MIT License
 
-  Unless otherwise stipulated in writing, any and all information contained
- herein regardless in any format shall remain the sole proprietary of
- Sigmastar Technology Corp. and be kept in strict confidence
- (��Sigmastar Confidential Information��) by the recipient.
- Any unauthorized act including without limitation unauthorized disclosure,
- copying, use, reproduction, sale, distribution, modification, disassembling,
- reverse engineering and compiling of the contents of Sigmastar Confidential
- Information is unlawful and strictly prohibited. Sigmastar hereby reserves the
- rights to any and all damages, losses, costs and expenses resulting therefrom.
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the "Software"),
+ to deal in the Software without restriction, including without limitation
+ the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ and/or sell copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ DEALINGS IN THE SOFTWARE.
+ */
+
+/*-------------------------------------------------------------------------*/
+/**
+   @file    iniparser.h
+   @author  N. Devillard
+   @brief   Parser for ini files.
 */
+/*--------------------------------------------------------------------------*/
 
 #ifndef _INIPARSER_H_
 #define _INIPARSER_H_

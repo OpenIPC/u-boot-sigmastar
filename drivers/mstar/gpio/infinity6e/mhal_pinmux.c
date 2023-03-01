@@ -37,12 +37,12 @@
 
 #define BASE_RIU_PA                         0x1F000000
 #define PMSLEEP_BANK                        0x000E00
+#define PM_SAR_BANK                         0x001400
 #define ALBANY1_BANK                        0x151500
 #define ALBANY2_BANK                        0x151600
 #define CHIPTOP_BANK                        0x101E00
 #define PADTOP_BANK                         0x103C00
 #define PM_PADTOP_BANK                      0x003F00
-#define PM_SAR_BANK                         0x001400
 #define UTMI0_BANK                          0x142100
 
 #define _GPIO_W_WORD(addr,val)              {(*(volatile u16*)(addr)) = (u16)(val);}
@@ -352,6 +352,7 @@
     #define REG_SAR_GPIO4_GPIO_MODE_MASK    BIT4
 #define REG_SAR_GPIO5_GPIO_MODE         0x11
     #define REG_SAR_GPIO5_GPIO_MODE_MASK    BIT5
+    #define REG_SAR_GPIO_MODE_MASK         (BIT0|BIT1|BIT2|BIT3|BIT4|BIT5)
 #define REG_SD0_GPIO0_GPIO_MODE         0x10
     #define REG_SD0_GPIO0_GPIO_MODE_MASK    BIT3
 #define REG_SD0_CDZ_GPIO_MODE           0x11
@@ -559,7 +560,7 @@
 
 
 //-------------------- configuration -----------------
-#define ENABLE_CHECK_ALL_PAD_CONFLICT       0
+#define ENABLE_CHECK_ALL_PAD_CONFLICT       1
 
 //==============================================================================
 //
@@ -595,8 +596,8 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
 
     {PAD_PM_UART_RX1, PM_PADTOP_BANK, REG_PM_PM51_UART_MODE,             REG_PM_PM51_UART_MODE_MASK,            BIT0,               PINMUX_FOR_PM_PM51_UART_MODE_1},
     {PAD_PM_UART_RX1, PM_PADTOP_BANK, REG_PM_PM_PAD_EXT_MODE_0,          REG_PM_PM_PAD_EXT_MODE_0_MASK,         BIT0,               PINMUX_FOR_PM_PM_PAD_EXT_MODE_0},
-    {PAD_PM_UART_RX1, PM_PADTOP_BANK, REG_PM_UART_RX1_GPIO_MODE,      REG_PM_UART_RX1_GPIO_MODE_MASK,     BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_UART_RX1, PADTOP_BANK, REG_PWM4_MODE,                  REG_PWM4_MODE_MASK,                 BIT1|BIT0,          PINMUX_FOR_PWM4_MODE_3},
+    {PAD_PM_UART_RX1, PM_PADTOP_BANK, REG_PM_UART_RX1_GPIO_MODE,      REG_PM_UART_RX1_GPIO_MODE_MASK,     BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_UART_RX1, PM_PADTOP_BANK, REG_PM_UART1_MODE,                 REG_PM_UART1_MODE_MASK,                BIT0,               PINMUX_FOR_PM_UART1_MODE_1},
 
     {PAD_PM_UART_TX1, PM_PADTOP_BANK, REG_PM_PM51_UART_MODE,             REG_PM_PM51_UART_MODE_MASK,            BIT0,               PINMUX_FOR_PM_PM51_UART_MODE_1},
@@ -629,7 +630,6 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_PM_I2CM_SDA, PM_PADTOP_BANK, REG_PM_I2CM_SDA_GPIO_MODE,      REG_PM_I2CM_SDA_GPIO_MODE_MASK,     BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_I2CM_SDA, PM_PADTOP_BANK, REG_PM_I2CM_MODE,                  REG_PM_I2CM_MODE_MASK,                 BIT0,               PINMUX_FOR_PM_I2CM_MODE_1},
 
-    {PAD_PM_GPIO0, PM_PADTOP_BANK, REG_PM_GPIO0_GPIO_MODE,         REG_PM_GPIO0_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_GPIO0, PM_PADTOP_BANK, REG_PM_PM_PAD_EXT_MODE_4,          REG_PM_PM_PAD_EXT_MODE_4_MASK,         BIT4,               PINMUX_FOR_PM_PM_PAD_EXT_MODE_4},
     {PAD_PM_GPIO0, PM_PADTOP_BANK, REG_PM_PM51_UART_MODE,             REG_PM_PM51_UART_MODE_MASK,            BIT1|BIT0,          PINMUX_FOR_PM_PM51_UART_MODE_3},
     {PAD_PM_GPIO0, PM_PADTOP_BANK, REG_PM_UART1_MODE,                 REG_PM_UART1_MODE_MASK,                BIT1,               PINMUX_FOR_PM_UART1_MODE_2},
@@ -640,6 +640,7 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_PM_GPIO0, PADTOP_BANK, REG_PWM0_MODE,                  REG_PWM0_MODE_MASK,                 BIT1|BIT0,          PINMUX_FOR_PWM0_MODE_3},
     {PAD_PM_GPIO0, PADTOP_BANK, REG_FUART_MODE,                 REG_FUART_MODE_MASK,                BIT5|BIT4,          PINMUX_FOR_FUART_MODE_3},
     {PAD_PM_GPIO0, PADTOP_BANK, REG_PWM8_MODE,                  REG_PWM8_MODE_MASK,                 BIT3,               PINMUX_FOR_PWM8_MODE_8},
+    {PAD_PM_GPIO0, PM_PADTOP_BANK, REG_PM_GPIO0_GPIO_MODE,         REG_PM_GPIO0_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_GPIO0, PM_PADTOP_BANK, REG_PM_VID_MODE,                   REG_PM_VID_MODE_MASK,                  BIT3,               PINMUX_FOR_PM_VID_MODE_2},
     {PAD_PM_GPIO0, PM_PADTOP_BANK, REG_PM_PIR_SERIN_MODE,             REG_PM_PIR_SERIN_MODE_MASK,            BIT2,               PINMUX_FOR_PM_PIR_SERIN_MODE_1},
     {PAD_PM_GPIO0, PADTOP_BANK, REG_I2S_RXTX_MODE,              REG_I2S_RXTX_MODE_MASK,             BIT13|BIT11,        PINMUX_FOR_I2S_RXTX_MODE_5},
@@ -674,7 +675,7 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_PM_GPIO3, PM_PADTOP_BANK, REG_PM_PM_PAD_EXT_MODE_7,          REG_PM_PM_PAD_EXT_MODE_7_MASK,         BIT7,               PINMUX_FOR_PM_PM_PAD_EXT_MODE_7},
 
     {PAD_PM_GPIO4, PM_PADTOP_BANK, REG_PM_PWM0_MODE,                  REG_PM_PWM0_MODE_MASK,                 BIT1,               PINMUX_FOR_PM_PWM0_MODE_2},
-    {PAD_PM_GPIO4, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT9|BIT8,          PINMUX_FOR_EJ_MODE_3},
+    {PAD_PM_GPIO4, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8|BIT7,          PINMUX_FOR_EJ_MODE_3},
     {PAD_PM_GPIO4, PM_PADTOP_BANK, REG_PM_PM_PAD_EXT_MODE_8,          REG_PM_PM_PAD_EXT_MODE_8_MASK,         BIT8,               PINMUX_FOR_PM_PM_PAD_EXT_MODE_8},
     {PAD_PM_GPIO4, PADTOP_BANK, REG_DMIC_MODE,                  REG_DMIC_MODE_MASK,                 BIT2|BIT1,          PINMUX_FOR_DMIC_MODE_6},
     {PAD_PM_GPIO4, PADTOP_BANK, REG_PWM4_MODE,                  REG_PWM4_MODE_MASK,                 BIT2,               PINMUX_FOR_PWM4_MODE_4},
@@ -682,7 +683,7 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_PM_GPIO4, PM_PADTOP_BANK, REG_PM_GPIO4_GPIO_MODE,         REG_PM_GPIO4_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
 
     {PAD_PM_GPIO5, PADTOP_BANK, REG_PWM5_MODE,                  REG_PWM5_MODE_MASK,                 BIT6,               PINMUX_FOR_PWM5_MODE_4},
-    {PAD_PM_GPIO5, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT9|BIT8,          PINMUX_FOR_EJ_MODE_3},
+    {PAD_PM_GPIO5, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8|BIT7,          PINMUX_FOR_EJ_MODE_3},
     {PAD_PM_GPIO5, PADTOP_BANK, REG_DMIC_MODE,                  REG_DMIC_MODE_MASK,                 BIT2|BIT1,          PINMUX_FOR_DMIC_MODE_6},
     {PAD_PM_GPIO5, PM_PADTOP_BANK, REG_PM_PIR_DIR_LINK_MODE,          REG_PM_PIR_DIR_LINK_MODE_MASK,         BIT0,               PINMUX_FOR_PM_PIR_DIR_LINK_MODE_1},
     {PAD_PM_GPIO5, PM_PADTOP_BANK, REG_PM_I2CM_MODE,                  REG_PM_I2CM_MODE_MASK,                 BIT1,               PINMUX_FOR_PM_I2CM_MODE_2},
@@ -691,15 +692,15 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_PM_GPIO5, PM_PADTOP_BANK, REG_PM_GPIO5_GPIO_MODE,         REG_PM_GPIO5_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
 
     {PAD_PM_GPIO6, PM_PADTOP_BANK, REG_PM_PIR_DIR_LINK_MODE,          REG_PM_PIR_DIR_LINK_MODE_MASK,         BIT1,               PINMUX_FOR_PM_PIR_DIR_LINK_MODE_2},
-    {PAD_PM_GPIO6, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT9|BIT8,          PINMUX_FOR_EJ_MODE_3},
-    {PAD_PM_GPIO6, PM_PADTOP_BANK, REG_PM_GPIO6_GPIO_MODE,         REG_PM_GPIO6_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
+    {PAD_PM_GPIO6, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8|BIT7,          PINMUX_FOR_EJ_MODE_3},
     {PAD_PM_GPIO6, PADTOP_BANK, REG_PWM6_MODE,                  REG_PWM6_MODE_MASK,                 BIT10,              PINMUX_FOR_PWM6_MODE_4},
+    {PAD_PM_GPIO6, PM_PADTOP_BANK, REG_PM_GPIO6_GPIO_MODE,         REG_PM_GPIO6_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_GPIO6, PM_PADTOP_BANK, REG_PM_PM_PAD_EXT_MODE_10,         REG_PM_PM_PAD_EXT_MODE_10_MASK,        BIT10,              PINMUX_FOR_PM_PM_PAD_EXT_MODE_10},
 
     {PAD_PM_GPIO7, PM_PADTOP_BANK, REG_PM_VID_MODE,                   REG_PM_VID_MODE_MASK,                  BIT2,               PINMUX_FOR_PM_VID_MODE_1},
     {PAD_PM_GPIO7, PADTOP_BANK, REG_PWM7_MODE,                  REG_PWM7_MODE_MASK,                 BIT14,              PINMUX_FOR_PWM7_MODE_4},
     {PAD_PM_GPIO7, PM_PADTOP_BANK, REG_PM_GPIO7_GPIO_MODE,         REG_PM_GPIO7_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
-    {PAD_PM_GPIO7, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT9|BIT8,          PINMUX_FOR_EJ_MODE_3},
+    {PAD_PM_GPIO7, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8|BIT7,          PINMUX_FOR_EJ_MODE_3},
     {PAD_PM_GPIO7, PM_PADTOP_BANK, REG_PM_PM_PAD_EXT_MODE_11,         REG_PM_PM_PAD_EXT_MODE_11_MASK,        BIT11,              PINMUX_FOR_PM_PM_PAD_EXT_MODE_11},
 
     {PAD_PM_GPIO8, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
@@ -709,30 +710,30 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
 
     {PAD_PM_GPIO9, PM_PADTOP_BANK, REG_PM_PM51_UART_MODE,             REG_PM_PM51_UART_MODE_MASK,            BIT1,               PINMUX_FOR_PM_PM51_UART_MODE_2},
     {PAD_PM_GPIO9, PM_PADTOP_BANK, REG_PM_PM_PAD_EXT_MODE_13,         REG_PM_PM_PAD_EXT_MODE_13_MASK,        BIT13,              PINMUX_FOR_PM_PM_PAD_EXT_MODE_13},
-    {PAD_PM_GPIO9, PM_PADTOP_BANK, REG_PM_GPIO9_GPIO_MODE,         REG_PM_GPIO9_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_GPIO9, PADTOP_BANK, REG_PWM9_MODE,                  REG_PWM9_MODE_MASK,                 BIT4,               PINMUX_FOR_PWM9_MODE_1},
+    {PAD_PM_GPIO9, PM_PADTOP_BANK, REG_PM_GPIO9_GPIO_MODE,         REG_PM_GPIO9_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_GPIO9, PMSLEEP_BANK, REG_PM_SPICSZ2_GPIO,               REG_PM_SPICSZ2_GPIO_MASK,              0,                  PINMUX_FOR_PM_SPICSZ2_MODE},
 
     {PAD_PM_GPIO10, PM_PADTOP_BANK, REG_PM_PM51_UART_MODE,             REG_PM_PM51_UART_MODE_MASK,            BIT1,               PINMUX_FOR_PM_PM51_UART_MODE_2},
+    {PAD_PM_GPIO10, PADTOP_BANK, REG_PWM8_MODE,                  REG_PWM8_MODE_MASK,                 BIT0,               PINMUX_FOR_PWM8_MODE_1},
     {PAD_PM_GPIO10, PM_PADTOP_BANK, REG_PM_GPIO10_GPIO_MODE,        REG_PM_GPIO10_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_GPIO10, PM_PADTOP_BANK, REG_PM_PM_PAD_EXT_MODE_14,         REG_PM_PM_PAD_EXT_MODE_14_MASK,        BIT14,              PINMUX_FOR_PM_PM_PAD_EXT_MODE_14},
-    {PAD_PM_GPIO10, PADTOP_BANK, REG_PWM8_MODE,                  REG_PWM8_MODE_MASK,                 BIT0,               PINMUX_FOR_PWM8_MODE_1},
     {PAD_PM_GPIO10, PMSLEEP_BANK, REG_PM_SPICSZ2_GPIO,               REG_PM_SPICSZ2_GPIO_MASK,              0,                  PINMUX_FOR_PM_SPICSZ2_MODE},
 
     {PAD_PM_SPI_CZ, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
     {PAD_PM_SPI_CZ, PMSLEEP_BANK, REG_PM_SPICSZ1_GPIO,               REG_PM_SPICSZ1_GPIO_MASK,              0,                  PINMUX_FOR_PM_SPICSZ1_MODE},
+    {PAD_PM_SPI_CZ, PADTOP_BANK, REG_PWM4_MODE,                  REG_PWM4_MODE_MASK,                 BIT2|BIT1,          PINMUX_FOR_PWM4_MODE_6},
     {PAD_PM_SPI_CZ, PM_PADTOP_BANK, REG_PM_SPI_CZ_GPIO_MODE,        REG_PM_SPI_CZ_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_SPI_CZ, PADTOP_BANK, REG_I2S_RX_MODE,                REG_I2S_RX_MODE_MASK,               BIT5|BIT4,          PINMUX_FOR_I2S_RX_MODE_3},
     {PAD_PM_SPI_CZ, PADTOP_BANK, REG_SPI1_MODE,                  REG_SPI1_MODE_MASK,                 BIT6|BIT4,          PINMUX_FOR_SPI1_MODE_5},
     {PAD_PM_SPI_CZ, PADTOP_BANK, REG_FUART_MODE,                 REG_FUART_MODE_MASK,                BIT6|BIT5|BIT4,     PINMUX_FOR_FUART_MODE_7},
     {PAD_PM_SPI_CZ, PM_PADTOP_BANK, REG_PM_PM_PAD_EXT_MODE_15,         REG_PM_PM_PAD_EXT_MODE_15_MASK,        BIT15,              PINMUX_FOR_PM_PM_PAD_EXT_MODE_15},
     {PAD_PM_SPI_CZ, PADTOP_BANK, REG_I2S_RXTX_MODE,              REG_I2S_RXTX_MODE_MASK,             BIT12|BIT11,        PINMUX_FOR_I2S_RXTX_MODE_3},
-    {PAD_PM_SPI_CZ, PADTOP_BANK, REG_PWM4_MODE,                  REG_PWM4_MODE_MASK,                 BIT2|BIT1,          PINMUX_FOR_PWM4_MODE_6},
 
     {PAD_PM_SPI_CK, PM_PADTOP_BANK, REG_PM_PM_PAD_EXT_MODE_19,         REG_PM_PM_PAD_EXT_MODE_19_MASK,        BIT3,               PINMUX_FOR_PM_PM_PAD_EXT_MODE_19},
     {PAD_PM_SPI_CK, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
-    {PAD_PM_SPI_CK, PM_PADTOP_BANK, REG_PM_SPI_CK_GPIO_MODE,        REG_PM_SPI_CK_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_SPI_CK, PADTOP_BANK, REG_PWM5_MODE,                  REG_PWM5_MODE_MASK,                 BIT6|BIT5,          PINMUX_FOR_PWM5_MODE_6},
+    {PAD_PM_SPI_CK, PM_PADTOP_BANK, REG_PM_SPI_CK_GPIO_MODE,        REG_PM_SPI_CK_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_SPI_CK, PMSLEEP_BANK, REG_PM_SPI_GPIO,                   REG_PM_SPI_GPIO_MASK,                  0,                  PINMUX_FOR_PM_SPI_MODE},
     {PAD_PM_SPI_CK, PADTOP_BANK, REG_I2S_RX_MODE,                REG_I2S_RX_MODE_MASK,               BIT5|BIT4,          PINMUX_FOR_I2S_RX_MODE_3},
     {PAD_PM_SPI_CK, PADTOP_BANK, REG_SPI1_MODE,                  REG_SPI1_MODE_MASK,                 BIT6|BIT4,          PINMUX_FOR_SPI1_MODE_5},
@@ -744,9 +745,9 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_PM_SPI_DI, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
     {PAD_PM_SPI_DI, PMSLEEP_BANK, REG_PM_SPI_GPIO,                   REG_PM_SPI_GPIO_MASK,                  0,                  PINMUX_FOR_PM_SPI_MODE},
     {PAD_PM_SPI_DI, PADTOP_BANK, REG_I2S_RX_MODE,                REG_I2S_RX_MODE_MASK,               BIT5|BIT4,          PINMUX_FOR_I2S_RX_MODE_3},
+    {PAD_PM_SPI_DI, PADTOP_BANK, REG_PWM6_MODE,                  REG_PWM6_MODE_MASK,                 BIT10|BIT9,         PINMUX_FOR_PWM6_MODE_6},
     {PAD_PM_SPI_DI, PM_PADTOP_BANK, REG_PM_SPI_DI_GPIO_MODE,        REG_PM_SPI_DI_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_PM_SPI_DI, PADTOP_BANK, REG_I2S_RXTX_MODE,              REG_I2S_RXTX_MODE_MASK,             BIT12|BIT11,        PINMUX_FOR_I2S_RXTX_MODE_3},
-    {PAD_PM_SPI_DI, PADTOP_BANK, REG_PWM6_MODE,                  REG_PWM6_MODE_MASK,                 BIT10|BIT9,         PINMUX_FOR_PWM6_MODE_6},
     {PAD_PM_SPI_DI, PADTOP_BANK, REG_FUART_MODE,                 REG_FUART_MODE_MASK,                BIT6|BIT5|BIT4,     PINMUX_FOR_FUART_MODE_7},
 
     {PAD_PM_SPI_DO, PADTOP_BANK, REG_PWM7_MODE,                  REG_PWM7_MODE_MASK,                 BIT14|BIT13,        PINMUX_FOR_PWM7_MODE_6},
@@ -773,33 +774,21 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_PM_SPI_HLD, PM_PADTOP_BANK, REG_PM_PM_PAD_EXT_MODE_20,         REG_PM_PM_PAD_EXT_MODE_20_MASK,        BIT4,               PINMUX_FOR_PM_PM_PAD_EXT_MODE_20},
 
     {PAD_SAR_GPIO0, PM_SAR_BANK, REG_SAR_GPIO0_GPIO_MODE,        REG_SAR_GPIO0_GPIO_MODE_MASK,       BIT0,               PINMUX_FOR_GPIO_MODE},
-    {PAD_SAR_GPIO0, PADTOP_BANK, REG_SPIHOLDN_GPIO,              REG_SPIHOLDN_GPIO_MASK,             0,                  PINMUX_FOR_SPIHOLDN_MODE},
-    {PAD_SAR_GPIO0, PADTOP_BANK, REG_EMMC0_8B_MODE,              REG_EMMC0_8B_MODE_MASK,             BIT1,               PINMUX_FOR_EMMC0_8B_MODE_1},
 
-    {PAD_SAR_GPIO1, PADTOP_BANK, REG_SPIHOLDN_GPIO,              REG_SPIHOLDN_GPIO_MASK,             0,                  PINMUX_FOR_SPIHOLDN_MODE},
     {PAD_SAR_GPIO1, PM_SAR_BANK, REG_SAR_GPIO1_GPIO_MODE,        REG_SAR_GPIO1_GPIO_MODE_MASK,       BIT1,               PINMUX_FOR_GPIO_MODE},
-    {PAD_SAR_GPIO1, PADTOP_BANK, REG_EMMC0_8B_MODE,              REG_EMMC0_8B_MODE_MASK,             BIT1,               PINMUX_FOR_EMMC0_8B_MODE_1},
 
-    {PAD_SAR_GPIO2, PADTOP_BANK, REG_SPIHOLDN_GPIO,              REG_SPIHOLDN_GPIO_MASK,             0,                  PINMUX_FOR_SPIHOLDN_MODE},
-    {PAD_SAR_GPIO2, PADTOP_BANK, REG_EMMC0_8B_MODE,              REG_EMMC0_8B_MODE_MASK,             BIT1,               PINMUX_FOR_EMMC0_8B_MODE_1},
     {PAD_SAR_GPIO2, PM_SAR_BANK, REG_SAR_GPIO2_GPIO_MODE,        REG_SAR_GPIO2_GPIO_MODE_MASK,       BIT2,               PINMUX_FOR_GPIO_MODE},
 
     {PAD_SAR_GPIO3, PM_SAR_BANK, REG_SAR_GPIO3_GPIO_MODE,        REG_SAR_GPIO3_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
-    {PAD_SAR_GPIO3, PADTOP_BANK, REG_SPIHOLDN_GPIO,              REG_SPIHOLDN_GPIO_MASK,             0,                  PINMUX_FOR_SPIHOLDN_MODE},
-    {PAD_SAR_GPIO3, PADTOP_BANK, REG_EMMC0_8B_MODE,              REG_EMMC0_8B_MODE_MASK,             BIT1,               PINMUX_FOR_EMMC0_8B_MODE_1},
 
-    {PAD_SAR_GPIO4, PADTOP_BANK, REG_EMMC0_8B_MODE,              REG_EMMC0_8B_MODE_MASK,             BIT1,               PINMUX_FOR_EMMC0_8B_MODE_1},
-    {PAD_SAR_GPIO4, PADTOP_BANK, REG_SPIHOLDN_GPIO,              REG_SPIHOLDN_GPIO_MASK,             0,                  PINMUX_FOR_SPIHOLDN_MODE},
     {PAD_SAR_GPIO4, PM_SAR_BANK, REG_SAR_GPIO4_GPIO_MODE,        REG_SAR_GPIO4_GPIO_MODE_MASK,       BIT4,               PINMUX_FOR_GPIO_MODE},
 
-    {PAD_SAR_GPIO5, PADTOP_BANK, REG_SPIHOLDN_GPIO,              REG_SPIHOLDN_GPIO_MASK,             0,                  PINMUX_FOR_SPIHOLDN_MODE},
     {PAD_SAR_GPIO5, PM_SAR_BANK, REG_SAR_GPIO5_GPIO_MODE,        REG_SAR_GPIO5_GPIO_MODE_MASK,       BIT5,               PINMUX_FOR_GPIO_MODE},
-    {PAD_SAR_GPIO5, PADTOP_BANK, REG_EMMC0_8B_MODE,              REG_EMMC0_8B_MODE_MASK,             BIT1,               PINMUX_FOR_EMMC0_8B_MODE_1},
 
     {PAD_SD0_GPIO0, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
     {PAD_SD0_GPIO0, PADTOP_BANK, REG_SPICSZ2_GPIO,               REG_SPICSZ2_GPIO_MASK,              0,                  PINMUX_FOR_SPICSZ2_MODE},
-    {PAD_SD0_GPIO0, PADTOP_BANK, REG_SD0_GPIO0_GPIO_MODE,        REG_SD0_GPIO0_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_SD0_GPIO0, PADTOP_BANK, REG_PWM8_MODE,                  REG_PWM8_MODE_MASK,                 BIT1,               PINMUX_FOR_PWM8_MODE_2},
+    {PAD_SD0_GPIO0, PADTOP_BANK, REG_SD0_GPIO0_GPIO_MODE,        REG_SD0_GPIO0_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_SD0_GPIO0, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT0,               PINMUX_FOR_TEST_IN_MODE_1},
     {PAD_SD0_GPIO0, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT4,               PINMUX_FOR_TEST_OUT_MODE_1},
 
@@ -872,9 +861,9 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
 
     {PAD_I2S0_MCLK, PADTOP_BANK, REG_I2S_MCK_MODE,               REG_I2S_MCK_MODE_MASK,              BIT0,               PINMUX_FOR_I2S_MCK_MODE_1},
     {PAD_I2S0_MCLK, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT2,               PINMUX_FOR_TTL16_MODE_4},
+    {PAD_I2S0_MCLK, PADTOP_BANK, REG_PWM9_MODE,                  REG_PWM9_MODE_MASK,                 BIT6|BIT5|BIT4,     PINMUX_FOR_PWM9_MODE_7},
     {PAD_I2S0_MCLK, PADTOP_BANK, REG_I2S0_MCLK_GPIO_MODE,        REG_I2S0_MCLK_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_I2S0_MCLK, PADTOP_BANK, REG_SD1_MODE,                   REG_SD1_MODE_MASK,                  BIT13,              PINMUX_FOR_SD1_MODE_2},
-    {PAD_I2S0_MCLK, PADTOP_BANK, REG_PWM9_MODE,                  REG_PWM9_MODE_MASK,                 BIT6|BIT5|BIT4,     PINMUX_FOR_PWM9_MODE_7},
     {PAD_I2S0_MCLK, PADTOP_BANK, REG_EMMC1_4B_MODE,              REG_EMMC1_4B_MODE_MASK,             BIT4,               PINMUX_FOR_EMMC1_4B_MODE_1},
     {PAD_I2S0_MCLK, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT1,               PINMUX_FOR_TEST_IN_MODE_2},
     {PAD_I2S0_MCLK, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT5,               PINMUX_FOR_TEST_OUT_MODE_2},
@@ -883,11 +872,11 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_I2S0_BCK, PADTOP_BANK, REG_UART0_MODE,                 REG_UART0_MODE_MASK,                BIT1|BIT0,          PINMUX_FOR_UART0_MODE_3},
     {PAD_I2S0_BCK, PADTOP_BANK, REG_SD1_MODE,                   REG_SD1_MODE_MASK,                  BIT13,              PINMUX_FOR_SD1_MODE_2},
     {PAD_I2S0_BCK, PADTOP_BANK, REG_DMIC_MODE,                  REG_DMIC_MODE_MASK,                 BIT0,               PINMUX_FOR_DMIC_MODE_1},
-    {PAD_I2S0_BCK, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT9,               PINMUX_FOR_EJ_MODE_2},
+    {PAD_I2S0_BCK, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8,               PINMUX_FOR_EJ_MODE_2},
     {PAD_I2S0_BCK, PADTOP_BANK, REG_I2S_RX_MODE,                REG_I2S_RX_MODE_MASK,               BIT4,               PINMUX_FOR_I2S_RX_MODE_1},
     {PAD_I2S0_BCK, PADTOP_BANK, REG_SPI0_MODE,                  REG_SPI0_MODE_MASK,                 BIT0,               PINMUX_FOR_SPI0_MODE_1},
-    {PAD_I2S0_BCK, PADTOP_BANK, REG_I2S0_BCK_GPIO_MODE,         REG_I2S0_BCK_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_I2S0_BCK, PADTOP_BANK, REG_PWM4_MODE,                  REG_PWM4_MODE_MASK,                 BIT2|BIT0,          PINMUX_FOR_PWM4_MODE_5},
+    {PAD_I2S0_BCK, PADTOP_BANK, REG_I2S0_BCK_GPIO_MODE,         REG_I2S0_BCK_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_I2S0_BCK, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT2,               PINMUX_FOR_TTL16_MODE_4},
     {PAD_I2S0_BCK, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT1,               PINMUX_FOR_TEST_IN_MODE_2},
     {PAD_I2S0_BCK, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT5,               PINMUX_FOR_TEST_OUT_MODE_2},
@@ -897,7 +886,7 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_I2S0_WCK, PADTOP_BANK, REG_UART0_MODE,                 REG_UART0_MODE_MASK,                BIT1|BIT0,          PINMUX_FOR_UART0_MODE_3},
     {PAD_I2S0_WCK, PADTOP_BANK, REG_SD1_MODE,                   REG_SD1_MODE_MASK,                  BIT13,              PINMUX_FOR_SD1_MODE_2},
     {PAD_I2S0_WCK, PADTOP_BANK, REG_PWM5_MODE,                  REG_PWM5_MODE_MASK,                 BIT6|BIT4,          PINMUX_FOR_PWM5_MODE_5},
-    {PAD_I2S0_WCK, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT9,               PINMUX_FOR_EJ_MODE_2},
+    {PAD_I2S0_WCK, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8,               PINMUX_FOR_EJ_MODE_2},
     {PAD_I2S0_WCK, PADTOP_BANK, REG_I2S_RX_MODE,                REG_I2S_RX_MODE_MASK,               BIT4,               PINMUX_FOR_I2S_RX_MODE_1},
     {PAD_I2S0_WCK, PADTOP_BANK, REG_SPI0_MODE,                  REG_SPI0_MODE_MASK,                 BIT0,               PINMUX_FOR_SPI0_MODE_1},
     {PAD_I2S0_WCK, PADTOP_BANK, REG_DMIC_MODE,                  REG_DMIC_MODE_MASK,                 BIT0,               PINMUX_FOR_DMIC_MODE_1},
@@ -910,7 +899,7 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_I2S0_DI, PADTOP_BANK, REG_I2S_RXTX_MODE,              REG_I2S_RXTX_MODE_MASK,             BIT11,              PINMUX_FOR_I2S_RXTX_MODE_1},
     {PAD_I2S0_DI, PADTOP_BANK, REG_EMMC1_4B_MODE,              REG_EMMC1_4B_MODE_MASK,             BIT4,               PINMUX_FOR_EMMC1_4B_MODE_1},
     {PAD_I2S0_DI, PADTOP_BANK, REG_SD1_MODE,                   REG_SD1_MODE_MASK,                  BIT13,              PINMUX_FOR_SD1_MODE_2},
-    {PAD_I2S0_DI, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT9,               PINMUX_FOR_EJ_MODE_2},
+    {PAD_I2S0_DI, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8,               PINMUX_FOR_EJ_MODE_2},
     {PAD_I2S0_DI, PADTOP_BANK, REG_I2S_RX_MODE,                REG_I2S_RX_MODE_MASK,               BIT4,               PINMUX_FOR_I2S_RX_MODE_1},
     {PAD_I2S0_DI, PADTOP_BANK, REG_UART1_MODE,                 REG_UART1_MODE_MASK,                BIT5,               PINMUX_FOR_UART1_MODE_2},
     {PAD_I2S0_DI, PADTOP_BANK, REG_SPI0_MODE,                  REG_SPI0_MODE_MASK,                 BIT0,               PINMUX_FOR_SPI0_MODE_1},
@@ -920,11 +909,11 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_I2S0_DI, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT5,               PINMUX_FOR_TEST_OUT_MODE_2},
     {PAD_I2S0_DI, PADTOP_BANK, REG_I2S0_DI_GPIO_MODE,          REG_I2S0_DI_GPIO_MODE_MASK,         BIT3,               PINMUX_FOR_GPIO_MODE},
 
-    {PAD_I2S0_DO, PADTOP_BANK, REG_I2S0_DO_GPIO_MODE,          REG_I2S0_DO_GPIO_MODE_MASK,         BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_I2S0_DO, PADTOP_BANK, REG_PWM7_MODE,                  REG_PWM7_MODE_MASK,                 BIT14|BIT12,        PINMUX_FOR_PWM7_MODE_5},
+    {PAD_I2S0_DO, PADTOP_BANK, REG_I2S0_DO_GPIO_MODE,          REG_I2S0_DO_GPIO_MODE_MASK,         BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_I2S0_DO, PADTOP_BANK, REG_EMMC1_4B_MODE,              REG_EMMC1_4B_MODE_MASK,             BIT4,               PINMUX_FOR_EMMC1_4B_MODE_1},
     {PAD_I2S0_DO, PADTOP_BANK, REG_SD1_MODE,                   REG_SD1_MODE_MASK,                  BIT13,              PINMUX_FOR_SD1_MODE_2},
-    {PAD_I2S0_DO, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT9,               PINMUX_FOR_EJ_MODE_2},
+    {PAD_I2S0_DO, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8,               PINMUX_FOR_EJ_MODE_2},
     {PAD_I2S0_DO, PADTOP_BANK, REG_UART1_MODE,                 REG_UART1_MODE_MASK,                BIT5,               PINMUX_FOR_UART1_MODE_2},
     {PAD_I2S0_DO, PADTOP_BANK, REG_SPI0_MODE,                  REG_SPI0_MODE_MASK,                 BIT0,               PINMUX_FOR_SPI0_MODE_1},
     {PAD_I2S0_DO, PADTOP_BANK, REG_I2S_TX_MODE,                REG_I2S_TX_MODE_MASK,               BIT8,               PINMUX_FOR_I2S_TX_MODE_1},
@@ -945,11 +934,11 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_I2C0_SCL, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT1,               PINMUX_FOR_TEST_IN_MODE_2},
     {PAD_I2C0_SCL, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT5,               PINMUX_FOR_TEST_OUT_MODE_2},
 
-    {PAD_I2C0_SDA, PADTOP_BANK, REG_I2C0_SDA_GPIO_MODE,         REG_I2C0_SDA_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_I2C0_SDA, PADTOP_BANK, REG_I2C0_MODE,                  REG_I2C0_MODE_MASK,                 BIT0,               PINMUX_FOR_I2C0_MODE_1},
     {PAD_I2C0_SDA, PADTOP_BANK, REG_PWM9_MODE,                  REG_PWM9_MODE_MASK,                 BIT6|BIT5,          PINMUX_FOR_PWM9_MODE_6},
     {PAD_I2C0_SDA, PADTOP_BANK, REG_EMMC1_RST_MODE,             REG_EMMC1_RST_MODE_MASK,            BIT6,               PINMUX_FOR_EMMC1_RST_MODE_1},
     {PAD_I2C0_SDA, PADTOP_BANK, REG_PWM1_MODE,                  REG_PWM1_MODE_MASK,                 BIT6|BIT4,          PINMUX_FOR_PWM1_MODE_5},
+    {PAD_I2C0_SDA, PADTOP_BANK, REG_I2C0_SDA_GPIO_MODE,         REG_I2C0_SDA_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_I2C0_SDA, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT2,               PINMUX_FOR_TTL16_MODE_4},
     {PAD_I2C0_SDA, PADTOP_BANK, REG_DMIC_MODE,                  REG_DMIC_MODE_MASK,                 BIT2,               PINMUX_FOR_DMIC_MODE_4},
     {PAD_I2C0_SDA, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT1,               PINMUX_FOR_TEST_IN_MODE_2},
@@ -970,7 +959,7 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_ETH_LED0, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT2,               PINMUX_FOR_TTL16_MODE_4},
     {PAD_ETH_LED0, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT4,               PINMUX_FOR_TEST_OUT_MODE_1},
 
-
+    {PAD_ETH_LED1, PADTOP_BANK, REG_PWM8_MODE,                  REG_PWM8_MODE_MASK,                 BIT1|BIT0,          PINMUX_FOR_PWM8_MODE_3},
     {PAD_ETH_LED1, PADTOP_BANK, REG_PWM3_MODE,                  REG_PWM3_MODE_MASK,                 BIT14|BIT12,        PINMUX_FOR_PWM3_MODE_5},
     {PAD_ETH_LED1, PADTOP_BANK, REG_LED1_MODE,                  REG_LED1_MODE_MASK,                 BIT5,               PINMUX_FOR_LED1_MODE_2},
     {PAD_ETH_LED1, PADTOP_BANK, REG_LED0_MODE,                  REG_LED0_MODE_MASK,                 BIT1,               PINMUX_FOR_LED0_MODE_2},
@@ -980,7 +969,6 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_ETH_LED1, PADTOP_BANK, REG_UART1_MODE,                 REG_UART1_MODE_MASK,                BIT5|BIT4,          PINMUX_FOR_UART1_MODE_3},
     {PAD_ETH_LED1, PADTOP_BANK, REG_ETH_LED1_GPIO_MODE,         REG_ETH_LED1_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_ETH_LED1, PADTOP_BANK, REG_UART0_MODE,                 REG_UART0_MODE_MASK,                BIT1,               PINMUX_FOR_UART0_MODE_2},
-    {PAD_ETH_LED1, PADTOP_BANK, REG_PWM8_MODE,                  REG_PWM8_MODE_MASK,                 BIT1|BIT0,          PINMUX_FOR_PWM8_MODE_3},
     {PAD_ETH_LED1, PADTOP_BANK, REG_I2S_TX_MODE,                REG_I2S_TX_MODE_MASK,               BIT8,               PINMUX_FOR_I2S_TX_MODE_1},
     {PAD_ETH_LED1, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT2,               PINMUX_FOR_TTL16_MODE_4},
     {PAD_ETH_LED1, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT4,               PINMUX_FOR_TEST_OUT_MODE_1},
@@ -988,12 +976,12 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
 
     {PAD_FUART_RX, PADTOP_BANK, REG_BT656_OUT_MODE,             REG_BT656_OUT_MODE_MASK,            BIT5|BIT4,          PINMUX_FOR_BT656_OUT_MODE_3},
     {PAD_FUART_RX, PADTOP_BANK, REG_DLA_EJ_MODE,                REG_DLA_EJ_MODE_MASK,               BIT0,               PINMUX_FOR_DLA_EJ_MODE_1},
+    {PAD_FUART_RX, PADTOP_BANK, REG_PWM0_MODE,                  REG_PWM0_MODE_MASK,                 BIT2|BIT1,          PINMUX_FOR_PWM0_MODE_6},
     {PAD_FUART_RX, PADTOP_BANK, REG_FUART_RX_GPIO_MODE,         REG_FUART_RX_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_FUART_RX, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
-    {PAD_FUART_RX, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8,               PINMUX_FOR_EJ_MODE_1},
+    {PAD_FUART_RX, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT7,               PINMUX_FOR_EJ_MODE_1},
     {PAD_FUART_RX, PADTOP_BANK, REG_SPI1_MODE,                  REG_SPI1_MODE_MASK,                 BIT4,               PINMUX_FOR_SPI1_MODE_1},
     {PAD_FUART_RX, PADTOP_BANK, REG_SPI0_MODE,                  REG_SPI0_MODE_MASK,                 BIT1,               PINMUX_FOR_SPI0_MODE_2},
-    {PAD_FUART_RX, PADTOP_BANK, REG_PWM0_MODE,                  REG_PWM0_MODE_MASK,                 BIT2|BIT1,          PINMUX_FOR_PWM0_MODE_6},
     {PAD_FUART_RX, PADTOP_BANK, REG_FUART_MODE,                 REG_FUART_MODE_MASK,                BIT4,               PINMUX_FOR_FUART_MODE_1},
     {PAD_FUART_RX, PADTOP_BANK, REG_FUART_MODE,                 REG_FUART_MODE_MASK,                BIT6|BIT4,          PINMUX_FOR_FUART_MODE_5},
     {PAD_FUART_RX, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT2,               PINMUX_FOR_TTL16_MODE_4},
@@ -1005,7 +993,7 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_FUART_TX, PADTOP_BANK, REG_DLA_EJ_MODE,                REG_DLA_EJ_MODE_MASK,               BIT0,               PINMUX_FOR_DLA_EJ_MODE_1},
     {PAD_FUART_TX, PADTOP_BANK, REG_SPI0_MODE,                  REG_SPI0_MODE_MASK,                 BIT1,               PINMUX_FOR_SPI0_MODE_2},
     {PAD_FUART_TX, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
-    {PAD_FUART_TX, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8,               PINMUX_FOR_EJ_MODE_1},
+    {PAD_FUART_TX, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT7,               PINMUX_FOR_EJ_MODE_1},
     {PAD_FUART_TX, PADTOP_BANK, REG_SPI1_MODE,                  REG_SPI1_MODE_MASK,                 BIT4,               PINMUX_FOR_SPI1_MODE_1},
     {PAD_FUART_TX, PADTOP_BANK, REG_PWM1_MODE,                  REG_PWM1_MODE_MASK,                 BIT6|BIT5,          PINMUX_FOR_PWM1_MODE_6},
     {PAD_FUART_TX, PADTOP_BANK, REG_FUART_TX_GPIO_MODE,         REG_FUART_TX_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
@@ -1021,32 +1009,30 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_FUART_CTS, PADTOP_BANK, REG_DLA_EJ_MODE,                REG_DLA_EJ_MODE_MASK,               BIT0,               PINMUX_FOR_DLA_EJ_MODE_1},
     {PAD_FUART_CTS, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT2,               PINMUX_FOR_TTL16_MODE_4},
     {PAD_FUART_CTS, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
-    {PAD_FUART_CTS, PADTOP_BANK, REG_FUART_CTS_GPIO_MODE,        REG_FUART_CTS_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
-    {PAD_FUART_CTS, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8,               PINMUX_FOR_EJ_MODE_1},
+    {PAD_FUART_CTS, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT7,               PINMUX_FOR_EJ_MODE_1},
     {PAD_FUART_CTS, PADTOP_BANK, REG_PWM9_MODE,                  REG_PWM9_MODE_MASK,                 BIT5,               PINMUX_FOR_PWM9_MODE_2},
     {PAD_FUART_CTS, PADTOP_BANK, REG_SPI1_MODE,                  REG_SPI1_MODE_MASK,                 BIT4,               PINMUX_FOR_SPI1_MODE_1},
     {PAD_FUART_CTS, PADTOP_BANK, REG_PWM2_MODE,                  REG_PWM2_MODE_MASK,                 BIT10|BIT9,         PINMUX_FOR_PWM2_MODE_6},
+    {PAD_FUART_CTS, PADTOP_BANK, REG_FUART_CTS_GPIO_MODE,        REG_FUART_CTS_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_FUART_CTS, PADTOP_BANK, REG_SPI0_MODE,                  REG_SPI0_MODE_MASK,                 BIT1,               PINMUX_FOR_SPI0_MODE_2},
     {PAD_FUART_CTS, PADTOP_BANK, REG_FUART_MODE,                 REG_FUART_MODE_MASK,                BIT4,               PINMUX_FOR_FUART_MODE_1},
     {PAD_FUART_CTS, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT0,               PINMUX_FOR_TEST_IN_MODE_1},
     {PAD_FUART_CTS, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT4,               PINMUX_FOR_TEST_OUT_MODE_1},
-
     {PAD_FUART_CTS, PADTOP_BANK, REG_ETH_MODE,                   REG_ETH_MODE_MASK,                  BIT0,               PINMUX_FOR_ETH_MODE},
 
+    {PAD_FUART_RTS, PADTOP_BANK, REG_PWM3_MODE,                  REG_PWM3_MODE_MASK,                 BIT14|BIT13,        PINMUX_FOR_PWM3_MODE_6},
     {PAD_FUART_RTS, PADTOP_BANK, REG_UART1_MODE,                 REG_UART1_MODE_MASK,                BIT6|BIT4,          PINMUX_FOR_UART1_MODE_5},
     {PAD_FUART_RTS, PADTOP_BANK, REG_FUART_RTS_GPIO_MODE,        REG_FUART_RTS_GPIO_MODE_MASK,       BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_FUART_RTS, PADTOP_BANK, REG_BT656_OUT_MODE,             REG_BT656_OUT_MODE_MASK,            BIT5|BIT4,          PINMUX_FOR_BT656_OUT_MODE_3},
     {PAD_FUART_RTS, PADTOP_BANK, REG_DLA_EJ_MODE,                REG_DLA_EJ_MODE_MASK,               BIT0,               PINMUX_FOR_DLA_EJ_MODE_1},
     {PAD_FUART_RTS, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT2,               PINMUX_FOR_TTL16_MODE_4},
     {PAD_FUART_RTS, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
-    {PAD_FUART_RTS, PADTOP_BANK, REG_PWM3_MODE,                  REG_PWM3_MODE_MASK,                 BIT14|BIT13,        PINMUX_FOR_PWM3_MODE_6},
-    {PAD_FUART_RTS, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT8,               PINMUX_FOR_EJ_MODE_1},
+    {PAD_FUART_RTS, PADTOP_BANK, REG_EJ_MODE,                    REG_EJ_MODE_MASK,                   BIT7,               PINMUX_FOR_EJ_MODE_1},
     {PAD_FUART_RTS, PADTOP_BANK, REG_SPI1_MODE,                  REG_SPI1_MODE_MASK,                 BIT4,               PINMUX_FOR_SPI1_MODE_1},
     {PAD_FUART_RTS, PADTOP_BANK, REG_SPI0_MODE,                  REG_SPI0_MODE_MASK,                 BIT1,               PINMUX_FOR_SPI0_MODE_2},
     {PAD_FUART_RTS, PADTOP_BANK, REG_FUART_MODE,                 REG_FUART_MODE_MASK,                BIT4,               PINMUX_FOR_FUART_MODE_1},
     {PAD_FUART_RTS, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT0,               PINMUX_FOR_TEST_IN_MODE_1},
     {PAD_FUART_RTS, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT4,               PINMUX_FOR_TEST_OUT_MODE_1},
-
     {PAD_FUART_RTS, PADTOP_BANK, REG_ETH_MODE,                   REG_ETH_MODE_MASK,                  BIT0,               PINMUX_FOR_ETH_MODE},
 
     {PAD_SD1_CDZ, PADTOP_BANK, REG_EMMC1_RST_MODE,             REG_EMMC1_RST_MODE_MASK,            BIT7,               PINMUX_FOR_EMMC1_RST_MODE_2},
@@ -1104,19 +1090,19 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_GPIO1, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT2,               PINMUX_FOR_TTL16_MODE_4},
     {PAD_GPIO1, PADTOP_BANK, REG_I2C2_MODE,                  REG_I2C2_MODE_MASK,                 BIT9,               PINMUX_FOR_I2C2_MODE_2},
     {PAD_GPIO1, PADTOP_BANK, REG_I2S_RX_MODE,                REG_I2S_RX_MODE_MASK,               BIT5,               PINMUX_FOR_I2S_RX_MODE_2},
-    {PAD_GPIO1, PADTOP_BANK, REG_GPIO1_GPIO_MODE,            REG_GPIO1_GPIO_MODE_MASK,           BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO1, PADTOP_BANK, REG_PWM1_MODE,                  REG_PWM1_MODE_MASK,                 BIT5,               PINMUX_FOR_PWM1_MODE_2},
+    {PAD_GPIO1, PADTOP_BANK, REG_GPIO1_GPIO_MODE,            REG_GPIO1_GPIO_MODE_MASK,           BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO1, PADTOP_BANK, REG_SPI0_MODE,                  REG_SPI0_MODE_MASK,                 BIT2,               PINMUX_FOR_SPI0_MODE_4},
     {PAD_GPIO1, PADTOP_BANK, REG_DMIC_MODE,                  REG_DMIC_MODE_MASK,                 BIT3,               PINMUX_FOR_DMIC_MODE_8},
     {PAD_GPIO1, PADTOP_BANK, REG_FUART_MODE,                 REG_FUART_MODE_MASK,                BIT5,               PINMUX_FOR_FUART_MODE_2},
     {PAD_GPIO1, PADTOP_BANK, REG_ETH_MODE,                   REG_ETH_MODE_MASK,                  BIT0,               PINMUX_FOR_ETH_MODE},
 
     {PAD_GPIO2, PADTOP_BANK, REG_I2S_RXTX_MODE,              REG_I2S_RXTX_MODE_MASK,             BIT12,              PINMUX_FOR_I2S_RXTX_MODE_2},
+    {PAD_GPIO2, PADTOP_BANK, REG_PWM2_MODE,                  REG_PWM2_MODE_MASK,                 BIT9,               PINMUX_FOR_PWM2_MODE_2},
     {PAD_GPIO2, PADTOP_BANK, REG_GPIO2_GPIO_MODE,            REG_GPIO2_GPIO_MODE_MASK,           BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO2, PADTOP_BANK, REG_DLA_EJ_MODE,                REG_DLA_EJ_MODE_MASK,               BIT1,               PINMUX_FOR_DLA_EJ_MODE_2},
     {PAD_GPIO2, PADTOP_BANK, REG_I2S_RX_MODE,                REG_I2S_RX_MODE_MASK,               BIT5,               PINMUX_FOR_I2S_RX_MODE_2},
     {PAD_GPIO2, PADTOP_BANK, REG_SR0_BT656_MODE,             REG_SR0_BT656_MODE_MASK,            BIT1,               PINMUX_FOR_SR0_BT656_MODE_2},
-    {PAD_GPIO2, PADTOP_BANK, REG_PWM2_MODE,                  REG_PWM2_MODE_MASK,                 BIT9,               PINMUX_FOR_PWM2_MODE_2},
     {PAD_GPIO2, PADTOP_BANK, REG_SPI0_MODE,                  REG_SPI0_MODE_MASK,                 BIT2,               PINMUX_FOR_SPI0_MODE_4},
     {PAD_GPIO2, PADTOP_BANK, REG_DMIC_MODE,                  REG_DMIC_MODE_MASK,                 BIT3,               PINMUX_FOR_DMIC_MODE_8},
     {PAD_GPIO2, PADTOP_BANK, REG_FUART_MODE,                 REG_FUART_MODE_MASK,                BIT5,               PINMUX_FOR_FUART_MODE_2},
@@ -1132,11 +1118,11 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_GPIO3, PADTOP_BANK, REG_GPIO3_GPIO_MODE,            REG_GPIO3_GPIO_MODE_MASK,           BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO3, PADTOP_BANK, REG_ETH_MODE,                   REG_ETH_MODE_MASK,                  BIT0,               PINMUX_FOR_ETH_MODE},
 
+    {PAD_GPIO4, PADTOP_BANK, REG_PWM4_MODE,                  REG_PWM4_MODE_MASK,                 BIT1,               PINMUX_FOR_PWM4_MODE_2},
     {PAD_GPIO4, PADTOP_BANK, REG_GPIO4_GPIO_MODE,            REG_GPIO4_GPIO_MODE_MASK,           BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO4, PADTOP_BANK, REG_I2S_RXTX_MODE,              REG_I2S_RXTX_MODE_MASK,             BIT12,              PINMUX_FOR_I2S_RXTX_MODE_2},
     {PAD_GPIO4, PADTOP_BANK, REG_SR0_BT656_MODE,             REG_SR0_BT656_MODE_MASK,            BIT1,               PINMUX_FOR_SR0_BT656_MODE_2},
     {PAD_GPIO4, PADTOP_BANK, REG_UART1_MODE,                 REG_UART1_MODE_MASK,                BIT6,               PINMUX_FOR_UART1_MODE_4},
-    {PAD_GPIO4, PADTOP_BANK, REG_PWM4_MODE,                  REG_PWM4_MODE_MASK,                 BIT1,               PINMUX_FOR_PWM4_MODE_2},
     {PAD_GPIO4, PADTOP_BANK, REG_I2S_TX_MODE,                REG_I2S_TX_MODE_MASK,               BIT9,               PINMUX_FOR_I2S_TX_MODE_2},
     {PAD_GPIO4, PADTOP_BANK, REG_I2S_TX_MODE,                REG_I2S_TX_MODE_MASK,               BIT10|BIT8,         PINMUX_FOR_I2S_TX_MODE_5},
     {PAD_GPIO4, PADTOP_BANK, REG_ETH_MODE,                   REG_ETH_MODE_MASK,                  BIT0,               PINMUX_FOR_ETH_MODE},
@@ -1148,11 +1134,11 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_GPIO5, PADTOP_BANK, REG_I2S_TX_MODE,                REG_I2S_TX_MODE_MASK,               BIT9,               PINMUX_FOR_I2S_TX_MODE_2},
     {PAD_GPIO5, PADTOP_BANK, REG_ETH_MODE,                   REG_ETH_MODE_MASK,                  BIT0,               PINMUX_FOR_ETH_MODE},
 
-    {PAD_GPIO6, PADTOP_BANK, REG_GPIO6_GPIO_MODE,            REG_GPIO6_GPIO_MODE_MASK,           BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO6, PADTOP_BANK, REG_I2C0_MODE,                  REG_I2C0_MODE_MASK,                 BIT1|BIT0,          PINMUX_FOR_I2C0_MODE_3},
     {PAD_GPIO6, PADTOP_BANK, REG_SR0_BT656_MODE,             REG_SR0_BT656_MODE_MASK,            BIT1,               PINMUX_FOR_SR0_BT656_MODE_2},
     {PAD_GPIO6, PADTOP_BANK, REG_DMIC_MODE,                  REG_DMIC_MODE_MASK,                 BIT1,               PINMUX_FOR_DMIC_MODE_2},
     {PAD_GPIO6, PADTOP_BANK, REG_PWM6_MODE,                  REG_PWM6_MODE_MASK,                 BIT9,               PINMUX_FOR_PWM6_MODE_2},
+    {PAD_GPIO6, PADTOP_BANK, REG_GPIO6_GPIO_MODE,            REG_GPIO6_GPIO_MODE_MASK,           BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO6, PADTOP_BANK, REG_I2S_TX_MODE,                REG_I2S_TX_MODE_MASK,               BIT9,               PINMUX_FOR_I2S_TX_MODE_2},
     {PAD_GPIO6, PADTOP_BANK, REG_ETH_MODE,                   REG_ETH_MODE_MASK,                  BIT0,               PINMUX_FOR_ETH_MODE},
 
@@ -1334,8 +1320,8 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_SR0_IO12, PADTOP_BANK, REG_SR0_BT601_MODE,             REG_SR0_BT601_MODE_MASK,            BIT2,               PINMUX_FOR_SR0_BT601_MODE_1},
 
     {PAD_SR0_IO13, PADTOP_BANK, REG_SR01_RST_MODE,              REG_SR01_RST_MODE_MASK,             BIT13,              PINMUX_FOR_SR01_RST_MODE_1},
-    {PAD_SR0_IO13, PADTOP_BANK, REG_SR0_IO13_GPIO_MODE,         REG_SR0_IO13_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_SR0_IO13, PADTOP_BANK, REG_PWM8_MODE,                  REG_PWM8_MODE_MASK,                 BIT2|BIT1|BIT0,     PINMUX_FOR_PWM8_MODE_7},
+    {PAD_SR0_IO13, PADTOP_BANK, REG_SR0_IO13_GPIO_MODE,         REG_SR0_IO13_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_SR0_IO13, PADTOP_BANK, REG_SR01_CTRL_MODE,             REG_SR01_CTRL_MODE_MASK,            BIT11,              PINMUX_FOR_SR01_CTRL_MODE},
     {PAD_SR0_IO13, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT1|BIT0,          PINMUX_FOR_TEST_IN_MODE_3},
     {PAD_SR0_IO13, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT5|BIT4,          PINMUX_FOR_TEST_OUT_MODE_3},
@@ -1402,18 +1388,18 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_SR1_IO00, PADTOP_BANK, REG_SPI1_MODE,                  REG_SPI1_MODE_MASK,                 BIT6,               PINMUX_FOR_SPI1_MODE_4},
     {PAD_SR1_IO00, PADTOP_BANK, REG_SR1_BT601_MODE,             REG_SR1_BT601_MODE_MASK,            BIT1,               PINMUX_FOR_SR1_BT601_MODE},
     {PAD_SR1_IO00, PADTOP_BANK, REG_SR1_MCLK_MODE,              REG_SR1_MCLK_MODE_MASK,             BIT10,              PINMUX_FOR_SR1_MCLK_MODE_2},
-    {PAD_SR1_IO00, PADTOP_BANK, REG_SR1_IO00_GPIO_MODE,         REG_SR1_IO00_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_SR1_IO00, PADTOP_BANK, REG_PWM0_MODE,                  REG_PWM0_MODE_MASK,                 BIT2,               PINMUX_FOR_PWM0_MODE_4},
     {PAD_SR1_IO00, PADTOP_BANK, REG_PWM8_MODE,                  REG_PWM8_MODE_MASK,                 BIT2,               PINMUX_FOR_PWM8_MODE_4},
+    {PAD_SR1_IO00, PADTOP_BANK, REG_SR1_IO00_GPIO_MODE,         REG_SR1_IO00_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_SR1_IO00, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT1|BIT0,          PINMUX_FOR_TEST_IN_MODE_3},
     {PAD_SR1_IO00, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT5|BIT4,          PINMUX_FOR_TEST_OUT_MODE_3},
 
+    {PAD_SR1_IO01, PADTOP_BANK, REG_PWM1_MODE,                  REG_PWM1_MODE_MASK,                 BIT6,               PINMUX_FOR_PWM1_MODE_4},
     {PAD_SR1_IO01, PADTOP_BANK, REG_SR1_IO01_GPIO_MODE,         REG_SR1_IO01_GPIO_MODE_MASK,        BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_SR1_IO01, PADTOP_BANK, REG_TTL24_MODE,                 REG_TTL24_MODE_MASK,                BIT4,               PINMUX_FOR_TTL24_MODE},
     {PAD_SR1_IO01, PADTOP_BANK, REG_I2C0_MODE,                  REG_I2C0_MODE_MASK,                 BIT2,               PINMUX_FOR_I2C0_MODE_4},
     {PAD_SR1_IO01, PADTOP_BANK, REG_SPI1_MODE,                  REG_SPI1_MODE_MASK,                 BIT6,               PINMUX_FOR_SPI1_MODE_4},
     {PAD_SR1_IO01, PADTOP_BANK, REG_SR1_BT601_MODE,             REG_SR1_BT601_MODE_MASK,            BIT1,               PINMUX_FOR_SR1_BT601_MODE},
-    {PAD_SR1_IO01, PADTOP_BANK, REG_PWM1_MODE,                  REG_PWM1_MODE_MASK,                 BIT6,               PINMUX_FOR_PWM1_MODE_4},
     {PAD_SR1_IO01, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT1,               PINMUX_FOR_TTL16_MODE_2},
     {PAD_SR1_IO01, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT1|BIT0,          PINMUX_FOR_TEST_IN_MODE_3},
     {PAD_SR1_IO01, PADTOP_BANK, REG_SR1_RST_MODE,               REG_SR1_RST_MODE_MASK,              BIT12,              PINMUX_FOR_SR1_RST_MODE_2},
@@ -1633,6 +1619,7 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
 
     {PAD_GPIO8, PADTOP_BANK, REG_BT656_OUT_MODE,             REG_BT656_OUT_MODE_MASK,            BIT5,               PINMUX_FOR_BT656_OUT_MODE_2},
     {PAD_GPIO8, PADTOP_BANK, REG_BT656_OUT_MODE,             REG_BT656_OUT_MODE_MASK,            BIT5|BIT4,          PINMUX_FOR_BT656_OUT_MODE_3},
+    {PAD_GPIO8, PADTOP_BANK, REG_PWM0_MODE,                  REG_PWM0_MODE_MASK,                 BIT0,               PINMUX_FOR_PWM0_MODE_1},
     {PAD_GPIO8, PADTOP_BANK, REG_GPIO8_GPIO_MODE,            REG_GPIO8_GPIO_MODE_MASK,           BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO8, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
     {PAD_GPIO8, PADTOP_BANK, REG_TTL24_MODE,                 REG_TTL24_MODE_MASK,                BIT4,               PINMUX_FOR_TTL24_MODE},
@@ -1640,16 +1627,15 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_GPIO8, PADTOP_BANK, REG_UART1_MODE,                 REG_UART1_MODE_MASK,                BIT6|BIT5,          PINMUX_FOR_UART1_MODE_6},
     {PAD_GPIO8, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT1|BIT0,          PINMUX_FOR_TTL16_MODE_3},
     {PAD_GPIO8, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT2,               PINMUX_FOR_TTL16_MODE_4},
-    {PAD_GPIO8, PADTOP_BANK, REG_PWM0_MODE,                  REG_PWM0_MODE_MASK,                 BIT0,               PINMUX_FOR_PWM0_MODE_1},
     {PAD_GPIO8, PADTOP_BANK, REG_I2S_RXTX_MODE,              REG_I2S_RXTX_MODE_MASK,             BIT13,              PINMUX_FOR_I2S_RXTX_MODE_4},
 
     {PAD_GPIO9, PADTOP_BANK, REG_BT656_OUT_MODE,             REG_BT656_OUT_MODE_MASK,            BIT5,               PINMUX_FOR_BT656_OUT_MODE_2},
     {PAD_GPIO9, PADTOP_BANK, REG_TTL24_MODE,                 REG_TTL24_MODE_MASK,                BIT4,               PINMUX_FOR_TTL24_MODE},
     {PAD_GPIO9, PADTOP_BANK, REG_I2S_RX_MODE,                REG_I2S_RX_MODE_MASK,               BIT6,               PINMUX_FOR_I2S_RX_MODE_4},
     {PAD_GPIO9, PADTOP_BANK, REG_UART1_MODE,                 REG_UART1_MODE_MASK,                BIT6|BIT5,          PINMUX_FOR_UART1_MODE_6},
+    {PAD_GPIO9, PADTOP_BANK, REG_GPIO9_GPIO_MODE,            REG_GPIO9_GPIO_MODE_MASK,           BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO9, PADTOP_BANK, REG_PWM1_MODE,                  REG_PWM1_MODE_MASK,                 BIT4,               PINMUX_FOR_PWM1_MODE_1},
     {PAD_GPIO9, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT1|BIT0,          PINMUX_FOR_TTL16_MODE_3},
-    {PAD_GPIO9, PADTOP_BANK, REG_GPIO9_GPIO_MODE,            REG_GPIO9_GPIO_MODE_MASK,           BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO9, PADTOP_BANK, REG_I2S_RXTX_MODE,              REG_I2S_RXTX_MODE_MASK,             BIT13,              PINMUX_FOR_I2S_RXTX_MODE_4},
 
     {PAD_GPIO10, PADTOP_BANK, REG_BT656_OUT_MODE,             REG_BT656_OUT_MODE_MASK,            BIT5,               PINMUX_FOR_BT656_OUT_MODE_2},
@@ -1674,6 +1660,7 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_GPIO12, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
     {PAD_GPIO12, PADTOP_BANK, REG_PWM4_MODE,                  REG_PWM4_MODE_MASK,                 BIT0,               PINMUX_FOR_PWM4_MODE_1},
     {PAD_GPIO12, PADTOP_BANK, REG_I2C0_MODE,                  REG_I2C0_MODE_MASK,                 BIT2|BIT0,          PINMUX_FOR_I2C0_MODE_5},
+    {PAD_GPIO12, PADTOP_BANK, REG_PWM8_MODE,                  REG_PWM8_MODE_MASK,                 BIT2|BIT0,          PINMUX_FOR_PWM8_MODE_5},
     {PAD_GPIO12, PADTOP_BANK, REG_GPIO12_GPIO_MODE,           REG_GPIO12_GPIO_MODE_MASK,          BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO12, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT0,               PINMUX_FOR_TTL16_MODE_1},
     {PAD_GPIO12, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT1|BIT0,          PINMUX_FOR_TTL16_MODE_3},
@@ -1681,7 +1668,6 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_GPIO12, PADTOP_BANK, REG_DMIC_MODE,                  REG_DMIC_MODE_MASK,                 BIT2|BIT0,          PINMUX_FOR_DMIC_MODE_5},
     {PAD_GPIO12, PADTOP_BANK, REG_EMMC0_8B_MODE,              REG_EMMC0_8B_MODE_MASK,             BIT2,               PINMUX_FOR_EMMC0_8B_MODE_2},
     {PAD_GPIO12, PADTOP_BANK, REG_SPI1_MODE,                  REG_SPI1_MODE_MASK,                 BIT5,               PINMUX_FOR_SPI1_MODE_2},
-    {PAD_GPIO12, PADTOP_BANK, REG_PWM8_MODE,                  REG_PWM8_MODE_MASK,                 BIT2|BIT0,          PINMUX_FOR_PWM8_MODE_5},
     {PAD_GPIO12, PADTOP_BANK, REG_I2S_TX_MODE,                REG_I2S_TX_MODE_MASK,               BIT10|BIT9,         PINMUX_FOR_I2S_TX_MODE_6},
     {PAD_GPIO12, PADTOP_BANK, REG_I2S_TX_MODE,                REG_I2S_TX_MODE_MASK,               BIT10|BIT9|BIT8,    PINMUX_FOR_I2S_TX_MODE_7},
     {PAD_GPIO12, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT1,               PINMUX_FOR_TEST_IN_MODE_2},
@@ -1715,6 +1701,7 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_GPIO14, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT1|BIT0,          PINMUX_FOR_TTL16_MODE_3},
     {PAD_GPIO14, PADTOP_BANK, REG_TTL16_MODE,                 REG_TTL16_MODE_MASK,                BIT2,               PINMUX_FOR_TTL16_MODE_4},
     {PAD_GPIO14, PADTOP_BANK, REG_OTP_TEST,                   REG_OTP_TEST_MASK,                  BIT8,               PINMUX_FOR_OTP_TEST},
+    {PAD_GPIO14, PADTOP_BANK, REG_PWM6_MODE,                  REG_PWM6_MODE_MASK,                 BIT8,               PINMUX_FOR_PWM6_MODE_1},
     {PAD_GPIO14, PADTOP_BANK, REG_GPIO14_GPIO_MODE,           REG_GPIO14_GPIO_MODE_MASK,          BIT3,               PINMUX_FOR_GPIO_MODE},
     {PAD_GPIO14, PADTOP_BANK, REG_TTL24_MODE,                 REG_TTL24_MODE_MASK,                BIT4,               PINMUX_FOR_TTL24_MODE},
     {PAD_GPIO14, PADTOP_BANK, REG_SPI1_MODE,                  REG_SPI1_MODE_MASK,                 BIT5,               PINMUX_FOR_SPI1_MODE_2},
@@ -1724,7 +1711,6 @@ const ST_PadMuxInfo m_stPadMuxTbl[] =
     {PAD_GPIO14, PADTOP_BANK, REG_I2S_TX_MODE,                REG_I2S_TX_MODE_MASK,               BIT10|BIT9,         PINMUX_FOR_I2S_TX_MODE_6},
     {PAD_GPIO14, CHIPTOP_BANK, REG_TEST_IN_MODE,               REG_TEST_IN_MODE_MASK,              BIT1,               PINMUX_FOR_TEST_IN_MODE_2},
     {PAD_GPIO14, CHIPTOP_BANK, REG_TEST_OUT_MODE,              REG_TEST_OUT_MODE_MASK,             BIT4,               PINMUX_FOR_TEST_OUT_MODE_1},
-    {PAD_GPIO14, PADTOP_BANK, REG_PWM6_MODE,                  REG_PWM6_MODE_MASK,                 BIT8,               PINMUX_FOR_PWM6_MODE_1},
 
     {PAD_GPIO15, PADTOP_BANK, REG_PWM7_MODE,                  REG_PWM7_MODE_MASK,                 BIT12,              PINMUX_FOR_PWM7_MODE_1},
     {PAD_GPIO15, PADTOP_BANK, REG_I2S_MCK_MODE,               REG_I2S_MCK_MODE_MASK,              BIT2,               PINMUX_FOR_I2S_MCK_MODE_4},
@@ -2058,6 +2044,7 @@ static const ST_PadModeInfo m_stPadModeInfoTbl[] =
     {"PM_PM_PAD_EXT_MODE_21",   _RIUA_16BIT(PM_PADTOP_BANK,REG_PM_PM_PAD_EXT_MODE_21),     REG_PM_PM_PAD_EXT_MODE_21_MASK},
     {"PM_PM_PAD_EXT_MODE_22",   _RIUA_16BIT(PM_PADTOP_BANK,REG_PM_PM_PAD_EXT_MODE_22),     REG_PM_PM_PAD_EXT_MODE_22_MASK},
     {"PM_PM_UART_IS_MODE",      _RIUA_16BIT(PM_PADTOP_BANK,REG_PM_UART_IS_GPIO),           REG_PM_UART_IS_GPIO_MASK},
+    {"PM_SAR_MODE",             _RIUA_16BIT(PM_SAR_BANK,REG_SAR_GPIO0_GPIO_MODE),          REG_SAR_GPIO_MODE_MASK},
 };
 
 //==============================================================================
@@ -2139,6 +2126,74 @@ static S32 HalPadSetMode_General(U32 u32PadID, U32 u32Mode)
                 }
             }
         }
+        else if (u8ModeIsFind)
+            break;
+    }
+
+    return (u8ModeIsFind) ? 0 : -1;
+}
+
+static S32 HalPadSetMode_GeneralPMPad(U32 u32PadID, U32 u32Mode)
+{
+    U32 u32RegAddr = 0;
+    U16 u16RegVal  = 0;
+    U8  u8ModeIsFind = 0;
+    U16 i = 0, ExtItemID = 0;
+    U32 SetBank = 0;
+
+    for (i = 0; i < sizeof(m_stPadMuxTbl)/sizeof(struct stPadMux); i++)
+    {
+        if (u32PadID == m_stPadMuxTbl[i].padID)
+        {
+            u32RegAddr = _RIUA_16BIT(m_stPadMuxTbl[i].base, m_stPadMuxTbl[i].offset);
+
+            if (u32Mode == m_stPadMuxTbl[i].mode)
+            {
+                u16RegVal = _GPIO_R_WORD_MASK(u32RegAddr, 0xFFFF);
+                u16RegVal &= ~(m_stPadMuxTbl[i].mask);
+                u16RegVal |= m_stPadMuxTbl[i].val; // CHECK Multi-Pad Mode
+
+                _GPIO_W_WORD_MASK(u32RegAddr, u16RegVal, 0xFFFF);
+
+                u8ModeIsFind = 1;
+                SetBank = m_stPadMuxTbl[i].base;
+#if (ENABLE_CHECK_ALL_PAD_CONFLICT == 0)
+                break;
+#endif
+            }
+            else if ((m_stPadMuxTbl[i].mode >= PINMUX_FOR_PM_PM_PAD_EXT_MODE_0) &&
+                    (m_stPadMuxTbl[i].mode <= PINMUX_FOR_PM_PM_PAD_EXT_MODE_22)) {
+                ExtItemID = i;
+            }
+            else
+            {
+                u16RegVal = _GPIO_R_WORD_MASK(u32RegAddr, m_stPadMuxTbl[i].mask);
+                if (u16RegVal == m_stPadMuxTbl[i].val)
+                {
+                   
+                    if (m_stPadMuxTbl[i].val != 0)
+                    {
+                        _GPIO_W_WORD_MASK(u32RegAddr, 0, m_stPadMuxTbl[i].mask);
+                    }
+                    else
+                    {
+                        _GPIO_W_WORD_MASK(u32RegAddr, m_stPadMuxTbl[i].mask, m_stPadMuxTbl[i].mask);
+                    }
+                }
+            }
+        }
+        else if (u8ModeIsFind)
+            break;
+    }
+
+    if (u8ModeIsFind && ((SetBank >> 8) > 0x1000)) {
+        // set external data mode
+        u32RegAddr = _RIUA_16BIT(m_stPadMuxTbl[ExtItemID].base, m_stPadMuxTbl[ExtItemID].offset);
+        u16RegVal = _GPIO_R_WORD_MASK(u32RegAddr, 0xFFFF);
+        u16RegVal &= ~(m_stPadMuxTbl[ExtItemID].mask);
+        u16RegVal |= m_stPadMuxTbl[ExtItemID].val; // CHECK Multi-Pad Mode
+
+        _GPIO_W_WORD_MASK(u32RegAddr, u16RegVal, 0xFFFF);
     }
 
     return (u8ModeIsFind) ? 0 : -1;
@@ -2148,80 +2203,48 @@ static S32 HalPadSetMode_MISC(U32 u32PadID, U32 u32Mode)
 {
     switch(u32PadID)
     {
+    /* SAR */
+    case PAD_SAR_GPIO0: /* reg_sar_aisel; reg[1422]#5 ~ #0=0b */
+    case PAD_SAR_GPIO1:
+    case PAD_SAR_GPIO2:
+    case PAD_SAR_GPIO3:
+    case PAD_SAR_GPIO4:
+    case PAD_SAR_GPIO5:
+        if (u32Mode == PINMUX_FOR_GPIO_MODE)
+        {
+            _HalPadDisablePadMux(PINMUX_FOR_TEST_IN_MODE_2);
+            _HalPadDisablePadMux(PINMUX_FOR_TEST_OUT_MODE_2);
+            _GPIO_W_WORD_MASK(_RIUA_16BIT(PM_SAR_BANK,REG_SAR_GPIO0_GPIO_MODE), 0, 1<<(u32PadID-PAD_SAR_GPIO0));
+        }
+        else if (u32Mode == PINMUX_FOR_PM_SAR_MODE)
+        {
+            _HalPadDisablePadMux(PINMUX_FOR_TEST_IN_MODE_2);
+            _HalPadDisablePadMux(PINMUX_FOR_TEST_OUT_MODE_2);
+            _GPIO_W_WORD_MASK(_RIUA_16BIT(PM_SAR_BANK,REG_SAR_GPIO0_GPIO_MODE), 1<<(u32PadID-PAD_SAR_GPIO0), 1<<(u32PadID-PAD_SAR_GPIO0));
+        }
+        else
+        {
+            return -1;
+        }
+        break;
     /* lan-top */
     case PAD_ETH_RN:
-        if (u32Mode == PINMUX_FOR_GPIO_MODE)
-        {
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_IN_MODE_2);
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_OUT_MODE_2);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY1_BANK,REG_ATOP_RX_INOFF), BIT14, BIT14);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY2_BANK,REG_ETH_GPIO_EN), BIT0, BIT0);
-        }
-        else if (u32Mode == PINMUX_FOR_ETH_MODE)
-        {
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_IN_MODE_2);
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_OUT_MODE_2);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY1_BANK,REG_ATOP_RX_INOFF), 0, BIT14);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY2_BANK,REG_ETH_GPIO_EN), 0, BIT0);
-        }
-        else
-        {
-            return -1;
-        }
-        break;
     case PAD_ETH_RP:
-        if (u32Mode == PINMUX_FOR_GPIO_MODE) {
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_IN_MODE_2);
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_OUT_MODE_2);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY1_BANK,REG_ATOP_RX_INOFF), BIT14, BIT14);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY2_BANK,REG_ETH_GPIO_EN), BIT1, BIT1);
-        }
-        else if (u32Mode == PINMUX_FOR_ETH_MODE)
-        {
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_IN_MODE_2);
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_OUT_MODE_2);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY1_BANK,REG_ATOP_RX_INOFF), 0, BIT14);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY2_BANK,REG_ETH_GPIO_EN), 0, BIT1);
-        }
-        else
-        {
-            return -1;
-        }
-        break;
     case PAD_ETH_TN:
-        if (u32Mode == PINMUX_FOR_GPIO_MODE)
-        {
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_IN_MODE_2);
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_OUT_MODE_2);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY1_BANK,REG_ATOP_RX_INOFF), BIT14, BIT14);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY2_BANK,REG_ETH_GPIO_EN), BIT2, BIT2);
-        }
-        else if (u32Mode == PINMUX_FOR_ETH_MODE)
-        {
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_IN_MODE_2);
-            _HalPadDisablePadMux(PINMUX_FOR_TEST_OUT_MODE_2);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY1_BANK,REG_ATOP_RX_INOFF), 0, BIT14);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY2_BANK,REG_ETH_GPIO_EN), 0, BIT2);
-        }
-        else
-        {
-            return -1;
-        }
-        break;
     case PAD_ETH_TP:
         if (u32Mode == PINMUX_FOR_GPIO_MODE)
         {
             _HalPadDisablePadMux(PINMUX_FOR_TEST_IN_MODE_2);
             _HalPadDisablePadMux(PINMUX_FOR_TEST_OUT_MODE_2);
             _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY1_BANK,REG_ATOP_RX_INOFF), BIT14, BIT14);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY2_BANK,REG_ETH_GPIO_EN), BIT3, BIT3);
+            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY2_BANK,REG_ETH_GPIO_EN), 1<<(u32PadID-PAD_ETH_RN), 1<<(u32PadID-PAD_ETH_RN));
         }
         else if (u32Mode == PINMUX_FOR_ETH_MODE)
         {
             _HalPadDisablePadMux(PINMUX_FOR_TEST_IN_MODE_2);
             _HalPadDisablePadMux(PINMUX_FOR_TEST_OUT_MODE_2);
             _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY1_BANK,REG_ATOP_RX_INOFF), 0, BIT14);
-            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY2_BANK,REG_ETH_GPIO_EN), 0, BIT3);
+            _GPIO_W_WORD_MASK(_RIUA_16BIT(ALBANY2_BANK,REG_ETH_GPIO_EN), 0, 1<<(u32PadID-PAD_ETH_RN));
         }
         else
         {
@@ -2268,18 +2291,18 @@ S32 HalPadSetVal(U32 u32PadID, U32 u32Mode)
     if (FALSE == _HalCheckPin(u32PadID)) {
         return FALSE;
     }
-#if 1
-    if (u32PadID >= PAD_ETH_RN && u32PadID <= PAD_USB2_DP)
+    if((u32PadID >= PAD_SAR_GPIO0 && u32PadID <= PAD_SAR_GPIO5) ||
+        (u32PadID >= PAD_ETH_RN && u32PadID <= PAD_USB2_DP))
     {
         return HalPadSetMode_MISC(u32PadID, u32Mode);
+    }
+    if (u32PadID >= PAD_PM_UART_RX1 && u32PadID <= PAD_PM_SPI_HLD) {
+        return HalPadSetMode_GeneralPMPad(u32PadID, u32Mode);
     }
     else
     {
         return HalPadSetMode_General(u32PadID, u32Mode);
     }
-#else 
-    return HalPadSetMode_General(u32PadID, u32Mode);
-#endif
 }
 //------------------------------------------------------------------------------
 //  Function    : HalPadSet

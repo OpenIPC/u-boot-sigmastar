@@ -51,26 +51,16 @@
 #define CONFIG_ENV_RANGE	CONFIG_ENV_SIZE
 #endif
 
-#if (defined(CONFIG_MS_SPINAND) && defined(CONFIG_MS_EMMC))
 char *nand_env_name_spec = "NAND";
-#else
-char *env_name_spec = "NAND";
-#endif
 
-#if defined(CONFIG_MS_SPINAND) || defined(CONFIG_MS_SPINAND)
 U32 ms_nand_env_offset = 0;
-#endif
 
 #if defined(ENV_IS_EMBEDDED)
 env_t *env_ptr = &environment;
 #elif defined(CONFIG_NAND_ENV_DST)
 env_t *env_ptr = (env_t *)CONFIG_NAND_ENV_DST;
 #else /* ! ENV_IS_EMBEDDED */
-#if (defined(CONFIG_MS_NAND) && defined(CONFIG_MS_EMMC))
 extern env_t *env_ptr;
-#else
-env_t *env_ptr;
-#endif
 #endif /* ENV_IS_EMBEDDED */
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -87,11 +77,7 @@ DECLARE_GLOBAL_DATA_PTR;
  * This way the SPL loads not only the U-Boot image from NAND but
  * also the environment.
  */
-#if (defined(CONFIG_MS_NAND) && defined(CONFIG_MS_EMMC))
 int nand_env_init(void)
-#else
-int env_init(void)
-#endif
 {
 #if defined(ENV_IS_EMBEDDED) || defined(CONFIG_NAND_ENV_DST)
 	int crc1_ok = 0, crc2_ok = 0;
@@ -206,11 +192,7 @@ static int erase_and_write_env(const struct env_location *location,
 static unsigned char env_flags;
 #endif
 
-#if (defined(CONFIG_MS_NAND) && defined(CONFIG_MS_EMMC))
 int nand_saveenv(void)
-#else
-int saveenv(void)
-#endif
 {
 	int	ret = 0;
 	ALLOC_CACHE_ALIGN_BUFFER(env_t, env_new, 1);
@@ -433,11 +415,7 @@ done:
  * device i.e., nand_dev_desc + 0. This is also the behaviour using
  * the new NAND code.
  */
-#if (defined(CONFIG_MS_NAND) && defined(CONFIG_MS_EMMC) && defined(CONFIG_MS_SPINAND))
 void nand_env_relocate_spec(void)
-#else
-void env_relocate_spec(void)
-#endif
 {
 #if !defined(ENV_IS_EMBEDDED)
 	int ret;

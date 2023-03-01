@@ -24,6 +24,10 @@ config SUPPORT_EMMC_BOOT
     depends on INFINITY6E
     depends on MS_EMMC
 
+config MS_SAVE_ENV_IN_EMMC
+    bool 'Save environment to eMMC'
+    depends on MS_EMMC
+
 config MS_GPIO
     bool 'MSTAR Gpio'
     default y
@@ -166,3 +170,9 @@ config SSTAR_INI_PARSER
 config MS_EMMC_RECOVERY
 	bool 'MSTAR emmc recovery'
     default n
+
+config SSTAR_PWM
+	bool 'SSTAR PWM driver'
+	default n
+
+

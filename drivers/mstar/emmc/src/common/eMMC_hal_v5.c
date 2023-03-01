@@ -438,7 +438,7 @@ U32 eMMC_FCIE_Reset(void)
     U16 u16Reg = 0, u16Cnt;
     U32 u32_err = eMMC_ST_SUCCESS;
     U16 u16_clk = g_eMMCDrv.u16_ClkRegVal;
-    
+
     REG_FCIE_CLRBIT(FCIE_SD_CTRL, BIT_JOB_START); // clear for safe
     eMMC_clock_setting(FCIE_DEFAULT_CLK); // speed up FCIE reset done
     REG_FCIE_W(FCIE_MIE_FUNC_CTL, BIT_MIE_FUNC_ENABLE); //I5:BIT_SD_EN
@@ -1220,7 +1220,7 @@ U32 eMMC_CMD3_CMD7(U16 u16_RCA, U8 u8_CmdIdx)
         REG_FCIE_R(FCIE_SD_STATUS, u16_reg);
 
         // de-select has no rsp
-        if(!(7==u8_CmdIdx && u16_RCA!=g_eMMCDrv.u16_RCA)) 
+        if(!(7==u8_CmdIdx && u16_RCA!=g_eMMCDrv.u16_RCA))
         {
             if(u16_reg & (BIT_SD_RSP_TIMEOUT|BIT_SD_RSP_CRC_ERR))
             {
@@ -1707,6 +1707,8 @@ U32 eMMC_CMD8_MIU(U8 *pu8_DataBuf)
         eMMC_FCIE_ErrHandler_Stop();
         goto LABEL_END;
     }
+
+    invalidate_dcache_all();
 
     LABEL_END:
 

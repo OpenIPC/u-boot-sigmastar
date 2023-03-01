@@ -69,15 +69,25 @@ bool DrvDispIrqGetIsrNum(void *pDevCtx, u32 *pu32IsrNum)
 {
     bool bRet = 1;
     DrvDispCtxConfig_t *pstDispCtx = (DrvDispCtxConfig_t *)pDevCtx;
+    HalDispIrqIoctlConfig_t stIrqIoctlCfg;
+    u8 u8Idx;
 
     if(pstDispCtx->enCtxType == E_DISP_CTX_TYPE_DEVICE)
     {
-        if(gstDispIrqCfg[pstDispCtx->u32Idx].bInit)
+        stIrqIoctlCfg.enIoctlType = E_HAL_DISP_IRQ_IOCTL_GET_ID;
+        stIrqIoctlCfg.enIrqType = E_HAL_DISP_IRQ_TYPE_NONE;
+        stIrqIoctlCfg.pDispCtx = pDevCtx;
+        stIrqIoctlCfg.pParam = (void *)&u8Idx;
+        HalDispIrqIoCtl(&stIrqIoctlCfg);
+        if(gstDispIrqCfg[u8Idx].bInit)
         {
-            *pu32IsrNum = gstDispIrqCfg[pstDispCtx->u32Idx].u32IrqNum;
-            DISP_DBG(DISP_DBG_LEVEL_IRQ, "%s %d, Id=%ld, Irq=%ld\n",
+            *pu32IsrNum = gstDispIrqCfg[u8Idx].u32IrqNum;
+            DISP_DBG(DISP_DBG_LEVEL_IRQ, "%s %d, CtxId=%ld, DevId:%ld, Idx:%d, IrqNum=%ld\n",
                 __FUNCTION__, __LINE__,
-                pstDispCtx->u32Idx, *pu32IsrNum);
+                pstDispCtx->u32Idx,
+                pstDispCtx->pstCtxContain->pstDevContain[pstDispCtx->u32Idx]->u32DevId,
+                u8Idx,
+                *pu32IsrNum);
         }
         else
         {
@@ -98,18 +108,33 @@ bool DrvDispIrqGetIsrNum(void *pDevCtx, u32 *pu32IsrNum)
 bool DrvDispIrqEnable(void *pDevCtx, u32 u32DevIrq, bool bEnable)
 {
     bool bRet = 1;
+    HalDispIrqIoctlConfig_t stIrqIoctlCfg;
     DrvDispCtxConfig_t *pstDispCtx = (DrvDispCtxConfig_t *)pDevCtx;
+    DrvDispCtxDeviceContain_t *pstDevContain = NULL;
+    u8 u8Idx;
+
     if(pstDispCtx->enCtxType == E_DISP_CTX_TYPE_DEVICE)
     {
-        if(gstDispIrqCfg[pstDispCtx->u32Idx].u32IrqNum == u32DevIrq)
+        pstDevContain = pstDispCtx->pstCtxContain->pstDevContain[pstDispCtx->u32Idx];
+        stIrqIoctlCfg.enIoctlType = E_HAL_DISP_IRQ_IOCTL_GET_ID;
+        stIrqIoctlCfg.enIrqType = E_HAL_DISP_IRQ_TYPE_NONE;
+        stIrqIoctlCfg.pDispCtx = pDevCtx;
+        stIrqIoctlCfg.pParam = (void *)&u8Idx;
+        HalDispIrqIoCtl(&stIrqIoctlCfg);
+
+        if(gstDispIrqCfg[u8Idx].u32IrqNum == u32DevIrq)
         {
-            HalDispIrqIoCtl(E_HAL_DISP_IRQ_IOCTL_ENABLE, E_HAL_DISP_IRQ_TYPE_VSYNC, (void *)&bEnable);
+            stIrqIoctlCfg.enIoctlType = E_HAL_DISP_IRQ_IOCTL_ENABLE;
+            stIrqIoctlCfg.enIrqType = E_HAL_DISP_IRQ_TYPE_VSYNC;
+            stIrqIoctlCfg.pDispCtx = pDevCtx;
+            stIrqIoctlCfg.pParam = (void *)&bEnable;
+            HalDispIrqIoCtl(&stIrqIoctlCfg);
         }
         else
         {
             bRet = 0;
-            DISP_ERR("%s %d, IrqNum not match %ld != %ld\n",
-                __FUNCTION__, __LINE__, u32DevIrq, gstDispIrqCfg[pstDispCtx->u32Idx].u32IrqNum);
+            DISP_ERR("%s %d, DevId:%ld, IrqNum not match %ld != %ld\n",
+                __FUNCTION__, __LINE__, pstDevContain->u32DevId, u32DevIrq, gstDispIrqCfg[u8Idx].u32IrqNum);
         }
     }
     else
@@ -125,11 +150,16 @@ bool DrvDispIrqGetFlag(void *pDevCtx, MHAL_DISP_IRQFlag_t *pstIrqFlag)
 {
     bool bRet = 1;
     u32 u32IrqFlag;
+    HalDispIrqIoctlConfig_t stIrqIoctlCfg;
     DrvDispCtxConfig_t *pstDispCtx = (DrvDispCtxConfig_t *)pDevCtx;
 
     if(pstDispCtx->enCtxType == E_DISP_CTX_TYPE_DEVICE)
     {
-        HalDispIrqIoCtl(E_HAL_DISP_IRQ_IOCTL_GET_FLAG, E_HAL_DISP_IRQ_TYPE_VSYNC, (void *)&u32IrqFlag);
+        stIrqIoctlCfg.enIoctlType = E_HAL_DISP_IRQ_IOCTL_GET_FLAG;
+        stIrqIoctlCfg.enIrqType = E_HAL_DISP_IRQ_TYPE_VSYNC;
+        stIrqIoctlCfg.pDispCtx = pDevCtx;
+        stIrqIoctlCfg.pParam = (void *)&u32IrqFlag;
+        HalDispIrqIoCtl(&stIrqIoctlCfg);
         pstIrqFlag->u32IrqFlag = u32IrqFlag;
         pstIrqFlag->u32IrqMask = E_HAL_DISP_IRQ_TYPE_VSYNC;
     }
@@ -146,12 +176,17 @@ bool DrvDispIrqGetFlag(void *pDevCtx, MHAL_DISP_IRQFlag_t *pstIrqFlag)
 bool DrvDispIrqClear(void *pDevCtx, void* pData)
 {
     bool bRet = 1;
-    DrvDispCtxConfig_t *pstDispCtx = (DrvDispCtxConfig_t *)pDevCtx;
+    HalDispIrqIoctlConfig_t stIrqIoctlCfg;
     MHAL_DISP_IRQFlag_t *pstIrqFlag = (MHAL_DISP_IRQFlag_t *)pData;
+    DrvDispCtxConfig_t *pstDispCtx = (DrvDispCtxConfig_t *)pDevCtx;
 
     if(pstDispCtx->enCtxType == E_DISP_CTX_TYPE_DEVICE)
     {
-        HalDispIrqIoCtl(E_HAL_DISP_IRQ_IOCTL_CLEAR, pstIrqFlag->u32IrqFlag & pstIrqFlag->u32IrqMask, NULL);
+        stIrqIoctlCfg.enIoctlType = E_HAL_DISP_IRQ_IOCTL_CLEAR;
+        stIrqIoctlCfg.enIrqType = pstIrqFlag->u32IrqFlag & pstIrqFlag->u32IrqMask;
+        stIrqIoctlCfg.pDispCtx = pDevCtx;
+        stIrqIoctlCfg.pParam = NULL;
+        HalDispIrqIoCtl(&stIrqIoctlCfg);
     }
     else
     {

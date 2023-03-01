@@ -570,8 +570,14 @@ void HAL_SPINAND_PreHandle(SPINAND_MODE eMode)
     U8 u8Status;
     SPI_NAND_DRIVER_t *pSpiNandDrv = (SPI_NAND_DRIVER_t*)drvSPINAND_get_DrvContext_address();
     //printf("HAL_SPINAND_PreHandle: %d TODO\n", __LINE__);
-    if(pSpiNandDrv->tSpinandInfo.au8_ID[0] == MID_GD &&
-            (pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0xD1 || pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0xD9))
+    if((pSpiNandDrv->tSpinandInfo.au8_ID[0] == MID_GD &&
+        (pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0xD1 
+	  || pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0xD9
+	  || pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0x51))
+	  || (pSpiNandDrv->tSpinandInfo.au8_ID[0] == MID_MXIC && 
+	   pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0xD9)
+	  || (pSpiNandDrv->tSpinandInfo.au8_ID[0] == MID_XTX && 
+	   pSpiNandDrv->tSpinandInfo.au8_ID[1] == 0xE1))
     {
         QSPI_WRITE(REG_SPI_CKG_SPI, REG_SPI_USER_DUMMY_EN|REG_SPI_DUMMY_CYC_SINGAL);
         QSPI_WRITE(REG_SPI_MODE_SEL, REG_SPI_NORMAL_MODE);
@@ -1568,17 +1574,16 @@ U32 HAL_SPINAND_Read_RandomIn(U32 u32_PageIdx, U32 u32_Column, U32 u32_Byte, U8 
     if(u32Ret != ERR_SPINAND_SUCCESS)
         return u32Ret;
 
-    if(u32Ret == ERR_SPINAND_SUCCESS)
+    if (u32Ret == ERR_SPINAND_SUCCESS)
     {
-        if(u8Status == ECC_1_3_CORRECTED)
-            u32Ret = ERR_SPINAND_ECC_1_3_CORRECTED;
-        if(u8Status == ECC_4_6_CORRECTED)
-           u32Ret = ERR_SPINAND_ECC_4_6_CORRECTED;
-        if(u8Status == ECC_7_8_CORRECTED)
-            u32Ret = ERR_SPINAND_ECC_7_8_CORRECTED;        
-        if(u8Status == ECC_NOT_CORRECTED){
+        if (u8Status & ECC_STATUS_ERR)
+        {
             u32Ret = ERR_SPINAND_ECC_ERROR;
-            printf("ecc error P: 0x%x\r\n", u32_PageIdx);
+            printf("ecc error P: 0x%X\r\n", u32_PageIdx);
+        }
+        else if (u8Status & ECC_STATUS_BITFLIP)
+        {
+            u32Ret = ERR_SPINAND_ECC_BITFLIP;
         }
     }
 

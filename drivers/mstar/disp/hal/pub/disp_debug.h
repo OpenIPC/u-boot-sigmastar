@@ -222,21 +222,21 @@ extern u32 _gu32DispDbgLevel;
 #define PARSING_HAL_IRQ_IOCTL(x)        (x == E_HAL_DISP_IRQ_IOCTL_ENABLE               ? "ENABLE"              : \
                                          x == E_HAL_DISP_IRQ_IOCTL_GET_FLAG             ? "GET_FLAG"            : \
                                          x == E_HAL_DISP_IRQ_IOCTL_CLEAR                ? "CLEAR"               : \
-                                         x == E_HAL_DISP_IRQ_IOCTL_INTERNAL_SUPPORTED   ? "INTERNAL_SUPPORTED"  : \
-                                         x == E_HAL_DISP_IRQ_IOCTL_INTERNAL_GET_ID      ? "INTERNAL_GET_ID"     : \
-                                         x == E_HAL_DISP_IRQ_IOCTL_INTERNAL_ENABLE      ? "INTERNAL_ENABLE"     : \
-                                         x == E_HAL_DISP_IRQ_IOCTL_INTERNAL_GET_FLAG    ? "INTERNAL_GET_FLAG"   : \
-                                         x == E_HAL_DISP_IRQ_IOCTL_INTERNAL_CLEAR       ? "INTERNAL_CLEAR"      : \
-                                         x == E_HAL_DISP_IRQ_IOCTL_INTERNAL_GET_STATUS  ? "INTERNAL_GET_STATUS" : \
+                                         x == E_HAL_DISP_IRQ_IOCTL_TIMEZONE_SUPPORTED   ? "TIMEZONE_SUPPORTED"  : \
+                                         x == E_HAL_DISP_IRQ_IOCTL_TIMEZONE_GET_ID      ? "TIMEZONE_GET_ID"     : \
+                                         x == E_HAL_DISP_IRQ_IOCTL_TIMEZONE_ENABLE      ? "TIMEZONE_ENABLE"     : \
+                                         x == E_HAL_DISP_IRQ_IOCTL_TIMEZONE_GET_FLAG    ? "TIMEZONE_GET_FLAG"   : \
+                                         x == E_HAL_DISP_IRQ_IOCTL_TIMEZONE_CLEAR       ? "TIMEZONE_CLEAR"      : \
+                                         x == E_HAL_DISP_IRQ_IOCTL_TIMEZONE_GET_STATUS  ? "INTERNAL_GET_STATUS" : \
                                                                                           "UNKNOWN")
 
 #define PARSING_HAL_IRQ_TYPE(x)        (x == E_HAL_DISP_IRQ_TYPE_NONE                    ? "NONE"                     : \
                                         x == E_HAL_DISP_IRQ_TYPE_VSYNC                   ? "VSYNC"                    : \
                                         x == E_HAL_DISP_IRQ_TYPE_VDE                     ? "VDE"                      : \
-                                        x == E_HAL_DISP_IRQ_TYPE_INTERNAL_VDE_NEGATIVE   ? "INTERNAL_VDE_NEGATIVE"    : \
-                                        x == E_HAL_DISP_IRQ_TYPE_INTERNAL_VDE_POSITIVE   ? "INTERNAL_VDE_POSITIVE"    : \
-                                        x == E_HAL_DISP_IRQ_TYPE_INTERNAL_VSYNC_NEGATIVE ? "INTERNAL_VSYNC_NEGATIVE"  : \
-                                        x == E_HAL_DISP_IRQ_TYPE_INTERNAL_VSYNC_POSITIVE ? "INTERNAL_VSYNC_POSITIVE"  : \
+                                        x == E_HAL_DISP_IRQ_TYPE_TIMEZONE_VDE_NEGATIVE   ? "TIMEZONE_VDE_NEGATIVE"    : \
+                                        x == E_HAL_DISP_IRQ_TYPE_TIMEZONE_VDE_POSITIVE   ? "TIMEZONE_VDE_POSITIVE"    : \
+                                        x == E_HAL_DISP_IRQ_TYPE_TIMEZONE_VSYNC_NEGATIVE ? "TIMEZONE_VSYNC_NEGATIVE"  : \
+                                        x == E_HAL_DISP_IRQ_TYPE_TIMEZONE_VSYNC_POSITIVE ? "TIMEZONE_VSYNC_POSITIVE"  : \
                                         x == E_HAL_DISP_IRQ_TYPE_INTERNAL_TIMEZONE       ? "INTERNAL_TIME_ZONE"       : \
                                         x == E_HAL_DISP_IRQ_TYPE_VGA_HPD_ON              ? "INTERNAL_VGP_HPD_ON"      : \
                                         x == E_HAL_DISP_IRQ_TYPE_VGA_HPD_OFF             ? "INTERNAL_VGP_HPD_OFF"     : \

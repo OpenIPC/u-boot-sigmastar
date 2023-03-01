@@ -398,6 +398,7 @@ CONFIG_SSTAR_PNL=y
 # CONFIG_SSTAR_JPD is not set
 # CONFIG_SSTAR_RGN is not set
 # CONFIG_SSTAR_MSPI is not set
+# CONFIG_SSTAR_PWM is not set
 
 #
 # File systems

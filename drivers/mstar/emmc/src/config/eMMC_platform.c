@@ -1810,12 +1810,20 @@ U32 eMMC_pads_switch(U32 u32Mode)
         REG_FCIE_SETBIT(reg_emmc_config, (BIT_EMMC_MODE_1)); //4B mode
         eMMC_debug(eMMC_DEBUG_LEVEL_ERROR, 1, "1X/4X-MOD\r\n");
     }
+    REG_FCIE_SETBIT(GET_REG_ADDR(PAD_CHIPTOP_BASE, 0x12), BIT4); //D1
+    REG_FCIE_SETBIT(GET_REG_ADDR(PAD_CHIPTOP_BASE, 0x13), BIT4); //D0
+    REG_FCIE_SETBIT(GET_REG_ADDR(PAD_CHIPTOP_BASE, 0x15), BIT4); //CMD
+    REG_FCIE_SETBIT(GET_REG_ADDR(PAD_CHIPTOP_BASE, 0x16), BIT4); //D3
+    REG_FCIE_SETBIT(GET_REG_ADDR(PAD_CHIPTOP_BASE, 0x17), BIT4); //D2
+
 #elif (defined(eMMC_DRV_INFINITY6B0_UBOOT)&&eMMC_DRV_INFINITY6B0_UBOOT)
 
 #if (IP_SELECT == IP_SD)
     REG_FCIE_SETBIT(reg_sd_config, BIT_SD_MODE_1);
+    REG_FCIE_SETBIT(reg_sd_padpin_pull, BIT_SD_PADPIN_MASK);
 #elif (IP_SELECT == IP_SDIO)
     REG_FCIE_SETBIT(reg_sdio_config, BIT_SD1_MODE_1);
+    REG_FCIE_SETBIT(reg_sdio_padpin_pull, BIT_SDIO_PADPIN_MASK);
 #else
     #error "IP_SELECT Error !"
 #endif
@@ -1888,7 +1896,7 @@ U32 eMMC_clock_gating(void)
 U32 eMMC_translate_DMA_address_Ex(U32 u32_DMAAddr, U32 u32_ByteCnt, int mode)
 {
     flush_cache(u32_DMAAddr, u32_ByteCnt);
-    return (u32_DMAAddr);
+    return (u32_DMAAddr - 0x20000000);
 }
 U32 eMMC_PlatformResetPre(void)
 {

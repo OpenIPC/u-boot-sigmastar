@@ -4,7 +4,7 @@
 #include "asm/arch/mach/ms_types.h"
 #include "asm/arch/mach/platform.h"
 #include "asm/arch/mach/io.h"
-
+#include "ipl.h"
 
 #include <ubi_uboot.h>
 #include <cmd_osd.h>
@@ -1716,6 +1716,8 @@ extern U32 eMMC_Init(void);
 extern int create_new_NVRAM_partition(block_dev_desc_t *dev_desc, disk_partition_t *info);
 int remove_NVRAM_partition(block_dev_desc_t *dev_desc, disk_partition_t *info);
 extern void print_part_emmc (block_dev_desc_t *dev_desc);
+extern int ClearDescTable(void);
+extern U32 eMMC_Get_Dev_Index(void);
 
 extern int get_NVRAM_max_part_count(void);
 unsigned char tmp_buf[EMMC_BLK_SZ];
@@ -1766,6 +1768,53 @@ U_BOOT_CMD(
     ""
 );
 
+static int do_emmc_get_cust(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    U32 u32CustAddress, u32IplSize, u32BootPartAddress;
+    char getCustAddress[10];
+
+    if(argc > 2)
+    {
+        printf("error: Illegality parameter! \n");
+        goto error;
+    }
+
+    u32BootPartAddress = (unsigned int)simple_strtoul(argv[1], NULL, 16);
+    if(u32BootPartAddress < 0X20000000)
+    {
+        printf("error: Illegality BOOTPART.bin Address! \n");
+        goto error;
+    }
+
+    if(image_get_ipl_magic(u32BootPartAddress) !=  IPL__HEADER_CHAR)
+    {
+        printf("error: BOOPART image is broken! wrong ipl head: 0x%08x\n", image_get_ipl_magic(u32BootPartAddress));
+        goto error;
+    }
+
+    u32IplSize = image_get_ipl_size(u32BootPartAddress);
+    u32CustAddress = u32BootPartAddress + u32IplSize + 256;
+
+    if(image_get_ipl_magic(u32CustAddress) != IPLK_HEADER_CHAR)
+    {
+        printf("error: BOOPART image is broken! wrong cust head: 0x%08x\n", image_get_ipl_magic(u32CustAddress));
+        goto error;
+    }
+
+    sprintf(getCustAddress, "%08x", u32CustAddress);
+    setenv("cust_address", getCustAddress);
+
+    return 0;
+
+error:
+    printf("=================================================================\n");
+    return -1;
+}
+
+U_BOOT_CMD(
+    emmc_get_cust, CONFIG_SYS_MAXARGS, 1, do_emmc_get_cust,
+    "Find cust address in BOOT_PART.bin", ""
+);
 
 static u32 do_mmc_empty_check(const void *buf, u32 len, u32 empty_flag)
 {
@@ -2040,6 +2089,8 @@ int do_emmc(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
             return 1;
         }
     }
+
+    emmc_dev_index = eMMC_Get_Dev_Index();
 
     emmc = find_mmc_device(emmc_dev_index);
 
@@ -2540,7 +2591,10 @@ int do_emmc(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
                 emmc_dev_index, boot_partition ? "boot" : "user area", start, cnt);
 
         if(!boot_partition)
+        {
+            ClearDescTable();
             n = emmc->block_dev.block_erase(0, start, cnt);
+        }
 //        else {
 //
 //            if (strncmp(argv[2], "1", 1) == 0)
@@ -3552,3 +3606,41 @@ U_BOOT_CMD(
 	"UART sub-system", uart_help_text
 );
 
+#if defined(CONFIG_SSTAR_PWM)
+#include <../drivers/mstar/pwm/mdrv_pwm.h>
+
+static char pwm_help_text[] =
+     " [id] [duty] [period] [pad]\n"
+     "set 5000Hz duty 50% pwm waveform\n"
+     "period_value = 1000000000 / 5000 = 200000\n"
+     "duty_value = period_value * 50%  = 100000\n";
+
+int pwmtest(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int id = 0;
+    int duty = 0;
+    int period_ns = 0;
+    int pad = 14;//PAD_FUART_RX;
+
+    id = simple_strtoul(argv[1], NULL, 0);
+    duty = simple_strtoul(argv[2], NULL, 0);
+    period_ns = simple_strtoul(argv[3], NULL, 0);
+    pad = simple_strtoul(argv[4], NULL, 0);
+
+    if (id<0 || id >7 || duty < 0 || period_ns <= 0 || pad==0)
+    {
+        printf("pwm error\n");
+        return -1;
+    }
+    DrvPWMInit(id);
+    DrvPWMSetConfig(id, duty, period_ns);
+    DrvPWMEnable(id, 1, pad);
+    return 0;
+ }
+
+ U_BOOT_CMD(
+     pwm,  CONFIG_SYS_MAXARGS,    1,    pwmtest,
+     "Set 5000Hz duty 50% pwm waveform and use PAD_FUART_RX\n"
+     "Sample: pwm 0 100000 200000 14\n", pwm_help_text
+ );
+#endif

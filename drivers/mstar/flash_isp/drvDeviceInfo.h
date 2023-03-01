@@ -115,6 +115,8 @@
 #define FLASH_IC_EN25F40         0x090AUL      // 512k
 #define FLASH_IC_EN25QH16        0x090BUL      // 2M
 #define FLASH_IC_EN25QH64A       0x090CUL      // 8M  aaron add
+#define FLASH_IC_EN25Q128A       0x090DUL      // 16M
+
 // ESMT
 #define FLASH_IC_ESMT_F25L016A   0x0A00UL      // 2M
 // GD
@@ -133,8 +135,17 @@
 #define FLASH_IC_XM25QH64A       0x0C07UL      // 8M aaron add
 #define FLASH_IC_XM25QH128B      0x0C08UL      // 16M
 #define FLASH_IC_XM25QH64B       0x0C09UL      // 8M
+#define FLASH_IC_XM25QH128C      0x0C0AUL      // 16M
+#define FLASH_IC_XM25QH64C       0x0C0BUL      // 8M
+#define FLASH_IC_XM25QH256C      0x0C0CUL      // 32M
+// NM
+#define FLASH_IC_NM25Q64         0x1406UL
+#define FLASH_IC_NM25Q128        0x1403UL
 // AM
 #define FLASH_IC_A25LM032        0x0D00UL
+
+//ISSI
+#define FLASH_IC_IS25LP064D      0x0D01UL
 
 // MICRON
 #define FLASH_IC_M25P16   0x0E00UL      // 2M
@@ -151,6 +162,12 @@
 #define FLASH_IC_ZB25Q128       0x1003UL      // 16M
 
 #define FLASH_IC_25Q128AS        0x1100UL     //16M
+//BYT
+#define FLASH_IC_BYT_BY25Q64AS       0x1400UL      // 64M
+#define FLASH_IC_BYT_BY25Q128AS      0x1401UL      // 128M
+
+//PY
+#define FLASH_IC_PUYA_PY25Q128HA      0x1500UL      // 128M
 
 // Flash Manufacture ID
 #define MID_MXIC                0xC2UL
@@ -175,6 +192,9 @@
 #define MID_KH			        0xC2UL
 #define MID_25Q                 0x68UL//25q128as
 #define MID_ZB                  0x5EUL
+#define MID_NM                  0x52UL
+#define MID_IS                  0x9DUL
+#define MID_PY                  0x85UL
 // Flash Storage Size
 #define SIZE_1KB                0x400UL
 #define SIZE_2KB                0x800UL

@@ -699,19 +699,15 @@ static int do_env_save(cmd_tbl_t *cmdtp, int flag, int argc,
 		       char * const argv[])
 {
 #ifndef CONFIG_MS_SAVE_ENV_IN_ISP_FLASH
-#if defined(CONFIG_CMD_SAVEENV) && defined(CONFIG_CMD_NAND) && defined(CONFIG_MS_EMMC)
-    extern DEVINFO_BOOT_TYPE ms_devinfo_boot_type(void);
+#if defined(CONFIG_CMD_SAVEENV)
     char *env_name_spec = NULL;
-    if (DEVINFO_BOOT_TYPE_EMMC==ms_devinfo_boot_type())
-    {
-        extern char *mmc_env_name_spec;
-        env_name_spec=mmc_env_name_spec;
-    }
-    else if (DEVINFO_BOOT_TYPE_NAND==ms_devinfo_boot_type())
-    {
-        extern char *nand_env_name_spec;
-        env_name_spec=nand_env_name_spec;
-    }
+#if defined(CONFIG_ENV_IS_IN_MMC)
+    extern char *mmc_env_name_spec;
+    env_name_spec=mmc_env_name_spec;
+#elif defined(CONFIG_ENV_IS_IN_NAND)
+    extern char *nand_env_name_spec;
+    env_name_spec=nand_env_name_spec;
+#endif
 #endif
 #endif
 

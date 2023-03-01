@@ -424,6 +424,7 @@ CONFIG_IMAGE_POSTFIX="_spinand"
 # CONFIG_SSTAR_MSPI is not set
 # CONFIG_SSTAR_AUTORUN_DSTAR is not set
 # CONFIG_SSTAR_INI_PARSER is not set
+CONFIG_SSTAR_PWM=y
 
 #
 # File systems

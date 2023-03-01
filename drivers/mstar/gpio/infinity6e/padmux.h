@@ -281,10 +281,11 @@
 #define PINMUX_FOR_PM_PM_PAD_EXT_MODE_21        0x102
 #define PINMUX_FOR_PM_PM_PAD_EXT_MODE_22        0x103
 #define PINMUX_FOR_PM_PM_UART_IS_MODE           0x104
+#define PINMUX_FOR_PM_SAR_MODE                  0x105
 
 
 // add manually for misc pads here
-#define PINMUX_FOR_USB_MODE                     0x105
+#define PINMUX_FOR_USB_MODE                     0x106
 
 
 

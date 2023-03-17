@@ -205,11 +205,19 @@
 /*	#define MTDPARTS_DEFAULT    "mtdparts=nand0:0x60000@0x140000(IPL0),0x60000(IPL1),0x60000(IPL_CUST0),0x60000(IPL_CUST1),0xC0000(UBOOT0),0xC0000(UBOOT1),0x60000(ENV),0x340000(KERNEL),0x340000(RECOVERY),-(UBI)"*/
 
 
+#ifndef CONFIG_MS_SAVE_ENV_IN_NAND_FLASH
+#define CONFIG_BOOTARGS "LX_MEM=0xFFE0000 mma_heap=mma_heap_name0,miu=0,sz=0x9E9C000 mma_heap=mma_heap_ipu,miu=0,sz=0x164000"
+#define CONFIG_BOOTCOMMAND "fatload mmc 0 0x22000000 uImage.${soc}; bootm 0x22000000"
+#define CONFIG_EXTRA_ENV_SETTINGS "soc=" __stringify(PRODUCT_SOC)
+#define CONFIG_SYS_DCACHE_OFF
+#define CONFIG_FAT_WRITE
+#else
 #define CONFIG_EXTRA_ENV_SETTINGS                              \
        "mtdids=" MTDIDS_DEFAULT "\0"                           \
        "mtdparts=" MTDPARTS_DEFAULT "\0"                       \
        "partition=nand0,0\0"                                   \
        ""
+#endif
 
 #define CONFIG_CMD_NAND
 
@@ -282,7 +290,7 @@
     #endif
 #endif /* CONFIG_MS_EMMC */
 
-#if defined(CONFIG_ENV_IS_IN_NAND) || defined(CONFIG_ENV_IS_IN_MMC) || defined(CONFIG_ENV_IS_IN_SPI_FLASH) || defined(CONFIG_MS_SPINAND)
+#if defined(CONFIG_ENV_IS_IN_NAND) || defined(CONFIG_ENV_IS_IN_MMC) || defined(CONFIG_ENV_IS_IN_SPI_FLASH)
 
 #define CONFIG_CMD_SAVEENV	/* saveenv */
 #define CONFIG_ENV_RANGE        0x00040000
@@ -419,6 +427,8 @@
     #define CONFIG_USB_GADGET_DUALSPEED
 #endif
 
+#ifndef CONFIG_ENV_IS_NOWHERE
 #include <configs/mstar-common.h>
+#endif
 
 #endif	/* __CONFIG_H */

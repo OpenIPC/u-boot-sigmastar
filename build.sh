@@ -43,3 +43,10 @@ cp u-boot.xz.img.bin output/u-boot-${soc}.bin
 mv BOOT.bin output/boot-${soc}.bin
 
 done
+
+# ssc338q_sdcard
+make distclean
+make infinity6e_spinand_defconfig
+sed -i "s/CONFIG_MS_SAVE_ENV_IN_NAND_FLASH=y/CONFIG_MS_SAVE_ENV_IN_NAND_FLASH=n/g" .config
+make -j5 KCFLAGS=-DPRODUCT_SOC=ssc338q
+cp u-boot_spinand.xz.img.bin output/u-boot-ssc338q_sdcard.bin

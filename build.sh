@@ -43,3 +43,16 @@ cp u-boot.xz.img.bin output/u-boot-${soc}.bin
 mv BOOT.bin output/boot-${soc}.bin
 
 done
+
+for soc in ssc338q;do
+
+make distclean
+make infinity6e_spinand_defconfig
+make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
+
+./make_boot_spinand.sh
+
+cp u-boot_spinand.xz.img.bin output/u-boot-${soc}_spinand.bin
+mv BOOT.bin output/boot-${soc}_spinand.bin
+
+done

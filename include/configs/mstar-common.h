@@ -101,7 +101,7 @@
 #define CONFIG_ENV_IS_IN_NAND
 #define CONFIG_ENV_OFFSET CONFIG_MSTAR_ENV_NAND_OFFSET
 #define CONFIG_MSTAR_ENV_NAND_OFFSET ms_nand_env_offset
-#define CONFIG_ENV_RANGE CONFIG_ENV_SIZE
+#define CONFIG_ENV_RANGE 0x40000
 #define CONFIG_ENV_SIZE 0x20000
 #endif
 
@@ -112,14 +112,20 @@
 
 #define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnand}; saveenv; run bootcmd"
 #define CONFIG_BOOTARGS "mem=\${osmem} console=ttyS0,115200 panic=20 init=/init root=ubi0:rootfs rootfstype=ubifs ubi.mtd=ubi,2048 \${mtdparts} \${sigmastar}"
-#define MTDPARTS_DEFAULT "mtdparts=nand0:384k@0x2C0000(boot0),384k(boot1),128k(env),3072k(kernel),3072k(recovery),-(ubi)"
+#define MTDPARTS_DEFAULT "mtdparts=nand0:384k@0x2C0000(boot0),384k(boot1),256k(env),3072k(kernel),3072k(recovery),-(ubi)"
+
+#ifndef CONFIG_MS_SAVE_ENV_IN_NAND_FLASH
+#define CONFIG_BOOTCOMMAND "setenv setargs setenv bootargs ${bootargs}; run setargs; fatload mmc 0 ${baseaddr} uImage.${soc}; bootm ${baseaddr}"
+#define CONFIG_BOOTARGS "mem=\${osmem} console=ttyS0,115200 panic=20 \${mtdparts} \${sigmastar}"
+#define MTDPARTS_DEFAULT "mtdparts=nand0:3840k(boot),-(data)"
+#endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"osmem=32M\0" \
 	"baseaddr=0x21000000\0" \
-	"bootcmdnand=setenv setargs setenv bootargs ${bootargs}; run setargs; nand read ${baseaddr} 0x3A0000 0x300000; bootm ${baseaddr}; nand read ${baseaddr} 0x6A0000 0x300000; bootm ${baseaddr}\0" \
-	"uknand=mw.b ${baseaddr} 0xFF 0x1000000; tftpboot ${baseaddr} uImage.${soc}; nand erase 0x3A0000 0x600000; nand write ${baseaddr} 0x3A0000 0x300000; nand write ${baseaddr} 0x6A0000 0x300000\0" \
-	"urnand=mw.b ${baseaddr} 0xFF 0x1000000; tftpboot ${baseaddr} rootfs.ubi.${soc}; nand erase 0x9A0000 0x7660000; nand write ${baseaddr} 0x9A0000 ${filesize}\0" \
+	"bootcmdnand=setenv setargs setenv bootargs ${bootargs}; run setargs; nand read ${baseaddr} 0x3C0000 0x300000; bootm ${baseaddr}; nand read ${baseaddr} 0x6C0000 0x300000; bootm ${baseaddr}\0" \
+	"uknand=mw.b ${baseaddr} 0xFF 0x1000000; tftpboot ${baseaddr} uImage.${soc}; nand erase 0x3C0000 0x600000; nand write ${baseaddr} 0x3C0000 0x300000; nand write ${baseaddr} 0x6C0000 0x300000\0" \
+	"urnand=mw.b ${baseaddr} 0xFF 0x1000000; tftpboot ${baseaddr} rootfs.ubi.${soc}; nand erase 0x9C0000 0x7640000; nand write ${baseaddr} 0x9C0000 ${filesize}\0" \
 	"sigmastar=LX_MEM=0xFFE0000 mma_heap=mma_heap_name0,miu=0,sz=0x9E9C000\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
 	"soc=" __stringify(PRODUCT_NAME)
@@ -178,7 +184,7 @@
 #endif
 #endif
 
-#if defined(CONFIG_ENV_IS_IN_NAND) || defined(CONFIG_ENV_IS_IN_MMC) || defined(CONFIG_ENV_IS_IN_SPI_FLASH) || defined(CONFIG_MS_SPINAND)
+#if defined(CONFIG_ENV_IS_IN_NAND) || defined(CONFIG_ENV_IS_IN_MMC) || defined(CONFIG_ENV_IS_IN_SPI_FLASH)
 
 #define CONFIG_CMD_SAVEENV	/* saveenv */
 #else

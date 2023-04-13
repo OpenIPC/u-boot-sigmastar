@@ -310,7 +310,7 @@ int board_late_init(void)
 }
 #endif
 
-#ifndef CONFIG_MS_SAVE_ENV_IN_ISP_FLASH
+#if !defined(CONFIG_MS_SAVE_ENV_IN_ISP_FLASH) && !defined(CONFIG_ENV_IS_NOWHERE)
 #ifdef CONFIG_ENV_IS_IN_NAND
 extern int nand_env_init(void);
 extern int nand_saveenv(void);

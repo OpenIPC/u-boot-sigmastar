@@ -56,3 +56,14 @@ cp u-boot_spinand.xz.img.bin output/u-boot-${soc}_spinand.bin
 mv BOOT.bin output/boot-${soc}_spinand.bin
 
 done
+
+for soc in ssc338q;do
+
+make distclean
+make infinity6e_spinand_defconfig
+sed -i "s/CONFIG_MS_SAVE_ENV_IN_NAND_FLASH=y/CONFIG_MS_SAVE_ENV_IN_NAND_FLASH=n/g" .config
+make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
+
+cp u-boot_spinand.xz.img.bin output/UBOOT-${soc}_initramfs.bin
+
+done

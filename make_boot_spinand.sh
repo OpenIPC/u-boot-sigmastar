@@ -1,7 +1,7 @@
 #!/bin/sh
 IPL_DIR=ipl/${1:-6e_spinand}
 
-dd if=/dev/zero bs=2k count=1856 | tr '\000' '\377' > BOOT.bin
+dd if=/dev/zero bs=2k count=1920 | tr '\000' '\377' > BOOT.bin
 
 dd if=${IPL_DIR}/CIS.bin of=BOOT.bin bs=2k seek=0 conv=notrunc status=none
 dd if=${IPL_DIR}/CIS.bin of=BOOT.bin bs=2k seek=64 conv=notrunc status=none

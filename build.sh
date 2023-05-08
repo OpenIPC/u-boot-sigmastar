@@ -12,9 +12,7 @@ make infinity6_defconfig
 make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
 
 ./make_boot.sh 6
-
-mv u-boot.xz.img.bin output/u-boot-${soc}.bin
-mv BOOT.bin output/boot-${soc}.bin
+mv BOOT.bin output/u-boot-${soc}-universal.bin
 
 done
 
@@ -25,9 +23,7 @@ make infinity6b0_defconfig
 make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
 
 ./make_boot.sh 6b0
-
-cp u-boot.xz.img.bin output/u-boot-${soc}.bin
-mv BOOT.bin output/boot-${soc}.bin
+mv BOOT.bin output/u-boot-${soc}-universal.bin
 
 done
 
@@ -38,9 +34,7 @@ make infinity6e_defconfig
 make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
 
 ./make_boot.sh 6e0
-
-cp u-boot.xz.img.bin output/u-boot-${soc}.bin
-mv BOOT.bin output/boot-${soc}.bin
+mv BOOT.bin output/u-boot-${soc}-universal.bin
 
 done
 
@@ -51,9 +45,7 @@ make infinity6e_spinand_defconfig
 make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
 
 ./make_boot_spinand.sh
-
-cp u-boot_spinand.xz.img.bin output/u-boot-${soc}_spinand.bin
-mv BOOT.bin output/boot-${soc}_spinand.bin
+mv BOOT.bin output/u-boot-${soc}-nand.bin
 
 done
 
@@ -64,6 +56,6 @@ make infinity6e_spinand_defconfig
 sed -i "s/CONFIG_MS_SAVE_ENV_IN_NAND_FLASH=y/CONFIG_MS_SAVE_ENV_IN_NAND_FLASH=n/g" .config
 make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
 
-cp u-boot_spinand.xz.img.bin output/UBOOT-${soc}_initramfs.bin
+cp u-boot_spinand.xz.img.bin output/u-boot-${soc}-ramfs.bin
 
 done

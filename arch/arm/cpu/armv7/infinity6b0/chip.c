@@ -302,10 +302,25 @@ int board_late_init(void)
     }
     printf("*******************************************\n");
     */
-    char msize[128];
-    sprintf(msize, "%dM", gd->ram_size/1024/1024);
-    setenv("totalmem", msize);
-    return 0;
+
+	char msize[32];
+	u16 rsize = gd->ram_size / 1024 / 1024;
+
+	sprintf(msize, "%dM", rsize);
+	setenv("totalmem", msize);
+
+	if (rsize == 64) {
+		setenv("memlx", "0x3FE0000");
+		setenv("memsz", "0x2000000");
+	} else if (rsize == 128) {
+		setenv("memlx", "0x7FE0000");
+		setenv("memsz", "0x3800000");
+	} else {
+		setenv("memlx", "0xFFE0000");
+		setenv("memsz", "0x5000000");
+	}
+
+	return 0;
 }
 #endif
 

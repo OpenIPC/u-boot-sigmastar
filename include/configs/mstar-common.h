@@ -13,8 +13,8 @@
 /*------------------------------------------------------------------------------
     Macro
 -------------------------------------------------------------------------------*/
-#define CONFIG_BOOTARGS "mem=\${osmem} console=ttyS0,115200 panic=20 root=/dev/mtdblock3 rootfstype=squashfs init=/init mtdparts=\${mtdparts} \${sigmastar}"
-#define CONFIG_BOOTCOMMAND "setenv setargs setenv bootargs ${bootargs}; run setargs; sf probe 0; sf read ${baseaddr} 0x50000 0x300000; bootm ${baseaddr}; reset"
+#define CONFIG_BOOTARGS "mem=\${osmem} console=ttyS0,115200 panic=20 root=/dev/mtdblock3 init=/init mtdparts=\${mtdparts} LX_MEM=\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\${memsz}"
+#define CONFIG_BOOTCOMMAND "setenv bootcmd run setflash; saveenv; reset"
 
 /* boot delay time */
 #define CONFIG_BOOTDELAY	0
@@ -58,30 +58,22 @@
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
     "baseaddr=0x21000000\0" \
-    "uknor8m=mw.b ${baseaddr} 0xFF 1000000; ${update} ${baseaddr} uImage.${soc}; sf probe 0; sf erase 0x50000 0x200000; sf write ${baseaddr} 0x50000 ${filesize}\0" \
-    "uknor16m=mw.b ${baseaddr} 0xFF 1000000; ${update} ${baseaddr} uImage.${soc}; sf probe 0; sf erase 0x50000 0x300000; sf write ${baseaddr} 0x50000 ${filesize}\0" \
-    "urnor8m=mw.b ${baseaddr} 0xFF 1000000; ${update} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase 0x250000 0x500000; sf write ${baseaddr} 0x250000 ${filesize}\0" \
-    "urnor16m=mw.b ${baseaddr} 0xFF 1000000; ${update} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase 0x350000 0xa00000; sf write ${baseaddr} 0x350000 ${filesize}\0" \
-    "uknand=mw.b ${baseaddr} 0xFF 1000000; ${update} ${baseaddr} uImage.${soc}; nand erase 0x100000 0x300000; nand write ${baseaddr} 0x100000 0x300000\0" \
-    "urnand=mw.b ${baseaddr} 0xFF 1000000; ${update} ${baseaddr} rootfs.ubi.${soc}; nand erase 0x400000 0x7c00000; nand write ${baseaddr} 0x400000 ${filesize}\0" \
-    "mtdparts=NOR_FLASH:256k(boot),64k(env),2048k(kernel),5120k(rootfs),-(rootfs_data)\0" \
+    "uknor8m=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} uImage.${soc}; sf probe 0; sf erase 0x50000 0x200000; sf write ${baseaddr} 0x50000 ${filesize}\0" \
+    "uknor16m=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} uImage.${soc}; sf probe 0; sf erase 0x50000 0x300000; sf write ${baseaddr} 0x50000 ${filesize}\0" \
+    "urnor8m=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase 0x250000 0x500000; sf write ${baseaddr} 0x250000 ${filesize}\0" \
+    "urnor16m=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase 0x350000 0xA00000; sf write ${baseaddr} 0x350000 ${filesize}\0" \
+    "uknand=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} uImage.${soc}; nand erase 0x100000 0x300000; nand write ${baseaddr} 0x100000 0x300000\0" \
+    "urnand=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} rootfs.ubi.${soc}; nand erase 0x400000 0x7C00000; nand write ${baseaddr} 0x400000 ${filesize}\0" \
     "mtdpartsubi=setenv mtdparts nand:256k(boot),768k(wtf),3072k(kernel),-(ubi)\0" \
-    "mtdpartsnand=setenv mtdparts nand:256k(boot),768k(wtf),3072k(kernel),10240k(rootfs),-(rootfs_data)\0" \
     "mtdpartsnor8m=setenv mtdparts NOR_FLASH:256k(boot),64k(env),2048k(kernel),5120k(rootfs),-(rootfs_data)\0" \
     "mtdpartsnor16m=setenv mtdparts NOR_FLASH:256k(boot),64k(env),3072k(kernel),10240k(rootfs),-(rootfs_data)\0" \
-    "nfsroot=/srv/nfs/" __stringify(PRODUCT_NAME) "\0" \
-    "bootargsnfs=mem=\${osmem} console=ttyS0,115200 panic=20 root=/dev/nfs rootfstype=nfs ip=${ipaddr}:::255.255.255.0::eth0 nfsroot=${serverip}:${nfsroot},v3,nolock rw\0" \
-    "bootargsubi=mem=\${osmem} console=ttyS0,115200 panic=20 init=/init root=ubi0:rootfs rootfstype=ubifs ubi.mtd=3,2048 mtdparts=\${mtdparts}\0" \
-    "bootnfs=setenv setargs setenv bootargs ${bootargsnfs}; run setargs; tftpboot ${baseaddr} uImage.${soc}; bootm ${baseaddr}\0" \
     "bootcmdnand=setenv setargs setenv bootargs ${bootargs}; run setargs; nand read ${baseaddr} 0x100000 0x300000; bootm ${baseaddr}\0" \
-    "bootcmdubi=setenv setargs setenv bootargs ${bootargsubi}; run setargs; nand read ${baseaddr} 0x100000 0x300000; bootm ${baseaddr}\0" \
     "bootcmdnor=setenv setargs setenv bootargs ${bootargs}; run setargs; sf probe 0; sf read ${baseaddr} 0x50000 0x300000; bootm ${baseaddr}\0" \
-    "setnand=run mtdpartsubi; setenv bootcmd ${bootcmdubi}; saveenv; reset\0" \
-    "setnor8m=run mtdpartsnor8m; setenv bootcmd ${bootcmdnor}; saveenv; reset\0" \
-    "setnor16m=run mtdpartsnor16m; setenv bootcmd ${bootcmdnor}; saveenv; reset\0" \
-    "sigmastar=LX_MEM=0x7FE0000 mma_heap=mma_heap_name0,miu=0,sz=0x3800000\0" \
-    "setsd=setenv update fatload mmc 0\0" \
-    "update=tftpboot\0" \
+    "setnand=run mtdpartsubi; setenv bootcmd ${bootcmdnand}; saveenv; run bootcmd\0" \
+    "setnor8m=run mtdpartsnor8m; setenv bootcmd ${bootcmdnor}; saveenv; run bootcmd\0" \
+    "setnor16m=run mtdpartsnor16m; setenv bootcmd ${bootcmdnor}; saveenv; run bootcmd\0" \
+    "setsdcard=setenv updatetool fatload mmc 0\0" \
+    "updatetool=tftpboot\0" \
     "osmem=32M\0" \
     "soc=" __stringify(PRODUCT_NAME)
 

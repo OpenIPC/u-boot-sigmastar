@@ -708,6 +708,11 @@ struct spi_flash *spi_flash_probe(unsigned int bus, unsigned int cs,
 	printf("SF: Detected %s with total size ", flash->name);
 	print_size(flash->size, "\n");
 
+	if (flash->size / 1024 / 1024 == 8) {
+		setenv("setflash", "run setnor8m");
+	} else {
+		setenv("setflash", "run setnor16m");
+	}
 
 	return flash;
 

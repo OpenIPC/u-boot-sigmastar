@@ -13,8 +13,12 @@
 /*------------------------------------------------------------------------------
     Macro
 -------------------------------------------------------------------------------*/
-#define CONFIG_BOOTARGS "mem=\${osmem} console=ttyS0,115200 panic=20 root=/dev/mtdblock3 init=/init mtdparts=\${mtdparts} LX_MEM=\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\${memsz}"
-#define CONFIG_BOOTCOMMAND "setenv bootcmd run setflash; saveenv; reset"
+#undef CONFIG_ENV_OFFSET
+#undef CONFIG_ENV_SECT_SIZE
+#undef CONFIG_ENV_SIZE
+#undef CONFIG_SYS_CBSIZE
+#undef CONFIG_SYS_MAXARGS
+#undef CONFIG_SYS_PROMPT
 
 /* boot delay time */
 #define CONFIG_BOOTDELAY	0
@@ -56,25 +60,23 @@
 #define PRODUCT_NAME "ssc335"
 #endif
 
+#define CONFIG_BOOTARGS "mem=\\${osmem} console=ttyS0,115200 panic=20 root=/dev/mtdblock3 init=/init \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
+#define CONFIG_BOOTCOMMAND "setenv bootcmd run setflash; saveenv; reset"
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
+    "osmem=32M\0" \
     "baseaddr=0x21000000\0" \
     "uknor8m=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} uImage.${soc}; sf probe 0; sf erase 0x50000 0x200000; sf write ${baseaddr} 0x50000 ${filesize}\0" \
     "uknor16m=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} uImage.${soc}; sf probe 0; sf erase 0x50000 0x300000; sf write ${baseaddr} 0x50000 ${filesize}\0" \
     "urnor8m=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase 0x250000 0x500000; sf write ${baseaddr} 0x250000 ${filesize}\0" \
     "urnor16m=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase 0x350000 0xA00000; sf write ${baseaddr} 0x350000 ${filesize}\0" \
-    "uknand=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} uImage.${soc}; nand erase 0x100000 0x300000; nand write ${baseaddr} 0x100000 0x300000\0" \
-    "urnand=mw.b ${baseaddr} 0xFF 1000000; ${updatetool} ${baseaddr} rootfs.ubi.${soc}; nand erase 0x400000 0x7C00000; nand write ${baseaddr} 0x400000 ${filesize}\0" \
-    "mtdpartsubi=setenv mtdparts nand:256k(boot),768k(wtf),3072k(kernel),-(ubi)\0" \
-    "mtdpartsnor8m=setenv mtdparts NOR_FLASH:256k(boot),64k(env),2048k(kernel),5120k(rootfs),-(rootfs_data)\0" \
-    "mtdpartsnor16m=setenv mtdparts NOR_FLASH:256k(boot),64k(env),3072k(kernel),10240k(rootfs),-(rootfs_data)\0" \
-    "bootcmdnand=setenv setargs setenv bootargs ${bootargs}; run setargs; nand read ${baseaddr} 0x100000 0x300000; bootm ${baseaddr}\0" \
+    "mtdpartsnor8m=setenv mtdparts mtdparts=NOR_FLASH:256k(boot),64k(env),2048k(kernel),5120k(rootfs),-(rootfs_data)\0" \
+    "mtdpartsnor16m=setenv mtdparts mtdparts=NOR_FLASH:256k(boot),64k(env),3072k(kernel),10240k(rootfs),-(rootfs_data)\0" \
     "bootcmdnor=setenv setargs setenv bootargs ${bootargs}; run setargs; sf probe 0; sf read ${baseaddr} 0x50000 0x300000; bootm ${baseaddr}\0" \
-    "setnand=run mtdpartsubi; setenv bootcmd ${bootcmdnand}; saveenv; run bootcmd\0" \
     "setnor8m=run mtdpartsnor8m; setenv bootcmd ${bootcmdnor}; saveenv; run bootcmd\0" \
     "setnor16m=run mtdpartsnor16m; setenv bootcmd ${bootcmdnor}; saveenv; run bootcmd\0" \
     "setsdcard=setenv updatetool fatload mmc 0\0" \
     "updatetool=tftpboot\0" \
-    "osmem=32M\0" \
     "soc=" __stringify(PRODUCT_NAME)
 
 #endif
@@ -102,13 +104,13 @@
 #define CONFIG_UBI_MWRITE
 #define CONFIG_SYS_DCACHE_OFF
 
+#define CONFIG_BOOTARGS "mem=\\${osmem} console=ttyS0,115200 panic=20 root=/dev/mtdblock5 init=/init ubi.mtd=ubi \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
 #define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnand}; saveenv; run bootcmd"
-#define CONFIG_BOOTARGS "mem=\${osmem} console=ttyS0,115200 panic=20 init=/init ubi.mtd=ubi root=/dev/mtdblock5 \${mtdparts} \${sigmastar}"
 #define MTDPARTS_DEFAULT "mtdparts=nand0:384k@0x140000(boot0),384k(boot1),256k(env),-(ubi)"
 
 #ifndef CONFIG_MS_SAVE_ENV_IN_NAND_FLASH
+#define CONFIG_BOOTARGS "mem=\\${osmem} console=ttyS0,115200 panic=20 \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
 #define CONFIG_BOOTCOMMAND "setenv setargs setenv bootargs ${bootargs}; run setargs; fatload mmc 0 ${baseaddr} uImage.${soc}; bootm ${baseaddr}"
-#define CONFIG_BOOTARGS "mem=\${osmem} console=ttyS0,115200 panic=20 \${mtdparts} \${sigmastar}"
 #define MTDPARTS_DEFAULT "mtdparts=nand0:-(nand)"
 #endif
 
@@ -117,7 +119,6 @@
 	"baseaddr=0x21000000\0" \
 	"bootcmdnand=setenv setargs setenv bootargs ${bootargs}; run setargs; ubi part ubi; ubi read ${baseaddr} kernel; bootm ${baseaddr}\0" \
 	"urnand=mw.b ${baseaddr} 0xFF 0x1000000; tftpboot ${baseaddr} rootfs.ubi.${soc}; nand erase 0x240000 0x7DC0000; nand write ${baseaddr} 0x240000 ${filesize}\0" \
-	"sigmastar=LX_MEM=0xFFE0000 mma_heap=mma_heap_name0,miu=0,sz=0x9E9C000\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
 	"soc=" __stringify(PRODUCT_NAME)
 

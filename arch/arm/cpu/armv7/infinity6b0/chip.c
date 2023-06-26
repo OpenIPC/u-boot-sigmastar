@@ -310,14 +310,14 @@ int board_late_init(void)
 	setenv("totalmem", msize);
 
 	if (rsize == 64) {
-		setenv("memlx", "0x3FE0000");
-		setenv("memsz", "0x2000000");
+		setenv("memlx", "0x03FE0000");
+		setenv("memsz", "0x02000000");
 	} else if (rsize == 128) {
-		setenv("memlx", "0x7FE0000");
-		setenv("memsz", "0x3800000");
-	} else {
-		setenv("memlx", "0xFFE0000");
-		setenv("memsz", "0x5000000");
+		setenv("memlx", "0x07FE0000");
+		setenv("memsz", "0x03800000");
+	} else if (rsize == 256) {
+		setenv("memlx", "0x0FFE0000");
+		setenv("memsz", "0x05000000");
 	}
 
 	return 0;

@@ -16,6 +16,7 @@
 #undef CONFIG_ENV_OFFSET
 #undef CONFIG_ENV_SECT_SIZE
 #undef CONFIG_ENV_SIZE
+#undef CONFIG_EXTRA_ENV_SETTINGS
 #undef CONFIG_SYS_CBSIZE
 #undef CONFIG_SYS_MAXARGS
 #undef CONFIG_SYS_PROMPT
@@ -91,6 +92,12 @@
 #endif
 
 #ifdef CONFIG_MS_SPINAND
+#undef CONFIG_BOOTARGS
+#undef CONFIG_BOOTCOMMAND
+#undef CONFIG_ENV_RANGE
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#undef MTDPARTS_DEFAULT
+
 #if defined(CONFIG_MS_SAVE_ENV_IN_NAND_FLASH)
 #define CONFIG_ENV_IS_IN_NAND
 #define CONFIG_ENV_OFFSET CONFIG_MSTAR_ENV_NAND_OFFSET
@@ -104,11 +111,11 @@
 #define CONFIG_UBI_MWRITE
 #define CONFIG_SYS_DCACHE_OFF
 
+#ifdef CONFIG_MS_SAVE_ENV_IN_NAND_FLASH
 #define CONFIG_BOOTARGS "mem=\\${osmem} console=ttyS0,115200 panic=20 root=/dev/mtdblock5 init=/init ubi.mtd=ubi \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
 #define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnand}; saveenv; run bootcmd"
-#define MTDPARTS_DEFAULT "mtdparts=nand0:384k@0x140000(boot0),384k(boot1),256k(env),-(ubi)"
-
-#ifndef CONFIG_MS_SAVE_ENV_IN_NAND_FLASH
+#define MTDPARTS_DEFAULT "mtdparts=nand0:1024k(boot0),1024k(boot1),256k(env),-(ubi)"
+#else
 #define CONFIG_BOOTARGS "mem=\\${osmem} console=ttyS0,115200 panic=20 \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
 #define CONFIG_BOOTCOMMAND "setenv setargs setenv bootargs ${bootargs}; run setargs; fatload mmc 0 ${baseaddr} uImage.${soc}; bootm ${baseaddr}"
 #define MTDPARTS_DEFAULT "mtdparts=nand0:-(nand)"
@@ -118,8 +125,10 @@
 	"osmem=32M\0" \
 	"baseaddr=0x21000000\0" \
 	"bootcmdnand=setenv setargs setenv bootargs ${bootargs}; run setargs; ubi part ubi; ubi read ${baseaddr} kernel; bootm ${baseaddr}\0" \
-	"urnand=mw.b ${baseaddr} 0xFF 0x1000000; tftpboot ${baseaddr} rootfs.ubi.${soc}; nand erase 0x240000 0x7DC0000; nand write ${baseaddr} 0x240000 ${filesize}\0" \
+	"urnand=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} rootfs.ubi.${soc}; nand erase 0x240000 0x7DC0000; nand write ${baseaddr} 0x240000 ${filesize}\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
+	"setsdcard=setenv updatetool fatload mmc 0\0" \
+	"updatetool=tftpboot\0" \
 	"soc=" __stringify(PRODUCT_NAME)
 
 #define CONFIG_CMD_NAND

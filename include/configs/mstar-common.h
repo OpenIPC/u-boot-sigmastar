@@ -54,8 +54,9 @@
 /* bottom 4KB of available space in Uboot */
 /* 0x40000 reserved for UBoot, 0x40000 maximum storage size of uboot */
 #define CONFIG_ENV_OFFSET       0x40000
-
 #endif
+
+#define CONFIG_VERSION_VARIABLE
 
 #ifndef PRODUCT_NAME
 #define PRODUCT_NAME "ssc335"

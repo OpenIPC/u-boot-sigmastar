@@ -63,7 +63,7 @@
 #endif
 
 #define CONFIG_BOOTARGS "mem=\\${osmem} console=ttyS0,115200 panic=20 root=/dev/mtdblock3 init=/init \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
-#define CONFIG_BOOTCOMMAND "setenv bootcmd run setflash; saveenv; reset"
+#define CONFIG_BOOTCOMMAND "sf probe 0; setenv bootcmd run setflash; saveenv; reset"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
     "osmem=32M\0" \

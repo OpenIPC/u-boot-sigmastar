@@ -143,6 +143,33 @@ static int do_spi_flash_probe(int argc, char * const argv[])
 	flash = new;
 #endif
 
+	char buf[64];
+	unsigned int addr = 0x250000;
+	unsigned int magic, size;
+
+	if (spi_flash_read(flash, addr, 64, buf)) {
+		printf("Failed to read from SPI flash\n");
+		return 1;
+	}
+
+	sscanf(buf, "%s", &magic);
+	sscanf(buf + 40, "%s", &size);
+
+	if (magic == 0x73717368) {
+		if (size + 0x1000 < 0x500000) {
+			setenv("rootmtd", "5120k");
+		} else {
+			setenv("rootmtd", "8192k");
+		}
+	}
+
+	int file = getenv_ulong("filesize", 16, 0);
+	if (file < 0x500000) {
+		setenv("rootsize", "0x500000");
+	} else {
+		setenv("rootsize", "0x800000");
+	}
+
 	return 0;
 }
 

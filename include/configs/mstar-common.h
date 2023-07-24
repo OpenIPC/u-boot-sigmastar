@@ -56,27 +56,28 @@
 #define CONFIG_ENV_OFFSET       0x40000
 #endif
 
+#define CONFIG_CMD_LOADB
+#define CONFIG_SPL_YMODEM_SUPPORT
 #define CONFIG_VERSION_VARIABLE
 
 #ifndef PRODUCT_NAME
 #define PRODUCT_NAME "ssc335"
 #endif
 
-#define CONFIG_BOOTARGS "mem=\\${osmem} console=ttyS0,115200 panic=20 root=/dev/mtdblock3 init=/init \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
-#define CONFIG_BOOTCOMMAND "run setnor16m; setenv bootcmd ${bootcmdnor}; saveenv; reset"
+#define CONFIG_BOOTARGS "mem=\\${osmem} console=ttyS0,115200 panic=20 root=/dev/mtdblock3 init=/init mtdparts=NOR_FLASH:256k(boot),64k(env),2048k(kernel),\\${rootmtd}(rootfs),-(rootfs_data) LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
+#define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnor}; saveenv; reset"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"osmem=32M\0" \
 	"baseaddr=0x21000000\0" \
-	"kerneladdr=0x50000\0" \
-	"kernelsize=0x200000\0" \
-	"rootfsaddr=0x250000\0" \
-	"rootfssize=0x800000\0" \
-	"bootcmdnor=setenv setargs setenv bootargs ${bootargs}; run setargs; sf probe 0; sf read ${baseaddr} ${kerneladdr} ${kernelsize}; bootm ${baseaddr}\0" \
-	"uknor=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} uImage.${soc}; sf probe 0; sf erase ${kerneladdr} ${kernelsize}; sf write ${baseaddr} ${kerneladdr} ${filesize}\0" \
-	"urnor=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase ${rootfsaddr} ${rootfssize}; sf write ${baseaddr} ${rootfsaddr} ${filesize}\0" \
-	"setnor8m=setenv mtdparts mtdparts=NOR_FLASH:256k(boot),64k(env),2048k(kernel),5120k(rootfs),-(rootfs_data); setenv rootfssize 0x500000\0" \
-	"setnor16m=setenv mtdparts mtdparts=NOR_FLASH:256k(boot),64k(env),2048k(kernel),8192k(rootfs),-(rootfs_data); setenv rootfssize 0x800000\0" \
+	"kernaddr=0x50000\0" \
+	"kernsize=0x200000\0" \
+	"rootaddr=0x250000\0" \
+	"rootsize=0x500000\0" \
+	"rootmtd=5120k\0" \
+	"bootcmdnor=sf probe 0; setenv setargs setenv bootargs ${bootargs}; run setargs; sf read ${baseaddr} ${kernaddr} ${kernsize}; bootm ${baseaddr}\0" \
+	"uknor=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} uImage.${soc}; sf probe 0; sf erase ${kernaddr} ${kernsize}; sf write ${baseaddr} ${kernaddr} ${filesize}\0" \
+	"urnor=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase ${rootaddr} ${rootsize}; sf write ${baseaddr} ${rootaddr} ${filesize}\0" \
 	"setsdcard=setenv updatetool fatload mmc 0\0" \
 	"updatetool=tftpboot\0" \
 	"soc=" __stringify(PRODUCT_NAME)
@@ -125,10 +126,10 @@
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"osmem=32M\0" \
 	"baseaddr=0x21000000\0" \
-	"rootfsaddr=0x240000\0" \
-	"rootfssize=0x7DC0000\0" \
+	"rootaddr=0x240000\0" \
+	"rootsize=0x7DC0000\0" \
 	"bootcmdnand=setenv setargs setenv bootargs ${bootargs}; run setargs; ubi part ubi; ubi read ${baseaddr} kernel; bootm ${baseaddr}\0" \
-	"urnand=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} rootfs.ubi.${soc}; nand erase ${rootfsaddr} ${rootfssize}; nand write ${baseaddr} ${rootfsaddr} ${filesize}\0" \
+	"urnand=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} rootfs.ubi.${soc}; nand erase ${rootaddr} ${rootsize}; nand write ${baseaddr} ${rootaddr} ${filesize}\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
 	"setsdcard=setenv updatetool fatload mmc 0\0" \
 	"updatetool=tftpboot\0" \

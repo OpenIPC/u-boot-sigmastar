@@ -2,4 +2,4 @@
 U-Boot for Infinity6xx SoC's
 
 ## Building
-`./build.sh [device]`
+`./build.sh`

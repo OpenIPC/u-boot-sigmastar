@@ -119,7 +119,7 @@
 
 #ifdef CONFIG_MS_SAVE_ENV_IN_NAND_FLASH
 #define CONFIG_BOOTARGS "mem=\\${osmem} console=ttyS0,115200 panic=20 root=/dev/mtdblock5 init=/init ubi.mtd=ubi \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
-#define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnand}; saveenv; run bootcmd"
+#define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnand}; saveenv; reset"
 #define MTDPARTS_DEFAULT "mtdparts=nand0:1024k(boot0),1024k(boot1),256k(env),-(ubi)"
 #else
 #define CONFIG_BOOTARGS "mem=\\${osmem} console=ttyS0,115200 panic=20 \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"

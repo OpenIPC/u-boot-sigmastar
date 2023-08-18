@@ -68,7 +68,7 @@
 #define CONFIG_SYS_LOAD_ADDR 0x21000000
 
 #define CONFIG_BOOTARGS "console=ttyS0,115200 panic=20 root=/dev/mtdblock3 init=/init mtdparts=NOR_FLASH:256k(boot),64k(env),2048k(kernel),\\${rootmtd}(rootfs),-(rootfs_data) LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
-#define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnor}; saveenv; reset"
+#define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnor}; sf probe 0; saveenv; reset"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"baseaddr=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
@@ -76,7 +76,6 @@
 	"kernsize=0x200000\0" \
 	"rootaddr=0x250000\0" \
 	"rootsize=0x500000\0" \
-	"rootmtd=5120k\0" \
 	"bootcmdnor=sf probe 0; setenv setargs setenv bootargs ${bootargs}; run setargs; sf read ${baseaddr} ${kernaddr} ${kernsize}; bootm ${baseaddr}\0" \
 	"ubnor=sf probe 0; sf erase 0x0 ${kernaddr}; sf write ${baseaddr} 0x0 ${kernaddr}\0" \
 	"uknor=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} uImage.${soc}; sf probe 0; sf erase ${kernaddr} ${kernsize}; sf write ${baseaddr} ${kernaddr} ${filesize}\0" \

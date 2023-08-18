@@ -143,6 +143,13 @@ static int do_spi_flash_probe(int argc, char * const argv[])
 	flash = new;
 #endif
 
+	int file = getenv_ulong("filesize", 16, 0);
+	if (file < 0x500000) {
+		setenv("rootsize", "0x500000");
+	} else {
+		setenv("rootsize", "0x800000");
+	}
+
 	char buf[64];
 	unsigned int addr = 0x250000;
 	unsigned int magic, size;
@@ -161,13 +168,6 @@ static int do_spi_flash_probe(int argc, char * const argv[])
 		} else {
 			setenv("rootmtd", "8192k");
 		}
-	}
-
-	int file = getenv_ulong("filesize", 16, 0);
-	if (file < 0x500000) {
-		setenv("rootsize", "0x500000");
-	} else {
-		setenv("rootsize", "0x800000");
 	}
 
 	return 0;

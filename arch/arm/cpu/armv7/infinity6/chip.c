@@ -309,13 +309,13 @@ int board_late_init(void)
 	setenv("totalmem", msize);
 
 	if (rsize == 64) {
-		setenv("memlx", "0x3FC6000");
+		setenv("memlx", "0x3FE0000");
 		setenv("memsz", "0x2000000");
 	} else if (rsize == 128) {
-		setenv("memlx", "0x7FC6000");
+		setenv("memlx", "0x7FE0000");
 		setenv("memsz", "0x5000000");
 	} else if (rsize == 256) {
-		setenv("memlx", "0xFFC6000");
+		setenv("memlx", "0xFFE0000");
 		setenv("memsz", "0xA000000");
 	}
 

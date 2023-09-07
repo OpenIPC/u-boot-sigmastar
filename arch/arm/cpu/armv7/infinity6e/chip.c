@@ -311,19 +311,19 @@ int board_late_init(void)
 
 	if (rsize == 64) {
 		setenv("memlx", "0x3FE0000");
-		setenv("memsz", "0x1E9C000");
+		setenv("memsz", "0x2000000");
 	} else if (rsize == 128) {
 		setenv("memlx", "0x7FE0000");
-		setenv("memsz", "0x4E9C000");
+		setenv("memsz", "0x5000000");
 	} else if (rsize == 256) {
 		setenv("memlx", "0xFFE0000");
-		setenv("memsz", "0x9E9C000");
+		setenv("memsz", "0xA000000");
 	} else if (rsize == 512) {
 		setenv("memlx", "0x1FFE0000");
-		setenv("memsz", "0x0FE9C000");
+		setenv("memsz", "0x10000000");
 	} else if (rsize == 1024) {
 		setenv("memlx", "0x3FFE0000");
-		setenv("memsz", "0x1FE9C000");
+		setenv("memsz", "0x20000000");
 	}
 
 	return 0;

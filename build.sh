@@ -24,7 +24,7 @@ mv BOOT.bin output/u-boot-${soc}-nor.bin
 done
 
 # spinor infinity6e
-for soc in ssc30kq ssc338q; do
+for soc in ssc30kd ssc30kq ssc338q; do
 make distclean
 make infinity6e_defconfig
 make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}

@@ -68,7 +68,7 @@
 #define CONFIG_SYS_LOAD_ADDR 0x21000000
 
 #define CONFIG_BOOTARGS "console=ttyS0,115200 panic=20 root=/dev/mtdblock3 init=/init mtdparts=NOR_FLASH:256k(boot),64k(env),2048k(kernel),\\${rootmtd}(rootfs),-(rootfs_data) LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
-#define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnor}; sf probe 0; saveenv; reset"
+#define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnor}; sf probe 0; saveenv; run bootcmd"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"baseaddr=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
@@ -118,7 +118,7 @@
 
 #ifdef CONFIG_MS_SAVE_ENV_IN_NAND_FLASH
 #define CONFIG_BOOTARGS "console=ttyS0,115200 panic=20 root=/dev/mtdblock5 init=/init ubi.mtd=ubi \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
-#define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnand}; saveenv; reset"
+#define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnand}; saveenv; run bootcmd"
 #define MTDPARTS_DEFAULT "mtdparts=nand0:1024k(boot0),1024k(boot1),256k(env),-(ubi)"
 #else
 #define CONFIG_BOOTARGS "console=ttyS0,115200 panic=20 \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
@@ -131,6 +131,7 @@
 	"rootaddr=0x240000\0" \
 	"rootsize=0x7DC0000\0" \
 	"bootcmdnand=setenv setargs setenv bootargs ${bootargs}; run setargs; ubi part ubi; ubi read ${baseaddr} kernel; bootm ${baseaddr}\0" \
+	"ubnand=nand erase 0x0 ${rootaddr}; nand write ${baseaddr} 0x0 ${rootaddr}\0" \
 	"urnand=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} rootfs.ubi.${soc}; nand erase ${rootaddr} ${rootsize}; nand write ${baseaddr} ${rootaddr} ${filesize}\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
 	"setsdcard=setenv updatetool fatload mmc 0\0" \

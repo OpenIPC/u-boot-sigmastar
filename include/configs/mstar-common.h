@@ -58,6 +58,7 @@
 #endif
 
 #define CONFIG_CMD_LOADB
+#define CONFIG_FAT_WRITE
 #define CONFIG_SPL_YMODEM_SUPPORT
 #define CONFIG_VERSION_VARIABLE
 
@@ -77,10 +78,12 @@
 	"rootaddr=0x250000\0" \
 	"rootsize=0x500000\0" \
 	"rootmtd=5120k\0" \
+	"flashsize=0x800000\0" \
 	"bootcmdnor=sf probe 0; setenv setargs setenv bootargs ${bootargs}; run setargs; sf read ${baseaddr} ${kernaddr} ${kernsize}; bootm ${baseaddr}\0" \
 	"ubnor=sf probe 0; sf erase 0x0 ${kernaddr}; sf write ${baseaddr} 0x0 ${kernaddr}\0" \
-	"uknor=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} uImage.${soc}; sf probe 0; sf erase ${kernaddr} ${kernsize}; sf write ${baseaddr} ${kernaddr} ${filesize}\0" \
-	"urnor=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase ${rootaddr} ${rootsize}; sf write ${baseaddr} ${rootaddr} ${filesize}\0" \
+	"uknor=sf probe 0; mw.b ${baseaddr} 0xFF ${flashsize}; ${updatetool} ${baseaddr} uImage.${soc}; sf erase ${kernaddr} ${kernsize}; sf write ${baseaddr} ${kernaddr} ${filesize}\0" \
+	"urnor=sf probe 0; mw.b ${baseaddr} 0xFF ${flashsize}; ${updatetool} ${baseaddr} rootfs.squashfs.${soc}; sf erase ${rootaddr} ${rootsize}; sf write ${baseaddr} ${rootaddr} ${filesize}\0" \
+	"sdbackup=sf probe 0; mw.b ${baseaddr} 0xFF ${flashsize}; sf read ${baseaddr} 0x0 ${flashsize}; fatwrite mmc 0 ${baseaddr} ${soc}_backup.bin ${flashsize}\0" \
 	"setsdcard=setenv updatetool fatload mmc 0\0" \
 	"updatetool=tftpboot\0" \
 	"soc=" __stringify(PRODUCT_NAME)

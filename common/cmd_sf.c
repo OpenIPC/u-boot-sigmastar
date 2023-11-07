@@ -170,6 +170,12 @@ static int do_spi_flash_probe(int argc, char * const argv[])
 		}
 	}
 
+	if (flash->size == 0x800000) {
+		setenv("flashsize", "0x800000");
+	} else {
+		setenv("flashsize", "0x1000000");
+	}
+
 	return 0;
 }
 

@@ -21,6 +21,8 @@
 #undef CONFIG_SYS_LOAD_ADDR
 #undef CONFIG_SYS_MAXARGS
 #undef CONFIG_SYS_PROMPT
+#undef CONFIG_USB
+#undef CONFIG_USB_STORAGE
 
 /* boot delay time */
 #define CONFIG_BOOTDELAY	0

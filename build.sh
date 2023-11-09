@@ -14,6 +14,15 @@ make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
 mv BOOT.bin output/u-boot-${soc}-nor.bin
 done
 
+# spinand infinity6
+for soc in ssc325de; do
+make distclean
+make infinity6_spinand_defconfig
+make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
+./make_boot_spinand.sh i6
+mv BOOT.bin output/u-boot-${soc}-nand.bin
+done
+
 # spinor infinity6b0
 for soc in ssc333 ssc335 ssc337 ssc335de ssc337de; do
 make distclean
@@ -37,7 +46,7 @@ for soc in ssc338q; do
 make distclean
 make infinity6e_spinand_defconfig
 make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
-./make_boot_spinand.sh
+./make_boot_spinand.sh i6e
 mv BOOT.bin output/u-boot-${soc}-nand.bin
 done
 

@@ -1,0 +1,445 @@
+#define _CONCAT( a, b )     a##b
+#define CONCAT( a, b )      _CONCAT( a, b )
+
+#define GPIO0_PAD        PAD_SR_IO00
+#define GPIO0_OEN        0x103E00, BIT2
+#define GPIO0_OUT        0x103E00, BIT1
+#define GPIO0_IN         0x103E00, BIT0
+
+#define GPIO1_PAD        PAD_SR_IO01
+#define GPIO1_OEN        0x103E02, BIT2
+#define GPIO1_OUT        0x103E02, BIT1
+#define GPIO1_IN         0x103E02, BIT0
+
+#define GPIO2_PAD        PAD_SR_IO02
+#define GPIO2_OEN        0x103E04, BIT2
+#define GPIO2_OUT        0x103E04, BIT1
+#define GPIO2_IN         0x103E04, BIT0
+
+#define GPIO3_PAD        PAD_SR_IO03
+#define GPIO3_OEN        0x103E06, BIT2
+#define GPIO3_OUT        0x103E06, BIT1
+#define GPIO3_IN         0x103E06, BIT0
+
+#define GPIO4_PAD        PAD_SR_IO04
+#define GPIO4_OEN        0x103E08, BIT2
+#define GPIO4_OUT        0x103E08, BIT1
+#define GPIO4_IN         0x103E08, BIT0
+
+#define GPIO5_PAD        PAD_SR_IO05
+#define GPIO5_OEN        0x103E0A, BIT2
+#define GPIO5_OUT        0x103E0A, BIT1
+#define GPIO5_IN         0x103E0A, BIT0
+
+#define GPIO6_PAD        PAD_SR_IO06
+#define GPIO6_OEN        0x103E0C, BIT2
+#define GPIO6_OUT        0x103E0C, BIT1
+#define GPIO6_IN         0x103E0C, BIT0
+
+#define GPIO7_PAD        PAD_SR_IO07
+#define GPIO7_OEN        0x103E0E, BIT2
+#define GPIO7_OUT        0x103E0E, BIT1
+#define GPIO7_IN         0x103E0E, BIT0
+
+#define GPIO8_PAD        PAD_SR_IO08
+#define GPIO8_OEN        0x103E10, BIT2
+#define GPIO8_OUT        0x103E10, BIT1
+#define GPIO8_IN         0x103E10, BIT0
+
+#define GPIO9_PAD        PAD_SR_IO09
+#define GPIO9_OEN        0x103E12, BIT2
+#define GPIO9_OUT        0x103E12, BIT1
+#define GPIO9_IN         0x103E12, BIT0
+
+#define GPIO10_PAD       PAD_SR_IO10
+#define GPIO10_OEN       0x103E14, BIT2
+#define GPIO10_OUT       0x103E14, BIT1
+#define GPIO10_IN        0x103E14, BIT0
+
+#define GPIO11_PAD       PAD_SR_IO11
+#define GPIO11_OEN       0x103E16, BIT2
+#define GPIO11_OUT       0x103E16, BIT1
+#define GPIO11_IN        0x103E16, BIT0
+
+#define GPIO12_PAD       PAD_SR_IO12
+#define GPIO12_OEN       0x103E18, BIT2
+#define GPIO12_OUT       0x103E18, BIT1
+#define GPIO12_IN        0x103E18, BIT0
+
+#define GPIO13_PAD       PAD_SR_IO13
+#define GPIO13_OEN       0x103E1A, BIT2
+#define GPIO13_OUT       0x103E1A, BIT1
+#define GPIO13_IN        0x103E1A, BIT0
+
+#define GPIO14_PAD       PAD_SR_IO14
+#define GPIO14_OEN       0x103E1C, BIT2
+#define GPIO14_OUT       0x103E1C, BIT1
+#define GPIO14_IN        0x103E1C, BIT0
+
+#define GPIO15_PAD       PAD_SR_IO15
+#define GPIO15_OEN       0x103E1E, BIT2
+#define GPIO15_OUT       0x103E1E, BIT1
+#define GPIO15_IN        0x103E1E, BIT0
+
+#define GPIO16_PAD       PAD_SR_IO16
+#define GPIO16_OEN       0x103E20, BIT2
+#define GPIO16_OUT       0x103E20, BIT1
+#define GPIO16_IN        0x103E20, BIT0
+
+#define GPIO17_PAD       PAD_TTL0
+#define GPIO17_OEN       0x103E22, BIT2
+#define GPIO17_OUT       0x103E22, BIT1
+#define GPIO17_IN        0x103E22, BIT0
+
+#define GPIO18_PAD       PAD_TTL1
+#define GPIO18_OEN       0x103E24, BIT2
+#define GPIO18_OUT       0x103E24, BIT1
+#define GPIO18_IN        0x103E24, BIT0
+
+#define GPIO19_PAD       PAD_TTL2
+#define GPIO19_OEN       0x103E26, BIT2
+#define GPIO19_OUT       0x103E26, BIT1
+#define GPIO19_IN        0x103E26, BIT0
+
+#define GPIO20_PAD       PAD_TTL3
+#define GPIO20_OEN       0x103E28, BIT2
+#define GPIO20_OUT       0x103E28, BIT1
+#define GPIO20_IN        0x103E28, BIT0
+
+#define GPIO21_PAD       PAD_TTL4
+#define GPIO21_OEN       0x103E2A, BIT2
+#define GPIO21_OUT       0x103E2A, BIT1
+#define GPIO21_IN        0x103E2A, BIT0
+
+#define GPIO22_PAD       PAD_TTL5
+#define GPIO22_OEN       0x103E2C, BIT2
+#define GPIO22_OUT       0x103E2C, BIT1
+#define GPIO22_IN        0x103E2C, BIT0
+
+#define GPIO23_PAD       PAD_TTL6
+#define GPIO23_OEN       0x103E2E, BIT2
+#define GPIO23_OUT       0x103E2E, BIT1
+#define GPIO23_IN        0x103E2E, BIT0
+
+#define GPIO24_PAD       PAD_TTL7
+#define GPIO24_OEN       0x103E30, BIT2
+#define GPIO24_OUT       0x103E30, BIT1
+#define GPIO24_IN        0x103E30, BIT0
+
+#define GPIO25_PAD       PAD_TTL8
+#define GPIO25_OEN       0x103E32, BIT2
+#define GPIO25_OUT       0x103E32, BIT1
+#define GPIO25_IN        0x103E32, BIT0
+
+#define GPIO26_PAD       PAD_TTL9
+#define GPIO26_OEN       0x103E34, BIT2
+#define GPIO26_OUT       0x103E34, BIT1
+#define GPIO26_IN        0x103E34, BIT0
+
+#define GPIO27_PAD       PAD_TTL10
+#define GPIO27_OEN       0x103E36, BIT2
+#define GPIO27_OUT       0x103E36, BIT1
+#define GPIO27_IN        0x103E36, BIT0
+
+#define GPIO28_PAD       PAD_TTL11
+#define GPIO28_OEN       0x103E38, BIT2
+#define GPIO28_OUT       0x103E38, BIT1
+#define GPIO28_IN        0x103E38, BIT0
+
+#define GPIO29_PAD       PAD_TTL12
+#define GPIO29_OEN       0x103E3A, BIT2
+#define GPIO29_OUT       0x103E3A, BIT1
+#define GPIO29_IN        0x103E3A, BIT0
+
+#define GPIO30_PAD       PAD_TTL13
+#define GPIO30_OEN       0x103E3C, BIT2
+#define GPIO30_OUT       0x103E3C, BIT1
+#define GPIO30_IN        0x103E3C, BIT0
+
+#define GPIO31_PAD       PAD_TTL14
+#define GPIO31_OEN       0x103E3E, BIT2
+#define GPIO31_OUT       0x103E3E, BIT1
+#define GPIO31_IN        0x103E3E, BIT0
+
+#define GPIO32_PAD       PAD_TTL15
+#define GPIO32_OEN       0x103E40, BIT2
+#define GPIO32_OUT       0x103E40, BIT1
+#define GPIO32_IN        0x103E40, BIT0
+
+#define GPIO33_PAD       PAD_TTL16
+#define GPIO33_OEN       0x103E42, BIT2
+#define GPIO33_OUT       0x103E42, BIT1
+#define GPIO33_IN        0x103E42, BIT0
+
+#define GPIO34_PAD       PAD_TTL17
+#define GPIO34_OEN       0x103E44, BIT2
+#define GPIO34_OUT       0x103E44, BIT1
+#define GPIO34_IN        0x103E44, BIT0
+
+#define GPIO35_PAD       PAD_TTL18
+#define GPIO35_OEN       0x103E46, BIT2
+#define GPIO35_OUT       0x103E46, BIT1
+#define GPIO35_IN        0x103E46, BIT0
+
+#define GPIO36_PAD       PAD_TTL19
+#define GPIO36_OEN       0x103E48, BIT2
+#define GPIO36_OUT       0x103E48, BIT1
+#define GPIO36_IN        0x103E48, BIT0
+
+#define GPIO37_PAD       PAD_TTL20
+#define GPIO37_OEN       0x103E4A, BIT2
+#define GPIO37_OUT       0x103E4A, BIT1
+#define GPIO37_IN        0x103E4A, BIT0
+
+#define GPIO38_PAD       PAD_TTL21
+#define GPIO38_OEN       0x103E4C, BIT2
+#define GPIO38_OUT       0x103E4C, BIT1
+#define GPIO38_IN        0x103E4C, BIT0
+
+#define GPIO39_PAD       PAD_KEY0
+#define GPIO39_OEN       0x103E4E, BIT2
+#define GPIO39_OUT       0x103E4E, BIT1
+#define GPIO39_IN        0x103E4E, BIT0
+
+#define GPIO40_PAD       PAD_KEY1
+#define GPIO40_OEN       0x103E50, BIT2
+#define GPIO40_OUT       0x103E50, BIT1
+#define GPIO40_IN        0x103E50, BIT0
+
+#define GPIO41_PAD       PAD_KEY2
+#define GPIO41_OEN       0x103E52, BIT2
+#define GPIO41_OUT       0x103E52, BIT1
+#define GPIO41_IN        0x103E52, BIT0
+
+#define GPIO42_PAD       PAD_KEY3
+#define GPIO42_OEN       0x103E54, BIT2
+#define GPIO42_OUT       0x103E54, BIT1
+#define GPIO42_IN        0x103E54, BIT0
+
+#define GPIO43_PAD       PAD_KEY4
+#define GPIO43_OEN       0x103E56, BIT2
+#define GPIO43_OUT       0x103E56, BIT1
+#define GPIO43_IN        0x103E56, BIT0
+
+#define GPIO44_PAD       PAD_KEY5
+#define GPIO44_OEN       0x103E58, BIT2
+#define GPIO44_OUT       0x103E58, BIT1
+#define GPIO44_IN        0x103E58, BIT0
+
+#define GPIO45_PAD       PAD_KEY6
+#define GPIO45_OEN       0x103E5A, BIT2
+#define GPIO45_OUT       0x103E5A, BIT1
+#define GPIO45_IN        0x103E5A, BIT0
+
+#define GPIO46_PAD       PAD_KEY7
+#define GPIO46_OEN       0x103E5C, BIT2
+#define GPIO46_OUT       0x103E5C, BIT1
+#define GPIO46_IN        0x103E5C, BIT0
+
+#define GPIO47_PAD       PAD_KEY8
+#define GPIO47_OEN       0x103E5E, BIT2
+#define GPIO47_OUT       0x103E5E, BIT1
+#define GPIO47_IN        0x103E5E, BIT0
+
+#define GPIO48_PAD       PAD_KEY9
+#define GPIO48_OEN       0x103E60, BIT2
+#define GPIO48_OUT       0x103E60, BIT1
+#define GPIO48_IN        0x103E60, BIT0
+
+#define GPIO49_PAD       PAD_KEY10
+#define GPIO49_OEN       0x103E62, BIT2
+#define GPIO49_OUT       0x103E62, BIT1
+#define GPIO49_IN        0x103E62, BIT0
+
+#define GPIO50_PAD       PAD_KEY11
+#define GPIO50_OEN       0x103E64, BIT2
+#define GPIO50_OUT       0x103E64, BIT1
+#define GPIO50_IN        0x103E64, BIT0
+
+#define GPIO51_PAD       PAD_KEY12
+#define GPIO51_OEN       0x103E66, BIT2
+#define GPIO51_OUT       0x103E66, BIT1
+#define GPIO51_IN        0x103E66, BIT0
+
+#define GPIO52_PAD       PAD_KEY13
+#define GPIO52_OEN       0x103E68, BIT2
+#define GPIO52_OUT       0x103E68, BIT1
+#define GPIO52_IN        0x103E68, BIT0
+
+#define GPIO53_PAD       PAD_SD_D1
+#define GPIO53_OEN       0x103E6A, BIT2
+#define GPIO53_OUT       0x103E6A, BIT1
+#define GPIO53_IN        0x103E6A, BIT0
+
+#define GPIO54_PAD       PAD_SD_D0
+#define GPIO54_OEN       0x103E6C, BIT2
+#define GPIO54_OUT       0x103E6C, BIT1
+#define GPIO54_IN        0x103E6C, BIT0
+
+#define GPIO55_PAD       PAD_SD_CLK
+#define GPIO55_OEN       0x103E6E, BIT2
+#define GPIO55_OUT       0x103E6E, BIT1
+#define GPIO55_IN        0x103E6E, BIT0
+
+#define GPIO56_PAD       PAD_SD_CMD
+#define GPIO56_OEN       0x103E70, BIT2
+#define GPIO56_OUT       0x103E70, BIT1
+#define GPIO56_IN        0x103E70, BIT0
+
+#define GPIO57_PAD       PAD_SD_D3
+#define GPIO57_OEN       0x103E72, BIT2
+#define GPIO57_OUT       0x103E72, BIT1
+#define GPIO57_IN        0x103E72, BIT0
+
+#define GPIO58_PAD       PAD_SD_D2
+#define GPIO58_OEN       0x103E74, BIT2
+#define GPIO58_OUT       0x103E74, BIT1
+#define GPIO58_IN        0x103E74, BIT0
+
+#define GPIO59_PAD       PAD_SD_GPIO0
+#define GPIO59_OEN       0x103E76, BIT2
+#define GPIO59_OUT       0x103E76, BIT1
+#define GPIO59_IN        0x103E76, BIT0
+
+#define GPIO60_PAD       PAD_SD_GPIO1
+#define GPIO60_OEN       0x103E78, BIT2
+#define GPIO60_OUT       0x103E78, BIT1
+#define GPIO60_IN        0x103E78, BIT0
+
+#define GPIO61_PAD       PAD_GPIO0
+#define GPIO61_OEN       0x103E7A, BIT2
+#define GPIO61_OUT       0x103E7A, BIT1
+#define GPIO61_IN        0x103E7A, BIT0
+
+#define GPIO62_PAD       PAD_GPIO1
+#define GPIO62_OEN       0x103E7C, BIT2
+#define GPIO62_OUT       0x103E7C, BIT1
+#define GPIO62_IN        0x103E7C, BIT0
+
+#define GPIO63_PAD       PAD_GPIO2
+#define GPIO63_OEN       0x103E7E, BIT2
+#define GPIO63_OUT       0x103E7E, BIT1
+#define GPIO63_IN        0x103E7E, BIT0
+
+#define GPIO64_PAD       PAD_GPIO3
+#define GPIO64_OEN       0x103E80, BIT2
+#define GPIO64_OUT       0x103E80, BIT1
+#define GPIO64_IN        0x103E80, BIT0
+
+#define GPIO65_PAD       PAD_GPIO4
+#define GPIO65_OEN       0x103E82, BIT2
+#define GPIO65_OUT       0x103E82, BIT1
+#define GPIO65_IN        0x103E82, BIT0
+
+#define GPIO66_PAD       PAD_GPIO5
+#define GPIO66_OEN       0x103E84, BIT2
+#define GPIO66_OUT       0x103E84, BIT1
+#define GPIO66_IN        0x103E84, BIT0
+
+#define GPIO67_PAD       PAD_GPIO6
+#define GPIO67_OEN       0x103E86, BIT2
+#define GPIO67_OUT       0x103E86, BIT1
+#define GPIO67_IN        0x103E86, BIT0
+
+#define GPIO68_PAD       PAD_GPIO7
+#define GPIO68_OEN       0x103E88, BIT2
+#define GPIO68_OUT       0x103E88, BIT1
+#define GPIO68_IN        0x103E88, BIT0
+
+#define GPIO69_PAD       PAD_GPIO8
+#define GPIO69_OEN       0x103E8A, BIT2
+#define GPIO69_OUT       0x103E8A, BIT1
+#define GPIO69_IN        0x103E8A, BIT0
+
+#define GPIO70_PAD       PAD_GPIO9
+#define GPIO70_OEN       0x103E8C, BIT2
+#define GPIO70_OUT       0x103E8C, BIT1
+#define GPIO70_IN        0x103E8C, BIT0
+
+#define GPIO71_PAD       PAD_PM_SPI_CZ
+#define GPIO71_OEN       0xF30, BIT0
+#define GPIO71_OUT       0xF30, BIT1
+#define GPIO71_IN        0xF30, BIT2
+
+#define GPIO72_PAD       PAD_PM_SPI_CK
+#define GPIO72_OEN       0xF32, BIT0
+#define GPIO72_OUT       0xF32, BIT1
+#define GPIO72_IN        0xF32, BIT2
+
+#define GPIO73_PAD       PAD_PM_SPI_DI
+#define GPIO73_OEN       0xF34, BIT0
+#define GPIO73_OUT       0xF34, BIT1
+#define GPIO73_IN        0xF34, BIT2
+
+#define GPIO74_PAD       PAD_PM_SPI_DO
+#define GPIO74_OEN       0xF36, BIT0
+#define GPIO74_OUT       0xF36, BIT1
+#define GPIO74_IN        0xF36, BIT2
+
+#define GPIO75_PAD       PAD_PM_SPI_WPZ
+#define GPIO75_OEN       0xF88, BIT0
+#define GPIO75_OUT       0xF88, BIT1
+#define GPIO75_IN        0xF88, BIT2
+
+#define GPIO76_PAD       PAD_PM_SPI_HLD
+#define GPIO76_OEN       0xF8A, BIT0
+#define GPIO76_OUT       0xF8A, BIT1
+#define GPIO76_IN        0xF8A, BIT2
+
+#define GPIO77_PAD       PAD_PM_SD_CDZ
+#define GPIO77_OEN       0xF8E, BIT0
+#define GPIO77_OUT       0xF8E, BIT1
+#define GPIO77_IN        0xF8E, BIT2
+
+#define GPIO78_PAD       PAD_PM_LED0
+#define GPIO78_OEN       0xF94, BIT0
+#define GPIO78_OUT       0xF94, BIT1
+#define GPIO78_IN        0xF94, BIT2
+
+#define GPIO79_PAD       PAD_PM_LED1
+#define GPIO79_OEN       0xF96, BIT0
+#define GPIO79_OUT       0xF96, BIT1
+#define GPIO79_IN        0xF96, BIT2
+
+#define GPIO80_PAD       PAD_PM_UART_RX
+#define GPIO80_OEN       0xF2A, BIT0
+#define GPIO80_OUT       0xF2A, BIT1
+#define GPIO80_IN        0xF2A, BIT2
+
+
+//-------------------------------------------------------------------------------------------------
+//  Local Variables
+//-------------------------------------------------------------------------------------------------
+static const struct gpio_setting
+{
+    U32 r_oen;
+    U8  m_oen;
+    U32 r_out;
+    U8  m_out;
+    U32 r_in;
+    U8  m_in;
+} gpio_table[] =
+{
+#define __GPIO__(_x_)   { CONCAT(CONCAT(GPIO, _x_), _OEN), CONCAT(CONCAT(GPIO, _x_), _OUT), CONCAT(CONCAT(GPIO, _x_), _IN) }
+#define __GPIO(_x_)     __GPIO__(_x_)
+
+//
+// !! WARNING !! DO NOT MODIFIY !!!!
+//
+// These defines order must match following
+// 1. the PAD name in GPIO excel
+// 2. the perl script to generate the package header file
+//
+    //__GPIO(999), // 0 is not used
+    __GPIO(0), __GPIO(1), __GPIO(2), __GPIO(3), __GPIO(4), __GPIO(5), __GPIO(6), __GPIO(7),
+    __GPIO(8), __GPIO(9), __GPIO(10), __GPIO(11), __GPIO(12), __GPIO(13), __GPIO(14), __GPIO(15),
+    __GPIO(16), __GPIO(17), __GPIO(18), __GPIO(19), __GPIO(20), __GPIO(21), __GPIO(22), __GPIO(23),
+    __GPIO(24), __GPIO(25), __GPIO(26), __GPIO(27), __GPIO(28), __GPIO(29), __GPIO(30), __GPIO(31),
+    __GPIO(32), __GPIO(33), __GPIO(34), __GPIO(35), __GPIO(36), __GPIO(37), __GPIO(38), __GPIO(39),
+    __GPIO(40), __GPIO(41), __GPIO(42), __GPIO(43), __GPIO(44), __GPIO(45), __GPIO(46), __GPIO(47),
+    __GPIO(48), __GPIO(49), __GPIO(50), __GPIO(51), __GPIO(52), __GPIO(53), __GPIO(54), __GPIO(55),
+    __GPIO(56), __GPIO(57), __GPIO(58), __GPIO(59), __GPIO(60), __GPIO(61), __GPIO(62), __GPIO(63),
+    __GPIO(64), __GPIO(65), __GPIO(66), __GPIO(67), __GPIO(68), __GPIO(69), __GPIO(70), __GPIO(71),
+    __GPIO(72), __GPIO(73), __GPIO(74), __GPIO(75), __GPIO(76), __GPIO(77), __GPIO(78), __GPIO(79),
+    __GPIO(80),
+};

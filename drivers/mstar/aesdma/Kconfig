@@ -1,0 +1,15 @@
+config CMD_SIGAUTH
+	bool "sigauth"
+	help
+	  This enables the command sigauth which only authenticate image
+	  with signature.
+
+config SRAM_DUMMY_ACCESS_RSA
+	bool "dummy access RSA"
+	depends on CMD_SIGAUTH
+
+config CMD_VERIFYAESDMA
+    bool "verifyaes"
+    default n
+	help
+        Verify AES/RSA driver

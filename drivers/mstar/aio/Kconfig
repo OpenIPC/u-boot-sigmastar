@@ -1,0 +1,26 @@
+config MS_AIO
+	tristate "AIO driver"
+	default n
+
+#config MS_AIO_INFINITY2
+#	tristate "AIO support for iNfinity2"
+#	depends on MS_AIO
+#	depends on ARCH_INFINITY2
+
+config MS_AIO_INFINITY5
+	tristate "AIO support for iNfinity5"
+	depends on MS_AIO
+	depends on ARCH_INFINITY5
+	depends on MS_GPIO
+
+config MS_AIO_INFINITY6
+	tristate "AIO support for iNfinity6"
+	depends on MS_AIO
+	depends on ARCH_INFINITY6
+	depends on MS_GPIO
+
+config MS_AIO_INFINITY6B0
+	tristate "AIO support for iNfinity6b0"
+	depends on MS_AIO
+	depends on ARCH_INFINITY6B0
+	depends on MS_GPIO

@@ -1,0 +1,32 @@
+if INFINITY6C
+choice
+	prompt "SD IP select config"
+	depends on MS_SDMMC
+	default SDIO_FCIE
+
+	config SDIO_FCIE
+		bool "both fcie & sdio"
+		help
+			Select SDIO and FCIE for SD drive
+
+	config SDIO_IP
+		bool "sdio"
+		help
+			Select SDIO for SD drive
+
+	config FCIE_IP
+		bool "fcie"
+		help
+			Select FCIE for SD drive
+endchoice
+endif
+
+config SDMMC_FAKE_CDZ
+	depends on MS_SDMMC
+	bool 'FAKE_CDZ'
+	default n
+
+config MS_SAVE_ENV_IN_SDMMC
+	depends on MS_SDMMC
+	bool "Save environment to SDMMC"
+	default n

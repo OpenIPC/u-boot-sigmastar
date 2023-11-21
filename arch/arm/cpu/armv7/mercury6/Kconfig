@@ -1,0 +1,29 @@
+if MERCURY6
+
+config SYS_CONFIG_NAME
+    default "mercury6"
+    ---help---
+    To load the "include/configs/mercury6.h"
+
+
+config SYS_SOC
+    default "mercury6"
+    ---help---
+    To generate correct  "arch/arm/include/asm/arch"
+
+config SYS_GENERIC_BOARD
+    bool
+    default y
+
+config VERSION_FPGA
+    bool "FPGA version"
+    default n
+
+config SS_BOOTING_PERF
+    bool "booting time"
+    default y
+
+config SSTAR_SPL_EARLY_BSS
+    bool "clear bss section first before run board_f"
+    default n
+endif

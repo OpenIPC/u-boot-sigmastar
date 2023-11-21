@@ -1,0 +1,40 @@
+menu "USB Gadget Support"
+
+config USBDOWNLOAD_GADGET
+	bool "Enable USB download gadget"
+	help
+	  Composite USB download gadget support (g_dnl) for download functions.
+	  This code works on top of composite gadget.
+
+if USBDOWNLOAD_GADGET
+
+config USB_GADGET_MASS_STORAGE
+	bool "Enable USB mass storage gadget"
+	help
+	  Enable mass storage protocol support in U-Boot. It allows exporting
+	  the eMMC/SD card content to HOST PC so it can be mounted.
+
+config CMD_THOR_DOWNLOAD
+	bool "Enable USB THOR gadget"
+	help
+	  Enable Tizen's THOR download protocol support in U-Boot. It
+	  allows downloading images into memory and flash them to target device.
+
+endif # USBDOWNLOAD_GADGET
+
+config SSTAR_DNL_GADGET
+	bool "Enable Sigmastar USB download gadget"
+	help
+	  Sigmastar Composite USB download gadget support (g_sstar_dnl) for download functions.
+	  This code works on top of composite gadget.
+
+if SSTAR_DNL_GADGET
+
+config USB_GADGET_FIRMWARE_UPDATE
+	bool "Enable Sigmastar USB firmware update gadget"
+	help
+	  Enable Sigmastar usb firmware update support in U-Boot.
+
+endif # SSTAR_DNL_GADGET
+
+endmenu

@@ -1,0 +1,281 @@
+config MS_ISP_FLASH
+    bool "MSTAR ISP NOR FLASH"
+
+config MS_SAVE_ENV_IN_ISP_FLASH
+    bool "Save environment to ISP NOR FLASH"
+    depends on MS_ISP_FLASH
+
+config MS_MTD_ISP_FLASH
+    bool "MTD device for ISP NOR FLASH"
+    depends on MS_ISP_FLASH
+
+config MS_PARTITION
+    bool 'Enable Mstar partition support'
+    depends on MS_ISP_FLASH
+
+config MS_NOR_ONEBIN
+    bool 'MS NOR ONEBIN'
+    depends on MS_ISP_FLASH
+
+config MS_NOR_ENV_BACKUP
+    bool 'Enable Mstar environment backup'
+    depends on MS_ISP_FLASH
+
+config MS_SDMMC
+    bool 'MSTAR SDMMC'
+
+if MS_SDMMC
+source "drivers/mstar/sdmmc/Kconfig"
+endif
+
+config MS_EMMC
+    bool 'MSTAR eMMC'
+
+config SUPPORT_EMMC_BOOT
+    bool 'Support eMMC BOOT'
+    depends on MS_EMMC
+
+config MS_USE_EMMC0
+    bool 'Emmc use pad emmc0'
+    depends on MS_EMMC
+    default y
+
+config MS_SAVE_ENV_IN_EMMC
+    bool 'Save environment to eMMC'
+    depends on MS_EMMC
+
+config MS_GPIO
+    bool 'MSTAR Gpio'
+    default y
+
+config MS_NAND
+    bool 'MSTAR NAND'
+
+config MS_SAVE_ENV_IN_NAND_FLASH
+    bool "Save environment to NAND FLASH"
+    depends on MS_NAND
+
+config MS_CMD_EYE
+    bool 'EYE'
+
+config MS_USB
+    bool 'MSTAR USB'
+
+menu "SSTAR GMAC"
+config SSTAR_GMAC
+    select CMD_NET
+    select PHYLIB
+    bool 'SSTAR GMAC'
+
+config SSTAR_GMAC_FORCE_100
+    bool 'FORCE 100'
+
+config SSTAR_GMAC_FORCE_1000
+    bool 'FORCE 1000'
+
+config MOTORCOMM_PHY
+    bool 'MOTORCOMM PHY'
+
+config SYS_NONCACHED_MEMORY
+    bool 'SYS NONCACHED MEMORY'
+    depends on SSTAR_GMAC
+
+config SSTAR_GMAC1_ENABLE
+    bool 'GMAC1 ON(default GMAC0)'
+    depends on SSTAR_GMAC
+
+config SSTAR_RMII_ENABLE
+    bool 'RMII ON(default RGMII)'
+    depends on SSTAR_GMAC
+    
+config SSTAR_GMAC_DISABLE_TX_FCTL
+    bool 'Disable flow control'
+    depends on SSTAR_GMAC
+    default y
+endmenu
+
+config MS_EMAC
+    select CMD_NET
+    bool 'MSTAR EMAC'
+
+config MS_EMAC1
+    bool "MSTAR EMAC 1"
+    depends on MS_EMAC
+
+config MS_QFN
+    bool "MSTAR EMAC 1 FOR QFN"
+    depends on MS_EMAC1
+
+config MS_LQFP
+    bool "MSTAR EMAC 1 FOR LQFP"
+    depends on MS_EMAC1
+
+config ETHERNET_ALBANY
+    bool "Supply to internel PHY"
+    depends on MS_EMAC
+
+config ETHERNET_RMII
+    bool "Supply to RMII"
+    depends on MS_EMAC
+
+config ETHERNET_ICPLUS
+    bool "Supply to IC+ Phy"
+    depends on MS_EMAC
+
+config ETHERNET_FIXLINK
+    bool "EMAC fix link to mii/rmii"
+    depends on MS_EMAC
+
+config ENABLE_FIRST_EHC
+    bool 'Enable 1st EHC'
+    depends on MS_USB
+
+config ENABLE_SECOND_EHC
+    bool 'Enable 2nd EHC'
+    depends on MS_USB
+
+config ENABLE_THIRD_EHC
+    bool 'Enable 3rd EHC'
+    depends on MS_USB
+    default y
+
+config MS_ENABLE_USB_LAN_MODULE
+    bool 'Enable USB lan module'
+    depends on MS_USB
+
+config MS_AESDMA
+    bool 'Enable AESDMA'
+
+if MS_AESDMA
+source "drivers/mstar/aesdma/Kconfig"
+endif
+
+config MS_BDMA
+    bool "Enable BDMA"
+
+config MS_SPINAND
+    bool "MSTAR SPINAND"
+
+choice
+    prompt "Read mode"
+    default MS_SPINAND_SINGLE_READ
+	depends on MS_SPINAND
+    config MS_SPINAND_SINGLE_READ
+        bool "Use single read"
+    config MS_SPINAND_QUAD_READ
+        bool "Use Quad read"
+endchoice
+
+choice
+    prompt "Write mode"
+    default MS_SPINAND_SINGLE_WRITE
+        depends on MS_SPINAND
+    config MS_SPINAND_SINGLE_WRITE
+        bool "Use single write"
+    config MS_SPINAND_QUAD_WRITE
+        bool "Use Quad write"
+endchoice
+
+config MS_SAVE_ENV_IN_NAND_FLASH
+    bool "Save environment to NAND FLASH"
+    depends on MS_SPINAND
+
+config MS_NAND_ONEBIN
+    bool "MS NAND ONEBIN"
+    depends on MS_SPINAND
+
+config SS_SOC_ECC
+    bool "SS SOC ECC"
+    depends on MS_SPINAND && MS_NAND_ONEBIN
+
+config MS_NAND_ENV_BACKUP
+    bool "Enable Mstar environment backup"
+    depends on MS_SPINAND
+
+config IMAGE_POSTFIX
+	string "Append postfix name to compressed file"
+	default ""
+	help
+	  u-boot"CONFIG_IMAGE_POSTFIX"
+
+config SSTAR_DISP
+	bool "SSTAR DISP"
+
+config SSTAR_DISP_HDMITX_VGA
+	bool "SSTAR DISP HDMITX VGA"
+
+config SSTAR_PNL
+	bool "SSTAR PNL"
+
+config SSTAR_HDMITX
+	bool "SSTAR HDMITX"
+
+config SSTAR_JPD
+	bool "SSTAR JPD"
+
+choice
+	prompt "Uboot JPD mode"
+	default JPD_SW
+
+config JPD_SW
+	bool "JPD_SW"
+	depends on SSTAR_JPD
+	help
+		This is JPD SW for uboot!
+
+config JPD_HW
+	bool "JPD_HW"
+	depends on SSTAR_JPD
+	help
+		This is JPD HW for uboot!
+endchoice
+
+
+config SSTAR_RGN
+	bool "SSTAR RGN"
+
+config SSTAR_MSPI
+    bool "SSTAR MSPI"
+
+config SSTAR_AUTORUN_DSTAR
+	bool "SSTAR AUTORUN DSTAR"
+
+config SSTAR_UPGRADE_UI
+	bool "SSTAR UPGRADE UI"
+	depends on SSTAR_DISP
+
+config SSTAR_UPGRADE_UI_WITH_TXT
+	bool "SSTAR UPGRADE UI with text"
+	depends on SSTAR_DISP
+	depends on SSTAR_UPGRADE_UI
+
+config SSTAR_UPGRADE_UI_DRAW_YUV
+	bool "BUFFER IS YUV FMT"
+	depends on SSTAR_DISP
+	depends on SSTAR_UPGRADE_UI
+
+config SSTAR_INI_PARSER
+	bool "SSTAR INI FILE PARSER"
+
+config MS_EMMC_RECOVERY
+	bool 'MSTAR emmc recovery'
+	default n
+
+config SSTAR_PWM
+	bool 'SSTAR PWM driver'
+	default n
+
+config SSTAR_SAR
+	bool "SSTAR SAR"
+
+config SSTAR_AIO
+	bool "SSTAR AIO"
+
+config SSTAR_KEYPAD
+        bool "SSTAR KEYPAD"
+
+config SSTAR_RIU_FILE
+	bool "SSTAR RIU FILE"
+
+config SSTAR_REG_CHIPID
+	bool "SSTAR REG_CHIPID"

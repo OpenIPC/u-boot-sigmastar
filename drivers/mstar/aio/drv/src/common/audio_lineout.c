@@ -1,0 +1,537 @@
+/*
+* audio_lineout.c- Sigmastar
+*
+* Copyright (c) [2019~2020] SigmaStar Technology.
+*
+*
+* This software is licensed under the terms of the GNU General Public
+* License version 2, as published by the Free Software Foundation, and
+* may be copied, distributed, and modified under those terms.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License version 2 for more details.
+*
+*/
+
+#include "mhal_audio.h"
+#include "hal_audio_common.h"
+
+#include <common.h>
+#include <malloc.h>
+
+#define MIU_OFFSET 0x20000000
+
+extern void Chip_Flush_Memory(void);
+
+static MS_U8 tone_48k_mono[] =
+{
+#if 1 // 1K sine , 48K sample rate
+    0x00, 0x00, 0x5F, 0x08, 0x9B, 0x10, 0x8D, 0x18,
+    0x13, 0x20, 0x0D, 0x27, 0x5C, 0x2D, 0xE5, 0x32,
+    0x8F, 0x37, 0x44, 0x3B, 0xF7, 0x3D, 0x9A, 0x3F,
+    0x27, 0x40, 0x9A, 0x3F, 0xF6, 0x3D, 0x45, 0x3B,
+    0x8F, 0x37, 0xE5, 0x32, 0x5C, 0x2D, 0x0E, 0x27,
+    0x13, 0x20, 0x8C, 0x18, 0x9A, 0x10, 0x60, 0x08,
+    0x00, 0x00, 0xA1, 0xF7, 0x66, 0xEF, 0x73, 0xE7,
+    0xED, 0xDF, 0xF3, 0xD8, 0xA3, 0xD2, 0x1B, 0xCD,
+    0x71, 0xC8, 0xBC, 0xC4, 0x09, 0xC2, 0x66, 0xC0,
+    0xD9, 0xBF, 0x66, 0xC0, 0x09, 0xC2, 0xBB, 0xC4,
+    0x72, 0xC8, 0x1B, 0xCD, 0xA4, 0xD2, 0xF2, 0xD8,
+    0xEC, 0xDF, 0x73, 0xE7, 0x66, 0xEF, 0xA1, 0xF7,
+
+    0x00, 0x00, 0x5F, 0x08, 0x9B, 0x10, 0x8D, 0x18,
+    0x13, 0x20, 0x0D, 0x27, 0x5C, 0x2D, 0xE5, 0x32,
+    0x8F, 0x37, 0x44, 0x3B, 0xF7, 0x3D, 0x9A, 0x3F,
+    0x27, 0x40, 0x9A, 0x3F, 0xF6, 0x3D, 0x45, 0x3B,
+    0x8F, 0x37, 0xE5, 0x32, 0x5C, 0x2D, 0x0E, 0x27,
+    0x13, 0x20, 0x8C, 0x18, 0x9A, 0x10, 0x60, 0x08,
+    0x00, 0x00, 0xA1, 0xF7, 0x66, 0xEF, 0x73, 0xE7,
+    0xED, 0xDF, 0xF3, 0xD8, 0xA3, 0xD2, 0x1B, 0xCD,
+    0x71, 0xC8, 0xBC, 0xC4, 0x09, 0xC2, 0x66, 0xC0,
+    0xD9, 0xBF, 0x66, 0xC0, 0x09, 0xC2, 0xBB, 0xC4,
+    0x72, 0xC8, 0x1B, 0xCD, 0xA4, 0xD2, 0xF2, 0xD8,
+    0xEC, 0xDF, 0x73, 0xE7, 0x66, 0xEF, 0xA1, 0xF7,
+
+    0x00, 0x00, 0x5F, 0x08, 0x9B, 0x10, 0x8D, 0x18,
+    0x13, 0x20, 0x0D, 0x27, 0x5C, 0x2D, 0xE5, 0x32,
+    0x8F, 0x37, 0x44, 0x3B, 0xF7, 0x3D, 0x9A, 0x3F,
+    0x27, 0x40, 0x9A, 0x3F, 0xF6, 0x3D, 0x45, 0x3B,
+    0x8F, 0x37, 0xE5, 0x32, 0x5C, 0x2D, 0x0E, 0x27,
+    0x13, 0x20, 0x8C, 0x18, 0x9A, 0x10, 0x60, 0x08,
+    0x00, 0x00, 0xA1, 0xF7, 0x66, 0xEF, 0x73, 0xE7,
+    0xED, 0xDF, 0xF3, 0xD8, 0xA3, 0xD2, 0x1B, 0xCD,
+    0x71, 0xC8, 0xBC, 0xC4, 0x09, 0xC2, 0x66, 0xC0,
+    0xD9, 0xBF, 0x66, 0xC0, 0x09, 0xC2, 0xBB, 0xC4,
+    0x72, 0xC8, 0x1B, 0xCD, 0xA4, 0xD2, 0xF2, 0xD8,
+    0xEC, 0xDF, 0x73, 0xE7, 0x66, 0xEF, 0xA1, 0xF7,
+
+    0x00, 0x00, 0x5F, 0x08, 0x9B, 0x10, 0x8D, 0x18,
+    0x13, 0x20, 0x0D, 0x27, 0x5C, 0x2D, 0xE5, 0x32,
+    0x8F, 0x37, 0x44, 0x3B, 0xF7, 0x3D, 0x9A, 0x3F,
+    0x27, 0x40, 0x9A, 0x3F, 0xF6, 0x3D, 0x45, 0x3B,
+    0x8F, 0x37, 0xE5, 0x32, 0x5C, 0x2D, 0x0E, 0x27,
+    0x13, 0x20, 0x8C, 0x18, 0x9A, 0x10, 0x60, 0x08,
+    0x00, 0x00, 0xA1, 0xF7, 0x66, 0xEF, 0x73, 0xE7,
+    0xED, 0xDF, 0xF3, 0xD8, 0xA3, 0xD2, 0x1B, 0xCD,
+    0x71, 0xC8, 0xBC, 0xC4, 0x09, 0xC2, 0x66, 0xC0,
+    0xD9, 0xBF, 0x66, 0xC0, 0x09, 0xC2, 0xBB, 0xC4,
+    0x72, 0xC8, 0x1B, 0xCD, 0xA4, 0xD2, 0xF2, 0xD8,
+    0xEC, 0xDF, 0x73, 0xE7, 0x66, 0xEF, 0xA1, 0xF7,
+
+    0x00, 0x00, 0x5F, 0x08, 0x9B, 0x10, 0x8D, 0x18,
+    0x13, 0x20, 0x0D, 0x27, 0x5C, 0x2D, 0xE5, 0x32,
+    0x8F, 0x37, 0x44, 0x3B, 0xF7, 0x3D, 0x9A, 0x3F,
+    0x27, 0x40, 0x9A, 0x3F, 0xF6, 0x3D, 0x45, 0x3B,
+    0x8F, 0x37, 0xE5, 0x32, 0x5C, 0x2D, 0x0E, 0x27,
+    0x13, 0x20, 0x8C, 0x18, 0x9A, 0x10, 0x60, 0x08,
+    0x00, 0x00, 0xA1, 0xF7, 0x66, 0xEF, 0x73, 0xE7,
+    0xED, 0xDF, 0xF3, 0xD8, 0xA3, 0xD2, 0x1B, 0xCD,
+    0x71, 0xC8, 0xBC, 0xC4, 0x09, 0xC2, 0x66, 0xC0,
+    0xD9, 0xBF, 0x66, 0xC0, 0x09, 0xC2, 0xBB, 0xC4,
+    0x72, 0xC8, 0x1B, 0xCD, 0xA4, 0xD2, 0xF2, 0xD8,
+    0xEC, 0xDF, 0x73, 0xE7, 0x66, 0xEF, 0xA1, 0xF7,
+
+    0x00, 0x00, 0x5F, 0x08, 0x9B, 0x10, 0x8D, 0x18,
+    0x13, 0x20, 0x0D, 0x27, 0x5C, 0x2D, 0xE5, 0x32,
+    0x8F, 0x37, 0x44, 0x3B, 0xF7, 0x3D, 0x9A, 0x3F,
+    0x27, 0x40, 0x9A, 0x3F, 0xF6, 0x3D, 0x45, 0x3B,
+    0x8F, 0x37, 0xE5, 0x32, 0x5C, 0x2D, 0x0E, 0x27,
+    0x13, 0x20, 0x8C, 0x18, 0x9A, 0x10, 0x60, 0x08,
+    0x00, 0x00, 0xA1, 0xF7, 0x66, 0xEF, 0x73, 0xE7,
+    0xED, 0xDF, 0xF3, 0xD8, 0xA3, 0xD2, 0x1B, 0xCD,
+    0x71, 0xC8, 0xBC, 0xC4, 0x09, 0xC2, 0x66, 0xC0,
+
+    0xD9, 0xBF, 0x66, 0xC0, 0x09, 0xC2, 0xBB, 0xC4,
+    0x72, 0xC8, 0x1B, 0xCD, 0xA4, 0xD2, 0xF2, 0xD8,
+    0xEC, 0xDF, 0x73, 0xE7, 0x66, 0xEF, 0xA1, 0xF7,
+#else
+    0x00, 0x00, 0xf9, 0x18, 0xfb, 0x30, 0x1c, 0x47,
+    0x82, 0x5a, 0x6d, 0x6a, 0x41, 0x76, 0x8a, 0x7d,
+    0xff, 0x7f, 0x8b, 0x7d, 0x42, 0x76, 0x6f, 0x6a,
+    0x84, 0x5a, 0x1f, 0x47, 0xfe, 0x30, 0xfc, 0x18,
+    0x03, 0x00, 0x0a, 0xe7, 0x07, 0xcf, 0xe6, 0xb8,
+    0x80, 0xa5, 0x95, 0x95, 0xc0, 0x89, 0x76, 0x82,
+    0x00, 0x80, 0x75, 0x82, 0xbc, 0x89, 0x90, 0x95,
+    0x7a, 0xa5, 0xde, 0xb8, 0xff, 0xce, 0x02, 0xe7,
+    0x00, 0x00, 0xf9, 0x18, 0xfb, 0x30, 0x1c, 0x47,
+    0x82, 0x5a, 0x6d, 0x6a, 0x41, 0x76, 0x8a, 0x7d,
+    0xff, 0x7f, 0x8b, 0x7d, 0x42, 0x76, 0x6f, 0x6a,
+    0x84, 0x5a, 0x1f, 0x47, 0xfe, 0x30, 0xfc, 0x18,
+    0x03, 0x00, 0x0a, 0xe7, 0x07, 0xcf, 0xe6, 0xb8,
+    0x80, 0xa5, 0x95, 0x95, 0xc0, 0x89, 0x76, 0x82,
+    0x00, 0x80, 0x75, 0x82, 0xbc, 0x89, 0x90, 0x95,
+    0x7a, 0xa5, 0xde, 0xb8, 0xff, 0xce, 0x02, 0xe7,
+    0x00, 0x00, 0xf9, 0x18, 0xfb, 0x30, 0x1c, 0x47,
+    0x82, 0x5a, 0x6d, 0x6a, 0x41, 0x76, 0x8a, 0x7d,
+    0xff, 0x7f, 0x8b, 0x7d, 0x42, 0x76, 0x6f, 0x6a,
+    0x84, 0x5a, 0x1f, 0x47, 0xfe, 0x30, 0xfc, 0x18,
+    0x03, 0x00, 0x0a, 0xe7, 0x07, 0xcf, 0xe6, 0xb8,
+    0x80, 0xa5, 0x95, 0x95, 0xc0, 0x89, 0x76, 0x82,
+    0x00, 0x80, 0x75, 0x82, 0xbc, 0x89, 0x90, 0x95,
+    0x7a, 0xa5, 0xde, 0xb8, 0xff, 0xce, 0x02, 0xe7,
+    0x00, 0x00, 0xf9, 0x18, 0xfb, 0x30, 0x1c, 0x47,
+    0x82, 0x5a, 0x6d, 0x6a, 0x41, 0x76, 0x8a, 0x7d,
+    0xff, 0x7f, 0x8b, 0x7d, 0x42, 0x76, 0x6f, 0x6a,
+    0x84, 0x5a, 0x1f, 0x47, 0xfe, 0x30, 0xfc, 0x18,
+    0x03, 0x00, 0x0a, 0xe7, 0x07, 0xcf, 0xe6, 0xb8,
+    0x80, 0xa5, 0x95, 0x95, 0xc0, 0x89, 0x76, 0x82,
+    0x00, 0x80, 0x75, 0x82, 0xbc, 0x89, 0x90, 0x95,
+    0x7a, 0xa5, 0xde, 0xb8, 0xff, 0xce, 0x02, 0xe7
+#endif
+};
+
+struct pcm_data
+{
+    MS_U32 dev_id;
+    MS_U32 playback;
+};
+
+static struct pcm_data pPcmData =
+{
+  .dev_id			= 0,
+  .playback			= TRUE,
+};
+
+typedef struct AUD_I2sCfg_s
+{
+    int nTdmMode;
+    int nMsMode;
+    int nBitWidth;
+    int nFmt;
+    int u16Channels;
+    int e4WireMode;
+    int eMck;
+}_AUD_I2sCfg_s;
+
+typedef struct AUD_PcmCfg_s
+{
+    int nRate;
+    int nBitWidth;
+    int n16Channels;
+    int nInterleaved;
+    int n32PeriodSize; //bytes
+    int n32StartThres;
+    int nTimeMs;
+    int nI2sConfig;
+    _AUD_I2sCfg_s sI2s;
+    int nDpgaGain;
+}_AUDPcmCfg_t;
+
+static struct AUD_PcmCfg_s sPcmCfg =
+{
+    .nRate              = 48000,
+    .nBitWidth          = 16,
+    .n16Channels        = 1,
+    .nInterleaved       = 1,
+    .n32PeriodSize      = 1024, //bytes
+    .n32StartThres      = 1<<30,
+    .nTimeMs            = 5000,
+    .nDpgaGain          = 0, //not use
+
+    //I2S config
+    .nI2sConfig         = 0,
+    .sI2s.nTdmMode      = 0,
+    .sI2s.nMsMode       = 0,
+    .sI2s.nBitWidth     = 0,
+    .sI2s.nFmt          = 0,
+    .sI2s.u16Channels   = 0,
+    .sI2s.e4WireMode    = 0,
+    .sI2s.eMck          = 0,
+};
+
+struct dma_buffer
+{
+    MS_U8 *area;	/* virtual pointer */
+    MS_U32 addr;	/* physical address */
+    MS_U32 bytes;	/* buffer size in bytes */
+};
+
+struct dma_buffer buf_AI;
+struct dma_buffer buf_AO;
+
+static int AudioOpen(void)
+{
+    /*memory alloc size should page align
+      max size = 65535*8 byte          */
+    int size = 511*1024;
+    int ret = 0;
+
+    if(pPcmData.playback == TRUE)
+    {
+        //AO buffer allocate
+        buf_AO.area = calloc(1, size);
+
+        if (!buf_AO.area)
+        {
+            printf("[ERROR] AO buffer allocate fail \n");
+            return -1;
+        }
+
+        memset(buf_AO.area, 0x00, size);
+
+        buf_AO.bytes = size;
+        buf_AO.addr = (MS_U32)buf_AO.area - MIU_OFFSET;
+
+        flush_dcache_range((MS_U32)buf_AO.area, (MS_U32)buf_AO.area + size);
+        Chip_Flush_Memory();
+
+        printf("AO dma buffer size 0x%x\n", buf_AO.bytes);
+        printf("physical dma address 0x%08x\n", buf_AO.addr);
+        printf("virtual dma address 0x%08x\n", (MS_U32)buf_AO.area);
+    }
+    else
+    {
+        //AI buffer allocate
+        buf_AI.area = calloc(1, size);
+
+        if (!buf_AI.area)
+        {
+            printf("[ERROR] AO buffer allocate fail \n");
+            return -1;
+        }
+
+        memset(buf_AI.area, 0x00, size);
+
+        buf_AI.bytes = size;
+        buf_AI.addr = (MS_U32)buf_AI.area - MIU_OFFSET;
+
+        flush_dcache_range((MS_U32)buf_AI.area, (MS_U32)buf_AI.area + size);
+        Chip_Flush_Memory();
+
+        printf("AO dma buffer size 0x%x\n", buf_AI.bytes);
+        printf("physical dma address 0x%08x\n", buf_AI.addr);
+        printf("virtual dma address 0x%08x\n", (MS_U32)buf_AI.area);
+    }
+
+    return ret;
+}
+
+static int AudioRelease(void)
+{
+    if(pPcmData.playback == TRUE)
+    {
+        free(buf_AO.area);
+    }
+    else
+    {
+        free(buf_AI.area);
+    }
+
+    return 0;
+}
+
+static int AudioPlayIoctl(void)
+{
+    MHAL_AUDIO_PcmCfg_t tPcm;
+    MHAL_AUDIO_I2sCfg_t tI2sCfg;
+    int dev = pPcmData.dev_id;
+    int ret;
+    int total_size = 0;
+    u8 *pDataArray;
+    int nArrSize;
+    int nStartThres;
+    int size = 0;
+    int flag = 1;
+    //int nGain = 0;
+
+        if(sPcmCfg.nRate==8000)
+            tPcm.eRate = E_MHAL_AUDIO_RATE_8K;
+        else if(sPcmCfg.nRate==11000)
+            tPcm.eRate = E_MHAL_AUDIO_RATE_11K;
+        else if(sPcmCfg.nRate==12000)
+            tPcm.eRate = E_MHAL_AUDIO_RATE_12K;
+        else if(sPcmCfg.nRate==16000)
+            tPcm.eRate = E_MHAL_AUDIO_RATE_16K;
+        else if(sPcmCfg.nRate==22000)
+            tPcm.eRate = E_MHAL_AUDIO_RATE_22K;
+        else if(sPcmCfg.nRate==24000)
+            tPcm.eRate = E_MHAL_AUDIO_RATE_24K;
+        else if(sPcmCfg.nRate==32000)
+            tPcm.eRate = E_MHAL_AUDIO_RATE_32K;
+        else if(sPcmCfg.nRate==44000)
+            tPcm.eRate = E_MHAL_AUDIO_RATE_44K;
+        else if(sPcmCfg.nRate==48000)
+            tPcm.eRate = E_MHAL_AUDIO_RATE_48K;
+        else
+        {
+            printf("AUDRV_PCM_IOCTL sample rate %d not support!!!\n",sPcmCfg.nRate);
+            return -EFAULT;
+        }
+
+        if(sPcmCfg.nBitWidth==16)
+            tPcm.eWidth = E_MHAL_AUDIO_BITWIDTH_16;
+        else if(sPcmCfg.nBitWidth==32)
+            tPcm.eWidth = E_MHAL_AUDIO_BITWIDTH_32;
+        else
+        {
+            printf("AUDRV_PCM_IOCTL bitwidth %d not support!!!\n",sPcmCfg.nBitWidth);
+            return -EFAULT;
+        }
+
+        if(sPcmCfg.n16Channels==1)
+        {
+            pDataArray = tone_48k_mono;
+            nArrSize = sizeof(tone_48k_mono);
+        }
+        else
+        {
+            printf("AUDRV_PCM_IOCTL channel %d not support!!!\n",sPcmCfg.n16Channels);
+            return -EFAULT;
+        }
+
+        tPcm.u16Channels = sPcmCfg.n16Channels;
+        tPcm.bInterleaved = sPcmCfg.nInterleaved;
+        tPcm.pu8DmaArea = buf_AO.area;
+        //tPcm.phyDmaAddr = buf_AO.addr-MIU_OFFSET;
+        tPcm.phyDmaAddr = buf_AO.addr;
+        tPcm.u32BufferSize = buf_AO.bytes;
+        tPcm.u32PeriodSize = sPcmCfg.n32PeriodSize;//1024*2*2*6;
+        tPcm.u32StartThres = sPcmCfg.n32StartThres;//buf.bytes+1;//buf.bytes/2;
+
+        if(sPcmCfg.nI2sConfig)
+        {
+            if(sPcmCfg.sI2s.nTdmMode==1)
+            {
+                if(sPcmCfg.sI2s.nMsMode==0)
+                {
+                    tI2sCfg.eMode = E_MHAL_AUDIO_MODE_TDM_MASTER;
+                }
+                else
+                {
+                    tI2sCfg.eMode = E_MHAL_AUDIO_MODE_TDM_SLAVE;
+                }
+            }
+            else if(sPcmCfg.sI2s.nTdmMode==0)
+            {
+                if(sPcmCfg.sI2s.nMsMode==0)
+                {
+                    tI2sCfg.eMode = E_MHAL_AUDIO_MODE_I2S_MASTER;
+                }
+                else
+                {
+                    tI2sCfg.eMode = E_MHAL_AUDIO_MODE_I2S_SLAVE;
+                }
+            }
+            else
+            {
+                printf("AUDRV_PCM_IOCTL I2S mode not support!!!\n");
+                return -EFAULT;
+            }
+
+            tI2sCfg.eWidth = (sPcmCfg.sI2s.nBitWidth?E_MHAL_AUDIO_BITWIDTH_32:E_MHAL_AUDIO_BITWIDTH_16);
+
+            tI2sCfg.eFmt = (sPcmCfg.sI2s.nFmt?E_MHAL_AUDIO_I2S_FMT_LEFT_JUSTIFY:E_MHAL_AUDIO_I2S_FMT_I2S);
+
+            tI2sCfg.u16Channels = sPcmCfg.sI2s.u16Channels;
+
+            tI2sCfg.eMck = sPcmCfg.sI2s.eMck;
+
+            tI2sCfg.e4WireMode = sPcmCfg.sI2s.e4WireMode;
+
+            tI2sCfg.eRate = tPcm.eRate;
+
+            ret=MHAL_AUDIO_ConfigI2sOut(dev, &tI2sCfg);
+            if(ret)
+            {
+                printf("MHAL_AUDIO_ConfigI2sOut error=%d!!!\n",ret);
+                return -EFAULT;
+            }
+        }
+
+        //dpga gain
+        //nGain = sPcmCfg.nDpgaGain;
+        //MHAL_AUDIO_SetGainOut(dev, nGain, 0, E_MHAL_AUDIO_GAIN_FADING_7);
+        //MHAL_AUDIO_SetGainOut(dev, nGain, 1, E_MHAL_AUDIO_GAIN_FADING_7);
+        //printf("AO dpga Gain %d!!!\n",nGain);
+
+        total_size = sPcmCfg.nTimeMs*(sPcmCfg.nRate/1000)*sPcmCfg.n16Channels*(sPcmCfg.nBitWidth/8);
+
+        printf("AO total_size %d!!!\n",total_size);
+
+        /*
+        if(sPcmCfg.n16Channels==1)
+        {
+            nStartThres = (buf_AO.bytes/2) - (sPcmCfg.n32PeriodSize*4);
+        }
+        else
+        {
+            nStartThres = (buf_AO.bytes/1) - (sPcmCfg.n32PeriodSize*4);
+        }
+        */
+        nStartThres = total_size;
+
+        printf("AO threshold size %d\n",nStartThres);
+
+        ret = MHAL_AUDIO_ConfigPcmOut(dev, &tPcm);
+        if(ret)
+        {
+            printf("MHAL_AUDIO_ConfigPcmOut error=%d!!!\n",ret);
+            return -EFAULT;
+        }
+
+        ret = MHAL_AUDIO_OpenPcmOut(dev);
+        if(ret)
+        {
+            printf("MHAL_AUDIO_OpenPcmOut error=%d!!!\n",ret);
+            goto fail;
+        }
+
+        while(total_size > nArrSize)
+        {
+            if ( (size>=nStartThres) && (flag==1) )
+            {
+                ret = MHAL_AUDIO_StartPcmOut(dev);
+                if ( ret )
+                {
+                    printf("MHAL_AUDIO_StartPcmOut fail !!! ret = %d\n",ret);
+                    return -1;
+                }
+                else
+                {
+                    printf("AO DMA Start ! current size = %d\n",size);
+                    break;
+                }
+
+                flag = 0;
+            }
+
+            ret = MHAL_AUDIO_WriteDataOut(dev, pDataArray, nArrSize, TRUE); // FALSE
+            if ( ret >= 0 )
+            {
+                size += nArrSize;
+                //total_size -= nArrSize;
+                //printf("current size = %d\n",size);
+            }
+            else
+            {
+                printf("MHAL_AUDIO_WriteDataOut fail !!! ret = %d\n",ret);
+
+                if ( MHAL_AUDIO_IsPcmOutXrun(dev) )
+                {
+                    printf("AO Empty ! XRUN !!!\n");
+                    flag = 1;
+                    size = 0;
+                }
+            }
+        }
+
+        // polling for empty
+        while(1)
+        {
+            if(MHAL_AUDIO_IsPcmOutXrun(dev) == TRUE)
+                break;
+        }
+
+fail:
+        ret = MHAL_AUDIO_StopPcmOut(dev);
+        if(ret)
+        {
+            printf("MHAL_AUDIO_StopPcmOut error=%d!!!\n",ret);
+            return -EFAULT;
+        }
+
+        ret = MHAL_AUDIO_ClosePcmOut(dev);
+        if(ret)
+        {
+            printf("MHAL_AUDIO_ClosePcmOut error=%d!!!\n",ret);
+            return -EFAULT;
+        }
+
+        //
+        printf("Ao PCM Test Finish !\n");
+
+        return 0;
+}
+
+void lineout_gain(int nGain)
+{
+    int dev = pPcmData.dev_id;
+
+    MHAL_AUDIO_SetGainOut(dev, nGain, 0, E_MHAL_AUDIO_GAIN_FADING_7);
+    MHAL_AUDIO_SetGainOut(dev, nGain, 1, E_MHAL_AUDIO_GAIN_FADING_7);
+    printf("AO dpga Gain %d!!!\n",nGain);
+}
+
+void lineout_start(void)
+{
+    int Ret=0;
+
+    Ret = AudioOpen();
+    if(Ret != 0)
+    {
+        printf("[ERROR] AudioOpen fail \n");
+    }
+
+    MHAL_AUDIO_Init(NULL);
+
+    Ret = AudioPlayIoctl();
+
+    if(Ret != 0)
+    {
+        printf("[ERROR] AudioPlayIoctl fail \n");
+    }
+
+    AudioRelease();
+}

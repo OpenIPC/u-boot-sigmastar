@@ -1,0 +1,10 @@
+config HW_WATCHDOG
+    bool "Enable watchdog"
+
+config HW_WATCHDOG_TIMEOUT
+        int "HW WATCHDOG Timeout in seconds"
+        default 10
+        depends on HW_WATCHDOG
+        help
+          Setup HW Watchdog timeout value in seconds.
+

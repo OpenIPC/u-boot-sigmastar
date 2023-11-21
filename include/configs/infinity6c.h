@@ -486,4 +486,6 @@
     #define CONFIG_USB_GADGET_DUALSPEED
 #endif
 
+#include <configs/sstar-common.h>
+
 #endif	/* __CONFIG_H */

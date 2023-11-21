@@ -17,6 +17,7 @@
 
 /* Asm functions from cache_v7_asm.S */
 void v7_flush_dcache_all(void);
+void v7_invalidate_dcache_all(void);
 
 /*
  * Write the level and type you want to Cache Size Selection Register(CSSELR)

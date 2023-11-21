@@ -100,7 +100,7 @@ extern U32 uart_multi_base;
 
 U32 ms_uart_padmux(U8 u8_Port)
 {
-    u32 uartClk = 0;
+    u64 uartClk = 0;
     switch(u8_Port)
     {
         case 1:

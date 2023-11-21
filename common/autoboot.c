@@ -17,6 +17,12 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define MAX_DELAY_STOP_STR 32
 
+#define SIZE_SCRIPT0 "fatsize mmc 0 boot.scr"
+#define LOAD_SCRIPT0 "fatload mmc 0 ${baseaddr} boot.scr"
+
+#define SIZE_SCRIPT1 "fatsize mmc 1 boot.scr"
+#define LOAD_SCRIPT1 "fatload mmc 1 ${baseaddr} boot.scr"
+
 #ifndef DEBUG_BOOTKEYS
 #define DEBUG_BOOTKEYS 0
 #endif
@@ -357,7 +363,19 @@ void autoboot_command(const char *s)
 			run_command("saveenv",0);
 		}
 #endif
-		
+
+		if (mmc_get_dev(0) && !run_command(SIZE_SCRIPT0, 0)) {
+			run_command(LOAD_SCRIPT0, 0);
+			run_command("source", 0);
+			return;
+		}
+
+		if (mmc_get_dev(1) && !run_command(SIZE_SCRIPT1, 0)) {
+			run_command(LOAD_SCRIPT1, 0);
+			run_command("source", 0);
+			return;
+		}
+
 		dcache_enable();
 		icache_enable();
 

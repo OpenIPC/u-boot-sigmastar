@@ -479,7 +479,7 @@ static int mmc_core_init(struct mmc *mmc)
 
     if(!_CardDetect(eSlot))
     {
-        printf("_[sdmmc_%u] Card Detect Fail! \n", (U32_T)eSlot);
+        pr_sd_main("_[sdmmc_%u] Card Detect Fail! \n", (U32_T)eSlot);
         return NO_CARD_ERR;
     }
 

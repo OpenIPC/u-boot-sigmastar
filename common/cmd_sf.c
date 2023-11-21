@@ -171,6 +171,32 @@ static int do_spi_flash_probe(int argc, char * const argv[])
 	flash = new;
 #endif
 
+	char buf[64];
+	unsigned int magic, bytes;
+
+	if (spi_flash_read(flash, CONFIG_ENV_ROOTADDR, sizeof(buf), buf)) {
+		printf("Failed to read from SPI flash\n");
+		return 1;
+	}
+
+	memcpy(&magic, &buf[0], sizeof(magic));
+	memcpy(&bytes, &buf[40], sizeof(bytes));
+
+	if (magic == 0x73717368) {
+		if (bytes + 0x1000 < 0x500000) {
+			setenv("rootmtd", "5120k");
+		} else {
+			setenv("rootmtd", "8192k");
+		}
+	}
+
+	ulong file = getenv_ulong("filesize", 16, 0);
+	if (file < 0x500000) {
+		setenv("rootsize", "0x500000");
+	} else {
+		setenv("rootsize", "0x800000");
+	}
+
 	return 0;
 }
 

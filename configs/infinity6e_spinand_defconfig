@@ -287,7 +287,7 @@ CONFIG_CMD_CRC32=y
 # CONFIG_CMD_NAND is not set
 # CONFIG_CMD_SPI is not set
 # CONFIG_CMD_I2C is not set
-CONFIG_CMD_BOOTLOGO=y
+# CONFIG_CMD_BOOTLOGO is not set
 # CONFIG_CMD_USB is not set
 # CONFIG_CMD_FPGA is not set
 
@@ -375,11 +375,7 @@ CONFIG_MS_SAVE_ENV_IN_NAND_FLASH=y
 # CONFIG_MS_CMD_EYE is not set
 # CONFIG_MS_USB is not set
 CONFIG_MS_EMAC=y
-<<<<<<< Updated upstream
 # CONFIG_MS_EMAC1 is not set
-=======
-CONFIG_MS_GPIO=y
->>>>>>> Stashed changes
 CONFIG_ETHERNET_ALBANY=y
 # CONFIG_ETHERNET_RMII is not set
 # CONFIG_ETHERNET_ICPLUS is not set

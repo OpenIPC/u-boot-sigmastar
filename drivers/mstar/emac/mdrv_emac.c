@@ -23,7 +23,7 @@
 #include "../gpio/mercury6/gpio.h"
 #include "../gpio/drvGPIO.h"
 
-u8 MY_MAC[6] = { 0x00, 0x30, 0x1B, 0xBA, 0x02, 0xDB };
+u8 MY_MAC[6] = { 0x00, 0x00, 0x23, 0x34, 0x45, 0x66 };
 unsigned char phy_id=0;
 
 #define EMAC_DBG_TFTP       (0)

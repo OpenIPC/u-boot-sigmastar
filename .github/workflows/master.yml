@@ -1,0 +1,42 @@
+name: Build
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Prepare
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-arm-linux-gnueabi
+
+      - name: Build
+        run: |
+          sh build.sh
+
+      - name: Upload
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: latest
+          files: |
+            output/u-boot-ssc30kd-nor.bin
+            output/u-boot-ssc30kq-nor.bin
+            output/u-boot-ssc325-nor.bin
+            output/u-boot-ssc325de-nand.bin
+            output/u-boot-ssc333-nor.bin
+            output/u-boot-ssc335de-nor.bin
+            output/u-boot-ssc335-nor.bin
+            output/u-boot-ssc337de-nor.bin
+            output/u-boot-ssc337de-nand.bin
+            output/u-boot-ssc337-nor.bin
+            output/u-boot-ssc338q-nand.bin
+            output/u-boot-ssc338q-nor.bin
+            output/u-boot-ssc338q-ram.bin
+            output/u-boot-ssc377-nor.bin

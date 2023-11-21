@@ -78,7 +78,8 @@ int arch_cpu_init(void)
 // we borrow the DRAN init to do the devinfo setting...
 int dram_init(void)
 {
-    gd->ram_size=CONFIG_UBOOT_RAM_SIZE;
+    u16 rsize = 1 << (INREG16(GET_REG_ADDR(REG_ADDR_BASE_MIU, 0x69)) >> 12);
+    gd->ram_size = rsize * 1024 * 1024;
 
     return 0;
 }
@@ -299,6 +300,24 @@ int board_late_init(void)
     }
     printf("*******************************************\n");
     */
+
+    char msize[32];
+    u16 rsize = gd->ram_size / 1024 / 1024;
+
+    sprintf(msize, "%dM", rsize);
+    setenv("totalmem", msize);
+
+    if (rsize == 64) {
+        setenv("memlx", "0x3FE0000");
+        setenv("memsz", "0x2000000");
+    } else if (rsize == 128) {
+        setenv("memlx", "0x7FE0000");
+        setenv("memsz", "0x4600000");
+    } else if (rsize == 256) {
+        setenv("memlx", "0xFFE0000");
+        setenv("memsz", "0xA000000");
+    }
+
     return 0;
 }
 #endif

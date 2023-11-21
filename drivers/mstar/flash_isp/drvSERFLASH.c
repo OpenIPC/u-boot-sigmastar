@@ -49,7 +49,7 @@
 #define SERFLASH_INTERFACE_VER  '0','1'
 #define SERFLASH_BUILD_VER      '0','0','0','1'
 #define CHANGE_LIST_NUM         '0','0','0','9','1','9','9','6'
-#define PRODUCT_NAME            'A','E'                             // AE: T2
+//#define PRODUCT_NAME            'A','E'                             // AE: T2
 #define CUSTOMER_NAME           '0'                                 //  0: Mstar
 #define DEVELOP_STAGE           'B','L','E','G'
 #define OS_VERSION              '0','0'

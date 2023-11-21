@@ -349,7 +349,7 @@ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 
 KBUILD_CPPFLAGS := -D__KERNEL__ -D__UBOOT__
 
-KBUILD_CFLAGS   := -Wall -Wstrict-prototypes \
+KBUILD_CFLAGS   := -Wno-address-of-packed-member -Wstrict-prototypes \
 		   -Wno-format-security \
 		   -fno-builtin -ffreestanding
 KBUILD_AFLAGS   := -D__ASSEMBLY__
@@ -1180,12 +1180,9 @@ include/config/uboot.release: include/config/auto.conf FORCE
 	@echo '  GCC version: $(shell $(CC) -dumpversion)'
 	@echo '  MVXV'
 	@echo chip_id $(MS_PLATFORM_ID)
-	@python ms_gen_mvxv_h.py include/ms_version.h --comp_id CM_UBT1501 \
-                --changelist g$$(git log --format=%h -n 1) --chip_id $(MS_PLATFORM_ID)
-#	@python ms_gen_mvxv_h.py include/ms_version.h --comp_id PLT_UBT1501 \
-		--changelist G$$(git describe --match CL* --tags --long | cut -b 12-18 |  awk '{print toupper($$0)}')
+	@python3 ms_gen_mvxv_h.py include/ms_version.h --comp_id CM_UBT1501 \
+		--changelist $$(git rev-parse --short HEAD) --chip_id $(MS_PLATFORM_ID)
 	$(call filechk,uboot.release)
-
 
 # Things we need to do before we recursively start building the kernel
 # or the modules are listed in "prepare".

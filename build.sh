@@ -32,6 +32,15 @@ make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
 mv BOOT.bin output/u-boot-${soc}-nor.bin
 done
 
+# spinor infinity6c
+for soc in ssc377; do
+make distclean
+make infinity6c_defconfig
+make -j5 KCFLAGS=-DPRODUCT_NAME=${soc}
+./make_boot_spinor.sh i6c
+mv BOOT.bin output/u-boot-${soc}-nor.bin
+done
+
 # spinor infinity6e
 for soc in ssc30kd ssc30kq ssc338q; do
 make distclean

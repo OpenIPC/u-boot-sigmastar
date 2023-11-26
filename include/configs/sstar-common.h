@@ -18,13 +18,15 @@
 #define CONFIG_VERSION_VARIABLE
 
 #ifdef CONFIG_MS_SAVE_ENV_IN_ISP_FLASH
-#undef CONFIG_ENV_OFFSET
 #undef CONFIG_ENV_SIZE
-
-#define CONFIG_ENV_OFFSET 0x40000
 #define CONFIG_ENV_SIZE 0x10000
 
-#define CONFIG_BOOTARGS "console=ttyS0,115200 panic=20 root=/dev/mtdblock3 init=/init mtdparts=NOR_FLASH:256k(boot),64k(env),2048k(kernel),\\${rootmtd}(rootfs),-(rootfs_data) LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
+#ifndef CONFIG_MS_NOR_ONEBIN
+#undef CONFIG_ENV_OFFSET
+#define CONFIG_ENV_OFFSET 0x40000
+#endif
+
+#define CONFIG_BOOTARGS "console=ttyS0,115200 panic=20 root=/dev/mtdblock3 init=/init mtdparts=NOR_FLASH:256k(boot),64k(env),2048k(kernel),\\${rootmtd}(rootfs),-(rootfs_data) LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz} cma=2M"
 #define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnor}; sf probe 0; saveenv; run bootcmd"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
@@ -38,7 +40,8 @@
 	"ubnor=sf probe 0; sf erase 0x0 ${kernaddr}; sf write ${baseaddr} 0x0 ${kernaddr}\0" \
 	"uknor=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} uImage.${soc}; sf probe 0; sf erase ${kernaddr} ${kernsize}; sf write ${baseaddr} ${kernaddr} ${filesize}\0" \
 	"urnor=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase ${rootaddr} ${rootsize}; sf write ${baseaddr} ${rootaddr} ${filesize}\0" \
-	"setsdcard=setenv updatetool fatload mmc 0\0" \
+	"setsdcard0=setenv updatetool fatload mmc 0\0" \
+	"setsdcard1=setenv updatetool fatload mmc 1\0" \
 	"updatetool=tftpboot\0" \
 	"soc=" __stringify(PRODUCT_NAME)
 #endif
@@ -56,11 +59,11 @@
 #define CONFIG_ENV_SIZE 0x20000
 
 #ifdef CONFIG_MS_SAVE_ENV_IN_NAND_FLASH
-#define CONFIG_BOOTARGS "console=ttyS0,115200 panic=20 root=/dev/mtdblock5 init=/init ubi.mtd=ubi \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
+#define CONFIG_BOOTARGS "console=ttyS0,115200 panic=20 root=/dev/mtdblock5 init=/init ubi.mtd=ubi \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz} cma=2M"
 #define CONFIG_BOOTCOMMAND "setenv bootcmd ${bootcmdnand}; saveenv; run bootcmd"
 #define MTDPARTS_DEFAULT "mtdparts=nand0:1024k(boot0),1024k(boot1),256k(env),-(ubi)"
 #else
-#define CONFIG_BOOTARGS "console=ttyS0,115200 panic=20 \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz}"
+#define CONFIG_BOOTARGS "console=ttyS0,115200 panic=20 \\${mtdparts} LX_MEM=\\${memlx} mma_heap=mma_heap_name0,miu=0,sz=\\${memsz} cma=2M"
 #define CONFIG_BOOTCOMMAND "setenv setargs setenv bootargs ${bootargs}; run setargs; fatload mmc 0 ${baseaddr} uImage.${soc}; bootm ${baseaddr}"
 #define MTDPARTS_DEFAULT "mtdparts=nand0:-(nand)"
 #define CONFIG_ENV_IS_NOWHERE
@@ -74,7 +77,8 @@
 	"ubnand=nand erase 0x0 ${rootaddr}; nand write ${baseaddr} 0x0 ${rootaddr}\0" \
 	"urnand=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} rootfs.ubi.${soc}; nand erase ${rootaddr} ${rootsize}; nand write ${baseaddr} ${rootaddr} ${filesize}\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
-	"setsdcard=setenv updatetool fatload mmc 0\0" \
+	"setsdcard0=setenv updatetool fatload mmc 0\0" \
+	"setsdcard1=setenv updatetool fatload mmc 1\0" \
 	"updatetool=tftpboot\0" \
 	"soc=" __stringify(PRODUCT_NAME)
 #endif

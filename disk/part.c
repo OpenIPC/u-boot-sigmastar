@@ -503,7 +503,7 @@ int get_device(const char *ifname, const char *dev_hwpart_str,
 
 	*dev_desc = get_dev_hwpart(ifname, dev, hwpart);
 	if (!(*dev_desc) || ((*dev_desc)->type == DEV_TYPE_UNKNOWN)) {
-		printf("** Bad device %s %s **\n", ifname, dev_hwpart_str);
+		printf("** No device %s %s **\n", ifname, dev_hwpart_str);
 		dev = -1;
 		goto cleanup;
 	}

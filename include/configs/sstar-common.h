@@ -6,14 +6,18 @@
 #define CONFIG_SYS_CBSIZE 1024
 #define CONFIG_SYS_LOAD_ADDR 0x21000000
 
+#define BOOT_SCRIPT0 "fatload mmc 0 ${baseaddr} boot.scr"
+#define BOOT_SCRIPT1 "fatload mmc 1 ${baseaddr} boot.scr"
+
 #define CONFIG_SERVERIP 192.168.1.1
 #define CONFIG_GATEWAYIP 192.168.1.1
 #define CONFIG_IPADDR 192.168.1.10
 #define CONFIG_NETMASK 255.255.255.0
 
+#define CONFIG_CMD_ECHO
 #define CONFIG_CMD_LOADB
+#define CONFIG_CMD_SOURCE
 #define CONFIG_FAT_WRITE
-#define CONFIG_HUSH_PARSER
 #define CONFIG_SPL_YMODEM_SUPPORT
 #define CONFIG_VERSION_VARIABLE
 
@@ -40,8 +44,6 @@
 	"ubnor=sf probe 0; sf erase 0x0 ${kernaddr}; sf write ${baseaddr} 0x0 ${kernaddr}\0" \
 	"uknor=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} uImage.${soc}; sf probe 0; sf erase ${kernaddr} ${kernsize}; sf write ${baseaddr} ${kernaddr} ${filesize}\0" \
 	"urnor=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase ${rootaddr} ${rootsize}; sf write ${baseaddr} ${rootaddr} ${filesize}\0" \
-	"setsdcard0=setenv updatetool fatload mmc 0\0" \
-	"setsdcard1=setenv updatetool fatload mmc 1\0" \
 	"updatetool=tftpboot\0" \
 	"soc=" __stringify(PRODUCT_NAME)
 #endif
@@ -77,8 +79,6 @@
 	"ubnand=nand erase 0x0 ${rootaddr}; nand write ${baseaddr} 0x0 ${rootaddr}\0" \
 	"urnand=mw.b ${baseaddr} 0xFF 0x1000000; ${updatetool} ${baseaddr} rootfs.ubi.${soc}; nand erase ${rootaddr} ${rootsize}; nand write ${baseaddr} ${rootaddr} ${filesize}\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
-	"setsdcard0=setenv updatetool fatload mmc 0\0" \
-	"setsdcard1=setenv updatetool fatload mmc 1\0" \
 	"updatetool=tftpboot\0" \
 	"soc=" __stringify(PRODUCT_NAME)
 #endif

@@ -357,7 +357,13 @@ void autoboot_command(const char *s)
 			run_command("saveenv",0);
 		}
 #endif
-		
+
+		if(!run_command(BOOT_SCRIPT0, 0) || !run_command(BOOT_SCRIPT1, 0))
+		{
+			run_command("source", 0);
+			return;
+		}
+
 		dcache_enable();
 		icache_enable();
 

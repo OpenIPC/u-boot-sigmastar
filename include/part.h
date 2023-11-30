@@ -69,6 +69,7 @@ typedef struct block_dev_desc {
 #define PART_TYPE_ISO		0x03
 #define PART_TYPE_AMIGA		0x04
 #define PART_TYPE_EFI		0x05
+#define PART_TYPE_EMMC      0x06
 
 /*
  * Type string for U-Boot bootable partitions
@@ -93,6 +94,7 @@ typedef struct disk_partition {
 #ifdef CONFIG_PARTITION_UUIDS
 	char	uuid[37];	/* filesystem UUID as string, if exists	*/
 #endif
+    lbaint_t    lba_start;
 } disk_partition_t;
 
 /* Misc _get_dev functions */
@@ -155,11 +157,23 @@ void print_part_mac (block_dev_desc_t *dev_desc);
 int   test_part_mac (block_dev_desc_t *dev_desc);
 #endif
 
+#ifdef CONFIG_EMMC_PARTITION
+/* disk/part_emmc.c */
+extern int  test_part_emmc (block_dev_desc_t *dev_desc);
+extern int  get_partition_info_emmc (block_dev_desc_t * dev_desc, int part, disk_partition_t *info);
+extern void print_part_emmc (block_dev_desc_t *dev_desc);
+extern int  add_emmc_partitions(block_dev_desc_t *dev_desc, disk_partition_t *info);
+extern int  remove_emmc_partitions(block_dev_desc_t *dev_desc, disk_partition_t *info);
+#endif
+
+
 #ifdef CONFIG_DOS_PARTITION
 /* disk/part_dos.c */
 int get_partition_info_dos (block_dev_desc_t * dev_desc, int part, disk_partition_t *info);
 void print_part_dos (block_dev_desc_t *dev_desc);
-int   test_part_dos (block_dev_desc_t *dev_desc);
+int  test_part_dos (block_dev_desc_t *dev_desc);
+int  create_partition_dos(block_dev_desc_t *dev_desc, unsigned int part_size );
+int delete_partition_dos(block_dev_desc_t *dev_desc, unsigned int erase_parts , int upgrade_flag);
 #endif
 
 #ifdef CONFIG_ISO_PARTITION

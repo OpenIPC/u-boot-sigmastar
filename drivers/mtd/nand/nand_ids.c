@@ -31,6 +31,9 @@
  * extended chip ID.
  */
 struct nand_flash_dev nand_flash_ids[] = {
+#if defined(CONFIG_MS_NAND_ONEBIN)
+    EXTENDED_ID_NAND("nand0",  0xEE,  128, LP_OPTIONS),
+#endif
 #ifdef CONFIG_MTD_NAND_MUSEUM_IDS
 	LEGACY_ID_NAND("NAND 1MiB 5V 8-bit",	0x6e, 1, SZ_4K, SP_OPTIONS),
 	LEGACY_ID_NAND("NAND 2MiB 5V 8-bit",	0x64, 2, SZ_4K, SP_OPTIONS),

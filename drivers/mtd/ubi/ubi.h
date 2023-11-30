@@ -49,10 +49,10 @@
 #endif
 
 /* UBI warning messages */
-#define ubi_warn(fmt, ...) pr_warn("UBI warning: %s: " fmt "\n",  \
+#define ubi_warn(fmt, ...) printf("UBI warning: %s: " fmt "\n",  \
 				   __func__, ##__VA_ARGS__)
 /* UBI error messages */
-#define ubi_err(fmt, ...) pr_err("UBI error: %s: " fmt "\n",      \
+#define ubi_err(fmt, ...) printf("UBI error: %s: " fmt "\n",      \
 				 __func__, ##__VA_ARGS__)
 
 /* Background thread name pattern */

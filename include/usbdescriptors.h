@@ -151,6 +151,10 @@
 #define USB_ST_CSD			0x17
 #define USB_ST_TCM			0x18
 
+#if 1 //MSTAR: move from usb.h
+#define USB_MAXENDPOINTS		16
+#endif
+
 /* endpoint modifiers
  * static struct usb_endpoint_description function_default_A_1[] = {
  *
@@ -186,7 +190,7 @@ struct usb_endpoint_descriptor {
 	u8 bmAttributes;
 	u16 wMaxPacketSize;
 	u8 bInterval;
-} __attribute__ ((packed));
+} __attribute__ ((packed, aligned(32)));
 
 struct usb_interface_descriptor {
 	u8 bLength;
@@ -198,6 +202,9 @@ struct usb_interface_descriptor {
 	u8 bInterfaceSubClass;
 	u8 bInterfaceProtocol;
 	u8 iInterface;
+#if 1 // MSTAR
+	struct usb_endpoint_descriptor ep_desc[USB_MAXENDPOINTS];
+#endif
 } __attribute__ ((packed));
 
 struct usb_configuration_descriptor {

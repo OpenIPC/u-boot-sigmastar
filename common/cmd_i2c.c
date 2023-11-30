@@ -117,7 +117,7 @@ static uchar i2c_no_probes[] = CONFIG_SYS_I2C_NOPROBES;
 #endif	/* defined(CONFIG_SYS_I2C) */
 #endif
 
-#define DISP_LINE_LEN	16
+#define DISP_LINE_LEN	4096
 
 /*
  * Default for driver model is to use the chip's existing address length.
@@ -566,7 +566,7 @@ static int do_i2c_mw ( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 	uchar	chip;
 	ulong	addr;
 	int	alen;
-	uchar	byte;
+	uchar	*byte;
 	int	count;
 	int ret;
 #ifdef CONFIG_DM_I2C
@@ -599,7 +599,7 @@ static int do_i2c_mw ( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 	/*
 	 * Value to write is always specified.
 	 */
-	byte = simple_strtoul(argv[3], NULL, 16);
+	byte = argv[3];
 
 	/*
 	 * Optional count
@@ -609,11 +609,11 @@ static int do_i2c_mw ( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 	else
 		count = 1;
 
-	while (count-- > 0) {
+	//while (count-- > 0) {
 #ifdef CONFIG_DM_I2C
-		ret = i2c_write(dev, addr++, &byte, 1);
+		ret = i2c_write(dev, addr, byte, count);
 #else
-		ret = i2c_write(chip, addr++, alen, &byte, 1);
+		ret = i2c_write(chip, addr, alen, byte, count);
 #endif
 		if (ret)
 			i2c_report_err(ret, I2C_ERR_WRITE);
@@ -627,7 +627,7 @@ static int do_i2c_mw ( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 #if !defined(CONFIG_SYS_I2C_FRAM)
 		udelay(11000);
 #endif
-	}
+	//}
 
 	return 0;
 }

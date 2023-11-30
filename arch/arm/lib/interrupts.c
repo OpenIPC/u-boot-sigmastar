@@ -165,12 +165,23 @@ void do_undefined_instruction (struct pt_regs *pt_regs)
 	bad_mode ();
 }
 
+#ifdef CONFIG_CMD_OTPCTRL
+void do_software_interrupt(unsigned long cmd,unsigned long val,unsigned long op)
+{
+    void (*pFn)(unsigned long op,unsigned long cmd,unsigned long val) = NULL;
+    printf ("[OTP Control] operation = %lx, command = %lx, data = %lx\n",op,cmd,val);
+
+    pFn = (void*)(CONFIG_OTPCTRL_FUN_ADDRESS);
+    (*pFn)(op,cmd,val);
+}
+#else
 void do_software_interrupt (struct pt_regs *pt_regs)
 {
-	printf ("software interrupt\n");
-	show_regs (pt_regs);
-	bad_mode ();
+    printf ("software interrupt\n");
+    show_regs (pt_regs);
+    bad_mode ();
 }
+#endif
 
 void do_prefetch_abort (struct pt_regs *pt_regs)
 {

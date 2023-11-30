@@ -17,13 +17,24 @@
 
 #include <dm.h>	/* Because we dereference struct udevice here */
 #include <linux/types.h>
+#if defined(CONFIG_MS_NOR_ONEBIN) || defined(CONFIG_MS_NAND_ONEBIN)
+#include <linux/mtd/mtd.h>
+#include <linux/mtd/concat.h>
+#include <spi.h>
+#endif
 
 #ifndef CONFIG_SF_DEFAULT_SPEED
 # define CONFIG_SF_DEFAULT_SPEED	1000000
 #endif
+
 #ifndef CONFIG_SF_DEFAULT_MODE
+#if defined(CONFIG_MS_NOR_ONEBIN) || defined(CONFIG_MS_NAND_ONEBIN)
 # define CONFIG_SF_DEFAULT_MODE		SPI_MODE_3
+#else
+# define CONFIG_SF_DEFAULT_MODE		0
 #endif
+#endif
+
 #ifndef CONFIG_SF_DEFAULT_CS
 # define CONFIG_SF_DEFAULT_CS		0
 #endif
@@ -63,47 +74,50 @@ struct spi_slave;
  */
 struct spi_flash {
 #ifdef CONFIG_DM_SPI_FLASH
-	struct spi_slave *spi;
-	struct udevice *dev;
+    struct spi_slave *spi;
+    struct udevice *dev;
 #else
-	struct spi_slave *spi;
+    struct spi_slave *spi;
 #endif
-	const char *name;
-	u8 dual_flash;
-	u8 shift;
+#if defined(CONFIG_MS_NOR_ONEBIN) || defined(CONFIG_MS_NAND_ONEBIN)
+    struct mtd_info     mtd;
+#endif
+    const char *name;
+    u8 dual_flash;
+    u8 shift;
 
-	u32 size;
-	u32 page_size;
-	u32 sector_size;
-	u32 erase_size;
+    u32 size;
+    u32 page_size;
+    u32 sector_size;
+    u32 erase_size;
 #ifdef CONFIG_SPI_FLASH_BAR
-	u8 bank_read_cmd;
-	u8 bank_write_cmd;
-	u8 bank_curr;
+    u8 bank_read_cmd;
+    u8 bank_write_cmd;
+    u8 bank_curr;
 #endif
-	u8 poll_cmd;
-	u8 erase_cmd;
-	u8 read_cmd;
-	u8 write_cmd;
-	u8 dummy_byte;
+    u8 poll_cmd;
+    u8 erase_cmd;
+    u8 read_cmd;
+    u8 write_cmd;
+    u8 dummy_byte;
 
-	void *memory_map;
+    void *memory_map;
 #ifndef CONFIG_DM_SPI_FLASH
-	/*
-	 * These are not strictly needed for driver model, but keep them here
-	 * whilt the transition is in progress.
-	 *
-	 * Normally each driver would provide its own operations, but for
-	 * SPI flash most chips use the same algorithms. One approach is
-	 * to create a 'common' SPI flash device which knows how to talk
-	 * to most devices, and then allow other drivers to be used instead
-	 * if requird, perhaps with a way of scanning through the list to
-	 * find the driver that matches the device.
-	 */
-	int (*read)(struct spi_flash *flash, u32 offset, size_t len, void *buf);
-	int (*write)(struct spi_flash *flash, u32 offset, size_t len,
-			const void *buf);
-	int (*erase)(struct spi_flash *flash, u32 offset, size_t len);
+    /*
+     * These are not strictly needed for driver model, but keep them here
+     * whilt the transition is in progress.
+     *
+     * Normally each driver would provide its own operations, but for
+     * SPI flash most chips use the same algorithms. One approach is
+     * to create a 'common' SPI flash device which knows how to talk
+     * to most devices, and then allow other drivers to be used instead
+     * if requird, perhaps with a way of scanning through the list to
+     * find the driver that matches the device.
+     */
+    int (*read)(struct spi_flash *flash, u32 offset, size_t len, void *buf);
+    int (*write)(struct spi_flash *flash, u32 offset, size_t len,
+            const void *buf);
+    int (*erase)(struct spi_flash *flash, u32 offset, size_t len);
 #endif
 };
 

@@ -1,0 +1,3 @@
+CONFIG_SYS_CONFIG_NAME := $(subst ",,$(CONFIG_SYS_CONFIG_NAME))
+
+obj-y += $(CONFIG_SYS_CONFIG_NAME)/hal_bdma.o

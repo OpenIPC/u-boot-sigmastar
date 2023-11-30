@@ -1358,6 +1358,10 @@ out_version:
 out_class:
 	class_destroy(ubi_class);
 out:
+#ifdef __UBOOT__
+	/* Reset any globals that the driver depends on being zeroed */
+	mtd_devs = 0;
+#endif
 	ubi_err("cannot initialize UBI, error %d", err);
 	return err;
 }
@@ -1383,7 +1387,13 @@ void ubi_exit(void)
 	kmem_cache_destroy(ubi_wl_entry_slab);
 	misc_deregister(&ubi_ctrl_cdev);
 	class_remove_file(ubi_class, &ubi_version);
+#ifdef __UBOOT__
+	/* Reset any globals that the driver depends on being zeroed */
+	mtd_devs = 0;
+#endif
+
 	class_destroy(ubi_class);
+	mtd_devs = 0;
 }
 module_exit(ubi_exit);
 
@@ -1478,6 +1488,9 @@ int ubi_mtd_param_parse(const char *val, struct kernel_param *kp)
 
 	strcpy(buf, val);
 
+
+	printf("UBI: parsing mtd_dev string '%s'\n",buf);
+
 	/* Get rid of the final newline */
 	if (buf[len - 1] == '\n')
 		buf[len - 1] = '\0';
@@ -1490,8 +1503,19 @@ int ubi_mtd_param_parse(const char *val, struct kernel_param *kp)
 		return -EINVAL;
 	}
 
+	for(i=0;i<mtd_devs;i++)
+	{
+		if(0==strcmp( &(mtd_dev_param[i].name[0]),tokens[0] ) )
+		{
+			printf("UBI warning: mtd_dev '%s' already parsed - ignored\n",tokens[0]);
+			return 0;
+		}
+	}
+
+
 	p = &mtd_dev_param[mtd_devs];
 	strcpy(&p->name[0], tokens[0]);
+
 
 	token = tokens[1];
 	if (token) {

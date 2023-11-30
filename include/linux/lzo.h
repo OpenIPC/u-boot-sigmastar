@@ -45,4 +45,7 @@ int lzop_decompress(const unsigned char *src, size_t src_len,
 #define LZO_E_INPUT_NOT_CONSUMED	(-8)
 #define LZO_E_NOT_YET_IMPLEMENTED	(-9)
 
+
+#define UNLZO_ALIGN_LEN 0xA00000
+
 #endif

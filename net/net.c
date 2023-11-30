@@ -182,6 +182,13 @@ IPaddr_t	NetNtpServerIP;
 int		NetTimeOffset;
 #endif
 
+#ifdef CONFIG_CMD_NETUPGRADE
+extern struct ip_udp_hdr *pIpUdpHdr;    // point to ip
+
+extern void NetUpgrade_start(void);
+extern void UpgradeStatus_start(void);
+#endif
+
 static uchar PktBuf[(PKTBUFSRX+1) * PKTSIZE_ALIGN + PKTALIGN];
 
 /* Receive packet */
@@ -438,6 +445,15 @@ restart:
 #if defined(CONFIG_CMD_LINK_LOCAL)
 		case LINKLOCAL:
 			link_local_start();
+			break;
+#endif
+#ifdef CONFIG_CMD_NETUPGRADE
+		case UPGRADESTATE:
+			UpgradeStatus_start();
+			break;
+
+		case NETUPGRADE:
+			NetUpgrade_start();
 			break;
 #endif
 		default:
@@ -1139,6 +1155,10 @@ NetReceive(uchar *inpkt, int len)
 		debug_cond(DEBUG_DEV_PKT,
 			"received UDP (to=%pI4, from=%pI4, len=%d)\n",
 			&dst_ip, &src_ip, len);
+
+#ifdef CONFIG_CMD_NETUPGRADE
+		pIpUdpHdr = (struct ip_udp_hdr *)ip;
+#endif
 
 #ifdef CONFIG_UDP_CHECKSUM
 		if (ip->udp_xsum != 0) {

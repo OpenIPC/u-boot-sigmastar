@@ -1,0 +1,22 @@
+config SSTAR_JPD
+	bool "Sigmastar JPD driver"
+	default n
+
+choice
+	prompt "Uboot JPD mode"
+	default JPD_SW
+
+config JPD_SW
+	bool "JPD_SW"
+	depends on SSTAR_JPD
+	help
+		This is JPD SW for uboot!
+
+config JPD_HW
+	bool "JPD_HW"
+	depends on SSTAR_JPD
+	help
+		This is JPD HW for uboot!
+endchoice
+
+

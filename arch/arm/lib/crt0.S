@@ -52,6 +52,24 @@
  */
 
 /*
+ * Macro for clearing BSS during SPL execution. Usually called during the
+ * relocation process for most boards before entering board_init_r(), but
+ * can also be done early before entering board_init_f() on plaforms that
+ * can afford it due to sufficient memory being available early.
+ */
+
+.macro SPL_CLEAR_BSS
+	ldr	r0, =__bss_start	/* this is auto-relocated! */
+	ldr	r1, =__bss_end		/* this is auto-relocated! */
+	mov	r2, #0x00000000		/* prepare zero to clear BSS */
+
+clbss_lf:cmp	r0, r1			/* while not at end of BSS */
+	strlo	r2, [r0]		/* clear 32-bit BSS word */
+	addlo	r0, r0, #4		/* move to next */
+	blo	clbss_lf
+.endm
+
+/*
  * entry point of crt0 sequence
  */
 
@@ -60,7 +78,6 @@ ENTRY(_main)
 /*
  * Set up initial C runtime environment and call board_init_f(0).
  */
-
 #if defined(CONFIG_SPL_BUILD) && defined(CONFIG_SPL_STACK)
 	ldr	sp, =(CONFIG_SPL_STACK)
 #else
@@ -82,6 +99,11 @@ clr_gd:
 	sub	sp, sp, #CONFIG_SYS_MALLOC_F_LEN
 	str	sp, [r9, #GD_MALLOC_BASE]
 #endif
+
+#if defined(CONFIG_SSTAR_SPL_EARLY_BSS)
+	SPL_CLEAR_BSS
+#endif
+
 	/* mov r0, #0 not needed due to above code */
 	bl	board_init_f
 
@@ -116,7 +138,6 @@ here:
 
 	ldr	r0, =__bss_start	/* this is auto-relocated! */
 	ldr	r1, =__bss_end		/* this is auto-relocated! */
-
 	mov	r2, #0x00000000		/* prepare zero to clear BSS */
 
 clbss_l:cmp	r0, r1			/* while not at end of BSS */

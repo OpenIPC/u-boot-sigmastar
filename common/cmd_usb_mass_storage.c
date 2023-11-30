@@ -13,6 +13,12 @@
 #include <usb.h>
 #include <usb_mass_storage.h>
 
+__weak
+int board_usb_init(int index, enum usb_init_type init)
+{
+	return 0;
+}
+
 static int ums_read_sector(struct ums *ums_dev,
 			   ulong start, lbaint_t blkcnt, void *buf)
 {

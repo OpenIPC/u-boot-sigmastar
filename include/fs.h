@@ -109,4 +109,7 @@ int do_save(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 int do_fs_uuid(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 		int fstype);
 
+int do_rm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
+      int fstype);
+
 #endif /* _FS_H */

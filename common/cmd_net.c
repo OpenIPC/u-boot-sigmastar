@@ -8,11 +8,81 @@
 /*
  * Boot support
  */
+#include <stdlib.h>
+#include <malloc.h>
 #include <common.h>
 #include <command.h>
 #include <net.h>
 
 static int netboot_common(enum proto_t, cmd_tbl_t *, int, char * const []);
+#if defined(CONFIG_MS_ISP_FLASH)
+extern int get_sf_size(int offset);
+
+static int do_sfbin(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	int ret = -1;
+	int addr = -1;
+	int offset = -1;
+	int len = -1;
+	char cmdbuf[128];
+	char largv[4][64];
+	char *pargv[4];
+
+
+    if (argc >= 4)
+    {
+        addr = simple_strtoul(argv[1], NULL, 16);
+		if(-1 == addr)
+		{
+		    printf("Get DRAM addr(0x%x) err!\n", addr);
+			return ret;
+		}
+
+        offset = simple_strtoul(argv[2], NULL, 16);
+		if(-1 == offset)
+		{
+		    printf("Get defined offset(0x%x) err!\n", offset);
+			return ret;
+		}
+    }
+
+    memset(cmdbuf, '\0', sizeof(cmdbuf));
+    sprintf(cmdbuf, "sf probe 0");
+    run_command (cmdbuf, 0);
+
+	len = get_sf_size(offset);
+	if(-1 == len)
+	{
+		printf("Get sf len(0x%x) from offset err!\n", len);
+	    return ret;
+	}
+
+	memset(largv, '\0', sizeof(largv));
+	sprintf(largv[1], "0x%x", addr);
+    sprintf(largv[2], "0x%x", len);
+	sprintf(largv[3], "%s", argv[3]);
+
+	memset(cmdbuf, '\0', sizeof(cmdbuf));
+    sprintf(cmdbuf, "sf read 0x%x 0x%x 0x%x", addr, offset, len);
+    run_command (cmdbuf, 0);
+
+    *pargv = (char *)malloc(4*sizeof(char*));
+	pargv[0] = largv[0];
+	pargv[1] = largv[1];
+	pargv[2] = largv[2];
+	pargv[3] = largv[3];
+
+	ret = netboot_common(TFTPPUT, cmdtp, argc, pargv);
+
+	return ret;
+}
+
+U_BOOT_CMD(
+	sfbin,	4,	0,	do_sfbin,
+	"for uploading sf image to a server(via network using TFTP protocol)",
+	"Address offset [[hostIPaddr:]filename]"
+);
+#endif
 
 static int do_bootp(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
@@ -50,11 +120,13 @@ int do_tftpput(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	return ret;
 }
 
+#if 0
 U_BOOT_CMD(
 	tftpput,	4,	1,	do_tftpput,
 	"TFTP put command, for uploading files to a server",
 	"Address Size [[hostIPaddr:]filename]"
 );
+#endif
 #endif
 
 #ifdef CONFIG_CMD_TFTPSRV

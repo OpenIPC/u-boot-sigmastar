@@ -147,11 +147,34 @@
 /*
  * EXT_CSD fields
  */
+#define EXT_CSD_ENH_START_ADDR_0     136    /* R/W */
+#define EXT_CSD_ENH_START_ADDR_1     137    /* R/W */
+#define EXT_CSD_ENH_START_ADDR_2     138    /* R/W */
+#define EXT_CSD_ENH_START_ADDR_3     139    /* R/W */
+#define EXT_CSD_ENH_SIZE_MULT_0      140    /* R/W */
+#define EXT_CSD_ENH_SIZE_MULT_1      141    /* R/W */
+#define EXT_CSD_ENH_SIZE_MULT_2      142    /* R/W */
+
 #define EXT_CSD_GP_SIZE_MULT		143	/* R/W */
+#define EXT_CSD_GP_SIZE_MULT_1_1	 144    /* R/W */
+#define EXT_CSD_GP_SIZE_MULT_1_2	 145    /* R/W */
+#define EXT_CSD_GP_SIZE_MULT_2_0	 146    /* R/W */
+#define EXT_CSD_GP_SIZE_MULT_2_1	 147    /* R/W */
+#define EXT_CSD_GP_SIZE_MULT_2_2	 148    /* R/W */
+#define EXT_CSD_GP_SIZE_MULT_3_0	 149    /* R/W */
+#define EXT_CSD_GP_SIZE_MULT_3_1	 150    /* R/W */
+#define EXT_CSD_GP_SIZE_MULT_3_2	 151    /* R/W */
+#define EXT_CSD_GP_SIZE_MULT_4_0	 152    /* R/W */
+#define EXT_CSD_GP_SIZE_MULT_4_1	 153    /* R/W */
+#define EXT_CSD_GP_SIZE_MULT_4_2	 154    /* R/W */
 #define EXT_CSD_PARTITION_SETTING	155	/* R/W */
 #define EXT_CSD_PARTITIONS_ATTRIBUTE	156	/* R/W */
+
+
 #define EXT_CSD_PARTITIONING_SUPPORT	160	/* RO */
 #define EXT_CSD_RST_N_FUNCTION		162	/* R/W */
+#define EXT_CSD_WR_REL_PARAM         166    /*R*/
+#define EXT_CSD_WR_REL_SET           167    /*R, W or not depend on 166*/
 #define EXT_CSD_RPMB_MULT		168	/* RO */
 #define EXT_CSD_ERASE_GROUP_DEF		175	/* R/W */
 #define EXT_CSD_BOOT_BUS_WIDTH		177
@@ -163,6 +186,7 @@
 #define EXT_CSD_SEC_CNT			212	/* RO, 4 bytes */
 #define EXT_CSD_HC_WP_GRP_SIZE		221	/* RO */
 #define EXT_CSD_HC_ERASE_GRP_SIZE	224	/* RO */
+#define EXT_CSD_ERASE_TIMEOUT_MULT 223 /*R*/
 #define EXT_CSD_BOOT_MULT		226	/* RO */
 
 /*
@@ -222,6 +246,9 @@
 #define MMC_RSP_R7	(MMC_RSP_PRESENT|MMC_RSP_CRC|MMC_RSP_OPCODE)
 
 #define MMCPART_NOAVAILABLE	(0xff)
+#define BOOT_PART_ENABLE_MASK   (0x38)
+#define BOOT_PART_OFFSET        (3)
+
 #define PART_ACCESS_MASK	(0x7)
 #define PART_SUPPORT		(0x1)
 #define PART_ENH_ATTRIB		(0x1f)
@@ -300,6 +327,7 @@ struct mmc {
 	uint dsr_imp;
 	uint scr[2];
 	uint csd[4];
+	char ext_csd[512];
 	uint cid[4];
 	ushort rca;
 	char part_config;
@@ -307,8 +335,11 @@ struct mmc {
 	uint tran_speed;
 	uint read_bl_len;
 	uint write_bl_len;
+	int reliable_write; // 0:unsupported 1:supported but unconfigured 2:supported and configured
 	uint erase_grp_size;
 	u64 capacity;
+	u64 slc_size;
+	u64 max_slc_size;
 	u64 capacity_user;
 	u64 capacity_boot;
 	u64 capacity_rpmb;
@@ -319,6 +350,18 @@ struct mmc {
 	char preinit;		/* start init as early as possible */
 	uint op_cond_response;	/* the response byte from the last op_cond */
 	int ddr_mode;
+    //Only for sd uboot
+    const char *name;
+    int (*send_cmd)(struct mmc *mmc, struct mmc_cmd *cmd, struct mmc_data *data);
+    void (*set_ios)(struct mmc *mmc);
+    int (*init)(struct mmc *mmc);
+    int (*getcd)(struct mmc *mmc);
+    int (*getwp)(struct mmc *mmc);
+    uint host_caps;
+    uint voltages;
+    uint f_min;
+    uint f_max;
+    uint b_max;
 };
 
 int mmc_register(struct mmc *mmc);
@@ -343,6 +386,9 @@ int mmc_boot_partition_size_change(struct mmc *mmc, unsigned long bootsize,
 					unsigned long rpmbsize);
 /* Function to modify the PARTITION_CONFIG field of EXT_CSD */
 int mmc_set_part_conf(struct mmc *mmc, u8 ack, u8 part_num, u8 access);
+int mmc_get_part_conf(void);
+/* Function to modify the BUS_WIDTH[183] field of EXT_CSD */
+int mmc_set_normal_bus_width(struct mmc *mmc, u8 width);
 /* Function to modify the BOOT_BUS_WIDTH field of EXT_CSD */
 int mmc_set_boot_bus_width(struct mmc *mmc, u8 width, u8 reset, u8 mode);
 /* Function to modify the RST_n_FUNCTION field of EXT_CSD */
@@ -399,5 +445,16 @@ int mmc_get_env_addr(struct mmc *mmc, int copy, u32 *env_addr);
 #ifndef CONFIG_SYS_MMC_MAX_BLK_COUNT
 #define CONFIG_SYS_MMC_MAX_BLK_COUNT 65535
 #endif
+
+
+//======================================for emmc==========================================
+
+int mmc_slc_mode(struct mmc *mmc, u64 size, int reliable_write);
+int mmc_ecsd_read(struct mmc *mmc);
+int mmc_ecsd_write(struct mmc *mmc, u8 num, u8 mask, u8 value);
+int mmc_slc_check(struct mmc *mmc);
+int mmc_relwr_check(struct mmc *mmc);
+int mmc_get_alignsize(struct mmc *mmc);
+
 
 #endif /* _MMC_H_ */

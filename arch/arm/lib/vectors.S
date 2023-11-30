@@ -233,15 +233,27 @@ undefined_instruction:
 
 	.align	5
 software_interrupt:
-	get_bad_stack
-	bad_save_user_regs
-	bl	do_software_interrupt
+#ifdef CONFIG_CMD_OTPCTRL
+    STMFD sp!,{r0-r3,r12,lr}
+    mrs   r3, spsr
+    STMFD sp!,{r3}
+    LDR   r2,[lr,#-4]
+    BIC   r2,r2,#0xFF000000
+    BL do_software_interrupt
+    LDMFD sp!,{r3}
+    msr   spsr_cf, r3
+    LDMFD sp!,{r0-r3,r12,pc}^
+#else
+    get_bad_stack
+    bad_save_user_regs
+    bl  do_software_interrupt
+#endif
 
 	.align	5
 prefetch_abort:
 	get_bad_stack
 	bad_save_user_regs
-	bl	do_prefetch_abort
+	bl  do_prefetch_abort
 
 	.align	5
 data_abort:

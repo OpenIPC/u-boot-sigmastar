@@ -43,6 +43,7 @@ void board_nand_init(void);
 int nand_register(int devnum);
 #else
 extern int board_nand_init(struct nand_chip *nand);
+extern int spi_nand_probe(int column);
 #endif
 
 typedef struct mtd_info nand_info_t;
@@ -137,6 +138,7 @@ int nand_read_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 
 int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 			size_t *actual, loff_t lim, u_char *buffer, int flags);
+int nand_set_quad_mode(int enable);
 int nand_erase_opts(nand_info_t *meminfo, const nand_erase_options_t *opts);
 int nand_torture(nand_info_t *nand, loff_t offset);
 

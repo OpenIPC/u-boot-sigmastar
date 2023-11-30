@@ -114,6 +114,7 @@ static int init_func_watchdog_init(void)
 	defined(CONFIG_SH))
 	hw_watchdog_init();
 # endif
+	hw_watchdog_init();
 	puts("       Watchdog enabled\n");
 	WATCHDOG_RESET();
 
@@ -213,7 +214,7 @@ static int show_dram_config(void)
 	size = gd->ram_size;
 #endif
 
-	print_size(size, "");
+	//print_size(size, "");
 	board_add_ram_info(0);
 	putc('\n');
 
@@ -498,7 +499,7 @@ static int reserve_uboot(void)
 	 * reserve memory for U-Boot code, data & bss
 	 * round down to next 4 kB limit
 	 */
-	gd->relocaddr -= gd->mon_len;
+	gd->relocaddr = CONFIG_SYS_TEXT_BASE; // force no-relocation
 	gd->relocaddr &= ~(4096 - 1);
 #ifdef CONFIG_E500
 	/* round down to next 64 kB limit so that IVPR stays aligned */

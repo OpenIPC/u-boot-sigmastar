@@ -9,10 +9,13 @@
 #ifndef _USB_H_
 #define _USB_H_
 
+#define MP_USB_MSTAR 1
+
 #include <usb_defs.h>
 #include <linux/usb/ch9.h>
 #include <asm/cache.h>
 #include <part.h>
+#include <linux/list.h>		/* for struct list_head */
 
 /*
  * The EHCI spec says that we must align to at least 32 bytes.  However,
@@ -32,6 +35,9 @@
 #define USB_MAXCONFIG			8
 #define USB_MAXINTERFACES		8
 #define USB_MAXENDPOINTS		16
+#if 1 //MBOOT_XHCI
+#define USB_ENDPOINTALLOC		8
+#endif
 #define USB_MAXCHILDREN			8	/* This is arbitrary */
 #define USB_MAX_HUB			16
 
@@ -41,7 +47,7 @@
  * This is the timeout to allow for submitting an urb in ms. We allow more
  * time for a BULK device to react - some are slow.
  */
-#define USB_TIMEOUT_MS(pipe) (usb_pipebulk(pipe) ? 5000 : 1000)
+#define USB_TIMEOUT_MS(pipe) (usb_pipebulk(pipe) ? 5000 : 100)
 
 /* device request (setup) */
 struct devrequest {
@@ -52,15 +58,32 @@ struct devrequest {
 	unsigned short	length;
 } __attribute__ ((packed));
 
+enum usb_interface_condition {
+	USB_INTERFACE_UNBOUND = 0,
+	USB_INTERFACE_BINDING,
+	USB_INTERFACE_BOUND,
+	USB_INTERFACE_UNBINDING,
+};
+
 /* Interface */
 struct usb_interface {
 	struct usb_interface_descriptor desc;
+	struct usb_endpoint_descriptor ep_desc[USB_MAXENDPOINTS];
 
 	unsigned char	no_of_ep;
 	unsigned char	num_altsetting;
 	unsigned char	act_altsetting;
+	struct usb_host_interface *altsetting;
 
-	struct usb_endpoint_descriptor ep_desc[USB_MAXENDPOINTS];
+	enum usb_interface_condition condition;		/* state of binding */
+	unsigned sysfs_files_created:1;	/* the sysfs attributes exist */
+	unsigned ep_devs_created:1;	/* endpoint "devices" exist */
+	unsigned unregistering:1;	/* unregistration is in progress */
+	unsigned needs_remote_wakeup:1;	/* driver requires remote wakeup */
+	unsigned needs_altsetting0:1;	/* switch to altsetting 0 is pending */
+	unsigned needs_binding:1;	/* needs delayed unbind/rebind */
+	unsigned reset_running:1;
+	unsigned resetting_device:1;	/* true: bandwidth alloc after reset */
 	/*
 	 * Super Speed Device will have Super Speed Endpoint
 	 * Companion Descriptor  (section 9.6.7 of usb 3.0 spec)
@@ -72,9 +95,9 @@ struct usb_interface {
 /* Configuration information.. */
 struct usb_config {
 	struct usb_config_descriptor desc;
+	struct usb_interface if_desc[USB_MAXINTERFACES];
 
 	unsigned char	no_of_if;	/* number of interfaces */
-	struct usb_interface if_desc[USB_MAXINTERFACES];
 } __attribute__ ((packed));
 
 enum {
@@ -83,6 +106,21 @@ enum {
 	PACKET_SIZE_16  = 1,
 	PACKET_SIZE_32  = 2,
 	PACKET_SIZE_64  = 3,
+};
+
+
+/* USB_DT_SS_ENDPOINT_COMP: SuperSpeed Endpoint Companion descriptor */
+
+struct usb_host_endpoint {
+	struct usb_endpoint_descriptor		desc;
+	struct usb_ss_ep_comp_descriptor	ss_ep_comp;
+	struct list_head		urb_list;
+	void				*hcpriv;
+	struct ep_device		*ep_dev;	/* For sysfs info */
+
+	unsigned char *extra;   /* Extra descriptors */
+	int extralen;
+	int enabled;
 };
 
 struct usb_device {
@@ -108,6 +146,7 @@ struct usb_device {
 	struct usb_device_descriptor descriptor
 		__attribute__((aligned(ARCH_DMA_MINALIGN)));
 	struct usb_config config; /* config descriptor */
+	struct usb_host_config *actconfig;
 
 	int have_langid;		/* whether string_langid is valid yet */
 	int string_langid;		/* language ID for strings */
@@ -125,11 +164,106 @@ struct usb_device {
 	int portnr;
 	struct usb_device *parent;
 	struct usb_device *children[USB_MAXCHILDREN];
+	int slot_id;
+	enum usb_device_state  	state;
+	u32		route;			//hub routing
+	struct usb_host_endpoint ep0;
+	struct usb_host_endpoint bulk1;
+	struct usb_host_endpoint bulk2;
+	int portnum;			//real port number
+#if 1 //MBOOT_XHCI
+	u8 level;
+#endif
+	unsigned char *product;
+	unsigned char *manufacturer;
+	unsigned char *serial2;
+	struct usb_host_endpoint *ep_in[16];
+	struct usb_host_endpoint *ep_out[16];
+	unsigned char **rawdescriptors;
+	struct usb_host_config *pconfig;
 
 	void *controller;		/* hardware controller private data */
 	/* slot_id - for xHCI enabled devices */
-	unsigned int slot_id;
 };
+
+struct urb {
+	/* private: usb core and host controller only fields in the urb */
+	int kref;		/* reference count of the URB */
+	void *hcpriv;			/* private data for host controller */
+	int use_count;		/* concurrent submissions counter */
+	int reject;		/* submissions will fail */
+	int unlinked;			/* unlink error code */
+
+	/* public: documented fields in the urb that can be used by drivers */
+	struct list_head urb_list;	/* list head for use by the urb's
+					 * current owner */
+	struct list_head anchor_list;	/* the URB may be anchored */
+	struct usb_anchor *anchor;
+	struct usb_device *dev;		/* (in) pointer to associated device */
+	struct usb_host_endpoint *ep;	/* (internal) pointer to endpoint */
+	unsigned int pipe;		/* (in) pipe information */
+	unsigned int stream_id;		/* (in) stream ID */
+	int status;			/* (return) non-ISO status */
+	unsigned int transfer_flags;	/* (in) URB_SHORT_NOT_OK | ...*/
+	void *transfer_buffer;		/* (in) associated data buffer */
+	dma_addr_t transfer_dma;	/* (in) dma addr for transfer_buffer */
+//	struct scatterlist *sg;		/* (in) scatter gather buffer list */
+	int num_mapped_sgs;		/* (internal) mapped sg entries */
+	int num_sgs;			/* (in) number of entries in the sg list */
+	u32 transfer_buffer_length;	/* (in) data buffer length */
+	u32 actual_length;		/* (return) actual transfer length */
+	unsigned char *setup_packet;	/* (in) setup packet (control only) */
+	dma_addr_t setup_dma;		/* (in) dma addr for setup_packet */
+	int start_frame;		/* (modify) start frame (ISO) */
+	int number_of_packets;		/* (in) number of ISO packets */
+	int interval;			/* (modify) transfer interval
+					 * (INT/ISO) */
+	int error_count;		/* (return) number of ISO errors */
+	void *context;			/* (in) context for completion */
+	int complete;	/* (in) completion routine */
+#ifdef CONFIG_MSTAR_CHIP
+	 void *SetDMABuf;	//Note, for DMA
+	 void *tmpSetDMABuf;
+	 s32 SetDMALen;
+	 void *Orignal_SetDMABuf;
+
+	 void *TxDMABuf;
+	 void *tmpTxDMABuf;
+	 s32 TxDMALen;
+	 void *Orignal_TxDMABuf;
+#endif
+//	struct usb_iso_packet_descriptor iso_frame_desc[0];
+					/* (in) ISO ONLY */
+};
+
+/*
+ * urb->transfer_flags:
+ *
+ * Note: URB_DIR_IN/OUT is automatically set in usb_submit_urb().
+ */
+#define URB_SHORT_NOT_OK	0x0001	/* report short reads as errors */
+#define URB_ISO_ASAP		0x0002	/* iso-only, urb->start_frame
+					 * ignored */
+#define URB_NO_TRANSFER_DMA_MAP	0x0004	/* urb->transfer_dma valid on submit */
+#define URB_NO_FSBR		0x0020	/* UHCI-specific */
+#define URB_ZERO_PACKET		0x0040	/* Finish bulk OUT with short packet */
+#define URB_NO_INTERRUPT	0x0080	/* HINT: no non-error interrupt
+					 * needed */
+#define URB_FREE_BUFFER		0x0100	/* Free transfer buffer with the URB */
+
+/* The following flags are used internally by usbcore and HCDs */
+#define URB_DIR_IN		0x0200	/* Transfer from device to host */
+#define URB_DIR_OUT		0
+#define URB_DIR_MASK		URB_DIR_IN
+
+#define URB_DMA_MAP_SINGLE	0x00010000	/* Non-scatter-gather mapping */
+#define URB_DMA_MAP_PAGE	0x00020000	/* HCD-unsupported S-G */
+#define URB_DMA_MAP_SG		0x00040000	/* HCD-supported S-G */
+#define URB_MAP_LOCAL		0x00080000	/* HCD-local-memory mapping */
+#define URB_SETUP_MAP_SINGLE	0x00100000	/* Setup packet DMA mapped */
+#define URB_SETUP_MAP_LOCAL	0x00200000	/* HCD-local setup packet */
+#define URB_DMA_SG_COMBINED	0x00400000	/* S-G entries were combined */
+#define URB_ALIGNED_TEMP_BUFFER	0x00800000	/* Temp buffer was alloc'd */
 
 struct int_queue;
 
@@ -146,7 +280,7 @@ enum usb_init_type {
 /**********************************************************************
  * this is how the lowlevel part communicate with the outer world
  */
-
+#define CONFIG_USB_EHCI
 #if defined(CONFIG_USB_UHCI) || defined(CONFIG_USB_OHCI) || \
 	defined(CONFIG_USB_EHCI) || defined(CONFIG_USB_OHCI_NEW) || \
 	defined(CONFIG_USB_SL811HS) || defined(CONFIG_USB_ISP116X_HCD) || \
@@ -157,15 +291,19 @@ enum usb_init_type {
 	defined(CONFIG_USB_MUSB_OMAP2PLUS) || defined(CONFIG_USB_XHCI) || \
 	defined(CONFIG_USB_DWC2)
 
-int usb_lowlevel_init(int index, enum usb_init_type init, void **controller);
-int usb_lowlevel_stop(int index);
-
+int usb_lowlevel_init(void);
+int usb_lowlevel_preinit(void);
+int usb_lowlevel_postinit(void);
+int usb_lowlevel_stop(int p);
 int submit_bulk_msg(struct usb_device *dev, unsigned long pipe,
 			void *buffer, int transfer_len);
 int submit_control_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
 			int transfer_len, struct devrequest *setup);
 int submit_int_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
 			int transfer_len, int interval);
+void usb_event_poll(void);
+void usb_set_u3_chk_conn_time(u32 uTimesec);
+void USB_Power_On(void);
 
 #ifdef CONFIG_USB_EHCI /* Only the ehci code has pollable int support */
 struct int_queue *create_int_queue(struct usb_device *dev, unsigned long pipe,
@@ -209,12 +347,24 @@ int board_usb_init(int index, enum usb_init_type init);
  */
 int board_usb_cleanup(int index, enum usb_init_type init);
 
-#ifdef CONFIG_USB_STORAGE
+#define	USB_PORT0	0
+#define	USB_PORT1	1
+#define	USB_PORT2	2
+#define	USB_PORT3	3
+#define	USB_PORT4	4 //XHCI port
 
-#define USB_MAX_STOR_DEV 5
+#if defined (CONFIG_USB_STORAGE)
+
+
+#define USB_MAX_STOR_DEV 1
 block_dev_desc_t *usb_stor_get_dev(int index);
 int usb_stor_scan(int mode);
 int usb_stor_info(void);
+// MSTAR start
+#if defined (CONFIG_USB_STORAGE)
+#define USB_WAIT_TIME 1000 //ms
+#endif
+// MSTAR end
 
 #endif
 
@@ -232,8 +382,12 @@ int usb_kbd_deregister(int force);
 
 #endif
 /* routines */
-int usb_init(void); /* initialize the USB Controller */
-int usb_stop(void); /* stop the USB Controller */
+int usb_init(int port); /* initialize the USB Controller */
+int usb_preinit(int port);
+int usb_post_init(int port);
+int usb_stop(int p); /* stop the USB Controller */
+int usb_stop_xhci(int p, int bDisablePower);
+
 
 
 int usb_set_protocol(struct usb_device *dev, int ifnum, int protocol);
@@ -246,10 +400,16 @@ int usb_control_msg(struct usb_device *dev, unsigned int pipe,
 			void *data, unsigned short size, int timeout);
 int usb_bulk_msg(struct usb_device *dev, unsigned int pipe,
 			void *data, int len, int *actual_length, int timeout);
+#if (MP_USB_MSTAR==1)
+int usb_submit_int_msg(struct usb_device *dev, unsigned long pipe,
+			void *buffer, int transfer_len, int *actual_length, int interval);
+#else
 int usb_submit_int_msg(struct usb_device *dev, unsigned long pipe,
 			void *buffer, int transfer_len, int interval);
+#endif
 int usb_disable_asynch(int disable);
 int usb_maxpacket(struct usb_device *dev, unsigned long pipe);
+void wait_ms(unsigned long ms);
 int usb_get_configuration_no(struct usb_device *dev, unsigned char *buffer,
 				int cfgno);
 int usb_get_report(struct usb_device *dev, int ifnum, unsigned char type,
@@ -411,6 +571,37 @@ struct usb_hub_descriptor {
 	   bitmaps that hold max 255 entries. (bit0 is ignored) */
 } __attribute__ ((packed));
 
+#define USB_MAXIADS		(USB_MAXINTERFACES/2)
+/*
+ * Descriptor types ... USB 2.0 spec table 9.5
+ */
+#define USB_DT_DEVICE			0x01
+#define USB_DT_CONFIG			0x02
+#define USB_DT_STRING			0x03
+#define USB_DT_INTERFACE		0x04
+#define USB_DT_ENDPOINT			0x05
+#define USB_DT_DEVICE_QUALIFIER		0x06
+#define USB_DT_OTHER_SPEED_CONFIG	0x07
+#define USB_DT_INTERFACE_POWER		0x08
+/* these are from a minor usb 2.0 revision (ECN) */
+#define USB_DT_OTG			0x09
+#define USB_DT_DEBUG			0x0a
+#define USB_DT_INTERFACE_ASSOCIATION	0x0b
+/* these are from the Wireless USB spec */
+#define USB_DT_SECURITY			0x0c
+#define USB_DT_KEY			0x0d
+#define USB_DT_ENCRYPTION_TYPE		0x0e
+#define USB_DT_BOS			0x0f
+#define USB_DT_DEVICE_CAPABILITY	0x10
+#define USB_DT_WIRELESS_ENDPOINT_COMP	0x11
+#define USB_DT_WIRE_ADAPTER		0x21
+#define USB_DT_RPIPE			0x22
+#define USB_DT_CS_RADIO_CONTROL		0x23
+/* From the T10 UAS specification */
+#define USB_DT_PIPE_USAGE		0x24
+/* From the USB 3.0 spec */
+#define	USB_DT_SS_ENDPOINT_COMP		0x30
+#define USB_DT_SS_EP_COMP_SIZE		6
 
 struct usb_hub_device {
 	struct usb_device *pusb_dev;
@@ -422,10 +613,22 @@ void usb_hub_reset(void);
 int hub_port_reset(struct usb_device *dev, int port,
 			  unsigned short *portstat);
 
-struct usb_device *usb_alloc_new_device(void *controller);
+struct usb_device *usb_alloc_new_device(void);
 
 int usb_new_device(struct usb_device *dev);
 void usb_free_device(void);
 int usb_alloc_device(struct usb_device *dev);
+
+#ifdef CONFIG_ENABLE_FIRST_EHC
+#define ENABLE_FIRST_EHC
+#endif
+
+#ifdef CONFIG_ENABLE_SECOND_EHC
+#define ENABLE_SECOND_EHC
+#endif
+
+#ifdef CONFIG_ENABLE_THIRD_EHC
+#define ENABLE_THIRD_EHC
+#endif
 
 #endif /*_USB_H_ */

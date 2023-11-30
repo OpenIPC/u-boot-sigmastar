@@ -22,4 +22,13 @@ obj-$(CONFIG_SANDBOX) += sandbox/
 obj-$(CONFIG_CMD_UBIFS) += ubifs/
 obj-$(CONFIG_YAFFS2) += yaffs2/
 obj-$(CONFIG_CMD_ZFS) += zfs/
+
+ifdef CONFIG_FS_LITTLEFS 
+obj-y += littlefs/
+endif
+
+ifdef CONFIG_FS_FIRMWAREFS
+obj-y += firmwarefs/
+endif
+
 endif

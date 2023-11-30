@@ -74,3 +74,8 @@ obj-$(CONFIG_NAND_MXC) += mxc_nand_spl.o
 obj-$(CONFIG_NAND_MXS) += mxs_nand_spl.o mxs_nand.o
 
 endif # drivers
+
+ifdef CONFIG_MS_SPINAND
+CFLAGS_nand_base.o  += -I$(srctree)/drivers/mstar/spinand/inc/config/$(CONFIG_SYS_CONFIG_NAME)
+CFLAGS_nand_util.o  += -I$(srctree)/drivers/mstar/spinand/inc/config/$(CONFIG_SYS_CONFIG_NAME)
+endif # CONFIG_MS_SPINAND

@@ -207,7 +207,11 @@ main (int argc, char **argv)
 			case 'e':
 				if (--argc <= 0)
 					usage ();
+#ifdef CONFIG_SS_SMF_LOAD_64_KERNEL_ENTRY
+				params.ep = strtoull (*++argv, &ptr, 16);
+#else
 				params.ep = strtoul (*++argv, &ptr, 16);
+#endif
 				if (*ptr) {
 					fprintf (stderr,
 						"%s: invalid entry point %s\n",

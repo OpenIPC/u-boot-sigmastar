@@ -971,4 +971,6 @@ static inline phys_addr_t map_to_sysmem(const void *ptr)
 # include <environment.h>
 #endif
 
+#define HERE printf("[%s]%d\n",__FILE__,__LINE__);
+
 #endif	/* __COMMON_H_ */

@@ -9,7 +9,12 @@
 #include <command.h>
 #include <mmc.h>
 
+#ifdef CONFIG_MS_EMMC
+int curr_device = -1;
+#else
 static int curr_device = -1;
+#endif
+
 #ifndef CONFIG_GENERIC_MMC
 int do_mmc (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
@@ -299,8 +304,8 @@ static int do_mmc_read(cmd_tbl_t *cmdtp, int flag,
 	if (!mmc)
 		return CMD_RET_FAILURE;
 
-	printf("\nMMC read: dev # %d, block # %d, count %d ... ",
-	       curr_device, blk, cnt);
+	printf("\nMMC read: dev # %d, block # %d, count %d bus_w %d... ",
+	       curr_device, blk, cnt, mmc->bus_width);
 
 	n = mmc->block_dev.block_read(curr_device, blk, cnt, addr);
 	/* flush cache after read */
@@ -327,8 +332,8 @@ static int do_mmc_write(cmd_tbl_t *cmdtp, int flag,
 	if (!mmc)
 		return CMD_RET_FAILURE;
 
-	printf("\nMMC write: dev # %d, block # %d, count %d ... ",
-	       curr_device, blk, cnt);
+	printf("\nMMC write: dev # %d, block # %d, count %d bus_w %d... ",
+	       curr_device, blk, cnt, mmc->bus_width);
 
 	if (mmc_getwp(mmc) == 1) {
 		printf("Error: card is write protected!\n");
@@ -367,6 +372,8 @@ static int do_mmc_erase(cmd_tbl_t *cmdtp, int flag,
 
 	return (n == cnt) ? CMD_RET_SUCCESS : CMD_RET_FAILURE;
 }
+
+//Plan to support port specific scan ex:"mmc rescan 0"...but not implemented.
 static int do_mmc_rescan(cmd_tbl_t *cmdtp, int flag,
 			 int argc, char * const argv[])
 {
@@ -401,7 +408,7 @@ static int do_mmc_dev(cmd_tbl_t *cmdtp, int flag,
 		      int argc, char * const argv[])
 {
 	int dev, part = 0, ret;
-	struct mmc *mmc;
+	struct mmc *mmc = 0;
 
 	if (argc == 1) {
 		dev = curr_device;
@@ -419,7 +426,9 @@ static int do_mmc_dev(cmd_tbl_t *cmdtp, int flag,
 		return CMD_RET_USAGE;
 	}
 
-	mmc = init_mmc_device(dev, true);
+    //mmc = init_mmc_device(dev, IS_SD(mmc)? true: false);
+    mmc = init_mmc_device(dev, false);
+
 	if (!mmc)
 		return CMD_RET_FAILURE;
 
@@ -509,6 +518,11 @@ static int do_mmc_partconf(cmd_tbl_t *cmdtp, int flag,
 	struct mmc *mmc;
 	u8 ack, part_num, access;
 
+    if(argc == 1)
+    {
+        return mmc_get_part_conf();
+    }
+
 	if (argc != 5)
 		return CMD_RET_USAGE;
 
@@ -597,7 +611,7 @@ static cmd_tbl_t cmd_mmc[] = {
 	U_BOOT_CMD_MKENT(read, 4, 1, do_mmc_read, "", ""),
 	U_BOOT_CMD_MKENT(write, 4, 0, do_mmc_write, "", ""),
 	U_BOOT_CMD_MKENT(erase, 3, 0, do_mmc_erase, "", ""),
-	U_BOOT_CMD_MKENT(rescan, 1, 1, do_mmc_rescan, "", ""),
+	U_BOOT_CMD_MKENT(rescan, 2, 1, do_mmc_rescan, "", ""),
 	U_BOOT_CMD_MKENT(part, 1, 1, do_mmc_part, "", ""),
 	U_BOOT_CMD_MKENT(dev, 3, 0, do_mmc_dev, "", ""),
 	U_BOOT_CMD_MKENT(list, 1, 1, do_mmc_list, "", ""),

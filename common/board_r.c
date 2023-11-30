@@ -56,6 +56,9 @@
 #include <linux/compiler.h>
 #include <linux/err.h>
 
+#include "../drivers/mstar/keypad/mdrv_keypad.h"
+
+
 DECLARE_GLOBAL_DATA_PTR;
 
 ulong monitor_flash_len;
@@ -163,6 +166,15 @@ static int initr_serial(void)
 	serial_initialize();
 	return 0;
 }
+
+#ifdef CONFIG_SSTAR_KEYPAD
+static int initr_keypad(void)
+{
+    mdrv_keypad_init(KP_E_STANDARD_MODE1);
+    udelay(5250);
+    return 0;
+}
+#endif
 
 #ifdef CONFIG_PPC
 static int initr_trap(void)
@@ -294,9 +306,12 @@ static int initr_announce(void)
 	return 0;
 }
 
-#if !defined(CONFIG_SYS_NO_FLASH)
+
+
 static int initr_flash(void)
 {
+#if !defined(CONFIG_SYS_NO_FLASH) || (defined(CONFIG_MS_ISP_FLASH) && defined(CONFIG_MS_MTD_ISP_FLASH))
+	extern unsigned long flash_init(void);
 	ulong flash_size = 0;
 	bd_t *bd = gd->bd;
 
@@ -307,7 +322,9 @@ static int initr_flash(void)
 	else
 		flash_size = flash_init();
 
+
 	print_size(flash_size, "");
+
 #ifdef CONFIG_SYS_FLASH_CHECKSUM
 	/*
 	* Compute and print flash CRC if flashchecksum is set to 'y'
@@ -341,9 +358,11 @@ static int initr_flash(void)
 #elif CONFIG_SYS_MONITOR_BASE == CONFIG_SYS_FLASH_BASE
 	bd->bi_flashoffset = monitor_flash_len;	/* reserved area for monitor */
 #endif
+
+#endif
 	return 0;
 }
-#endif
+
 
 #if defined(CONFIG_PPC) && !defined(CONFIG_DM_SPI)
 static int initr_spi(void)
@@ -359,7 +378,31 @@ static int initr_spi(void)
 }
 #endif
 
+
 #ifdef CONFIG_CMD_NAND
+
+#if	defined(CONFIG_MS_NAND) || defined(CONFIG_MS_SPINAND)
+#include "asm/arch/mach/platform.h"
+extern DEVINFO_BOOT_TYPE ms_devinfo_boot_type(void);
+static int initr_nand(void)
+{
+	if(ms_devinfo_boot_type() == DEVINFO_BOOT_TYPE_NAND)
+	{
+		puts("NANDY0:  ");
+	}
+	else if(ms_devinfo_boot_type() == DEVINFO_BOOT_TYPE_SPINAND_EXT_ECC)
+	{
+		puts("SPINAND_E:  ");
+	}
+	else if(ms_devinfo_boot_type() == DEVINFO_BOOT_TYPE_SPINAND_INT_ECC)
+	{
+		puts("SPINAND_I:  ");
+
+	}
+	nand_init();/* go init the NAND */
+	return 0;
+}
+#else
 /* go init the NAND */
 static int initr_nand(void)
 {
@@ -367,6 +410,8 @@ static int initr_nand(void)
 	nand_init();
 	return 0;
 }
+#endif
+
 #endif
 
 #if defined(CONFIG_CMD_ONENAND)
@@ -662,11 +707,34 @@ static int initr_kbd(void)
 }
 #endif
 
+static int initr_sstar(void)
+{
+#ifdef CONFIG_MS_USB
+    // if usb_folder is not exist, set default value
+    if (!getenv("usb_folder"))
+        setenv("usb_folder", "images");
+#endif
+    return 0;
+}
+
 static int run_main_loop(void)
 {
+#ifdef CONFIG_SSTAR_KEYPAD
+        u32 keynum=0;
+#endif
+
 #ifdef CONFIG_SANDBOX
 	sandbox_main_loop_init();
 #endif
+#ifdef CONFIG_SSTAR_KEYPAD
+        keynum = mdrv_keypad_Scan();
+        if(keynum !=0 )
+        {
+            printf("Keynum %d\n",keynum);
+            //do something, pls note watchdog   //WATCHDOG_RESET(); /* Trigger watchdog, if needed */
+        }
+#endif
+
 	/* main_loop() can return to retry autoboot, if so just run it again */
 	for (;;)
 		main_loop();
@@ -752,7 +820,7 @@ init_fnc_t init_sequence_r[] = {
 	arch_early_init_r,
 #endif
 	power_init_board,
-#ifndef CONFIG_SYS_NO_FLASH
+#ifndef CONFIG_VERSION_PZ1
 	initr_flash,
 #endif
 	INIT_FUNC_WATCHDOG_RESET
@@ -767,7 +835,9 @@ init_fnc_t init_sequence_r[] = {
 	init_func_spi,
 #endif
 #ifdef CONFIG_CMD_NAND
+#ifndef CONFIG_VERSION_PZ1
 	initr_nand,
+#endif
 #endif
 #ifdef CONFIG_CMD_ONENAND
 	initr_onenand,
@@ -778,7 +848,9 @@ init_fnc_t init_sequence_r[] = {
 #ifdef CONFIG_HAS_DATAFLASH
 	initr_dataflash,
 #endif
+#ifndef CONFIG_VERSION_PZ1
 	initr_env,
+#endif
 	INIT_FUNC_WATCHDOG_RESET
 	initr_secondary_cpu,
 #ifdef CONFIG_SC3
@@ -795,6 +867,9 @@ init_fnc_t init_sequence_r[] = {
 	initr_pci,
 #endif
 	stdio_add_devices,
+#ifdef CONFIG_SSTAR_KEYPAD
+    initr_keypad,
+#endif
 	initr_jumptable,
 #ifdef CONFIG_API
 	initr_api,
@@ -873,6 +948,7 @@ init_fnc_t init_sequence_r[] = {
 #ifdef CONFIG_PS2KBD
 	initr_kbd,
 #endif
+    initr_sstar,
 	run_main_loop,
 };
 

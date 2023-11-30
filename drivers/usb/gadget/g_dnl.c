@@ -19,7 +19,7 @@
 #include <thor.h>
 
 #include "gadget_chips.h"
-#include "composite.c"
+#include <linux/usb/composite.h>
 
 /*
  * One needs to define the following:

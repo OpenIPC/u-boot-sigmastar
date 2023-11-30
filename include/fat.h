@@ -11,6 +11,7 @@
 #define _FAT_H_
 
 #include <asm/byteorder.h>
+#include "malloc.h"
 
 #define CONFIG_SUPPORT_VFAT
 /* Maximum Long File Name length supported here is 128 UTF-16 code units */
@@ -33,6 +34,8 @@
 #define FAT16BUFSIZE	(FATBUFSIZE/2)
 #define FAT32BUFSIZE	(FATBUFSIZE/4)
 
+/* Maximum number of entry for long file name according to spec */
+#define MAX_LFN_SLOT    20
 
 /* Filesystem identifiers */
 #define FAT12_SIGN	"FAT12   "
@@ -95,6 +98,63 @@
 				(x) >= ((fatsize) != 32 ? \
 					((fatsize) != 16 ? 0xff0 : 0xfff0) : \
 					0xffffff0))
+
+#define BYTE_PER_SEC	512
+#define RESERVED_CNT	32
+
+
+#define mk1(p, x)				\
+    (p) = (__u8)(x)
+
+#define mk2(p, x)				\
+    (p)[0] = (__u8)(x),			\
+    (p)[1] = (__u8)((x) >> 010)
+
+#define mk4(p, x)				\
+    (p)[0] = (__u8)(x),			\
+    (p)[1] = (__u8)((x) >> 010),		\
+    (p)[2] = (__u8)((x) >> 020),		\
+    (p)[3] = (__u8)((x) >> 030)
+
+struct bs {
+    __u8 jmp[3];		/* bootstrap entry point */
+    __u8 oem[8];		/* OEM name and version */
+};
+
+struct bsbpb {
+    __u8 bps[2];		/* bytes per sector */
+    __u8 spc;			/* sectors per cluster */
+    __u8 res[2];		/* reserved sectors */
+    __u8 nft;			/* number of FATs */
+    __u8 rde[2];		/* root directory entries */
+    __u8 sec[2];		/* total sectors */
+    __u8 mid;			/* media descriptor */
+    __u8 spf[2];		/* sectors per FAT */
+    __u8 spt[2];		/* sectors per track */
+    __u8 hds[2];		/* drive heads */
+    __u8 hid[4];		/* hidden sectors */
+    __u8 bsec[4];		/* big total sectors */
+};
+
+/* For FAT32 */
+struct bsxbpb {
+    __u8 bspf[4];		/* big sectors per FAT */
+    __u8 xflg[2];		/* FAT control flags */
+    __u8 vers[2];		/* file system version */
+    __u8 rdcl[4];		/* root directory start cluster */
+    __u8 infs[2];		/* file system info sector */
+    __u8 bkbs[2];		/* backup boot sector */
+    __u8 rsvd[12];		/* reserved */
+};
+
+struct bsx {
+    __u8 drv;		/* drive number */
+    __u8 rsvd;		/* reserved */
+    __u8 sig;		/* extended boot signature */
+    __u8 volid[4];		/* volume ID number */
+    __u8 label[11]; 	/* volume label */
+    __u8 type[8];		/* file system type */
+};
 
 typedef struct boot_sector {
 	__u8	ignored[3];	/* Bootstrap code */
@@ -165,16 +225,37 @@ typedef struct dir_slot {
  * (see FAT32 accesses)
  */
 typedef struct {
-	__u8	*fatbuf;	/* Current FAT buffer */
-	int	fatsize;	/* Size of FAT in bits */
-	__u32	fatlength;	/* Length of FAT in sectors */
-	__u16	fat_sect;	/* Starting sector of the FAT */
-	__u32	rootdir_sect;	/* Start sector of root directory */
-	__u16	sect_size;	/* Size of sectors in bytes */
-	__u16	clust_size;	/* Size of clusters in sectors */
-	int	data_begin;	/* The sector of the first cluster, can be negative */
-	int	fatbufnum;	/* Used by get_fatent, init to -1 */
+    __u8    *fatbuf;    /* Current FAT buffer */
+    int fatsize;    /* Size of FAT in bits */
+    __u32   fatlength;  /* Length of FAT in sectors */
+    __u16   fat_sect;   /* Starting sector of the FAT */
+    __u8    fat_dirty;      /* Set if fatbuf has been modified */
+    __u32   rootdir_sect;   /* Start sector of root directory */
+    __u16   sect_size;  /* Size of sectors in bytes */
+    __u16   clust_size; /* Size of clusters in sectors */
+    int data_begin; /* The sector of the first cluster, can be negative */
+    int fatbufnum;  /* Used by get_fatent, init to -1 */
+    int rootdir_size;   /* Size of root dir for non-FAT32 */
+    __u32   root_cluster;   /* First cluster of root dir for FAT32 */
+    u32 total_sect; /* Number of sectors */
+    int fats;       /* Number of FATs */
 } fsdata;
+
+static inline u32 clust_to_sect(fsdata *fsdata, u32 clust)
+{
+	return fsdata->data_begin + clust * fsdata->clust_size;
+}
+
+static inline u32 sect_to_clust(fsdata *fsdata, int sect)
+{
+	return (sect - fsdata->data_begin) / fsdata->clust_size;
+}
+
+static inline void *malloc_cache_aligned(size_t size)
+{
+	return memalign(ARCH_DMA_MINALIGN, ALIGN(size, ARCH_DMA_MINALIGN));
+}
+
 
 typedef int	(file_detectfs_func)(void);
 typedef int	(file_ls_func)(const char *dir);
@@ -208,7 +289,9 @@ int fat_register_device(block_dev_desc_t *dev_desc, int part_no);
 
 int file_fat_write(const char *filename, void *buf, loff_t offset, loff_t len,
 		   loff_t *actwrite);
+int fat_unlink(const char *filename);
 int fat_read_file(const char *filename, void *buf, loff_t offset, loff_t len,
 		  loff_t *actread);
 void fat_close(void);
+int fat_format_device(block_dev_desc_t *dev_desc, int part_no);
 #endif /* _FAT_H_ */

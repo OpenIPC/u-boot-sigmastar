@@ -679,6 +679,10 @@ TftpTimeout(void)
 	if (++TftpTimeoutCount > TftpTimeoutCountMax) {
 		restart("Retry count exceeded");
 	} else {
+        #ifdef CONFIG_MS_EMAC
+        extern void MDrv_EMAC_SwReset(void);
+        MDrv_EMAC_SwReset();
+        #endif
 		puts("T ");
 		NetSetTimeout(TftpTimeoutMSecs, TftpTimeout);
 		if (TftpState != STATE_RECV_WRQ)

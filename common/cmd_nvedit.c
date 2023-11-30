@@ -36,6 +36,8 @@
 #include <asm/byteorder.h>
 #include <asm/io.h>
 
+#include "asm/arch/mach/platform.h"
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #if	!defined(CONFIG_ENV_IS_IN_EEPROM)	&& \
@@ -116,6 +118,9 @@ static int do_env_print(cmd_tbl_t *cmdtp, int flag, int argc,
 	int i;
 	int rcode = 0;
 	int env_flag = H_HIDE_DOT;
+    char str_reboot[20];
+    char *str=str_reboot;
+    U16 RegVal = 0 ;
 
 	if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 'a') {
 		argc--;
@@ -132,6 +137,25 @@ static int do_env_print(cmd_tbl_t *cmdtp, int flag, int argc,
 			rcode, (ulong)ENV_SIZE);
 		return 0;
 	}
+
+    /* add function to print rebootType under uboot. userguide:
+    http://sswiki.sigmastar.com.tw:8090/pages/viewpage.action?pageId=18318362 */
+    str += scnprintf(str, 10, "rebootType");
+    if (!strcmp(argv[1],str_reboot)){
+        RegVal = INREG16(BASE_REG_WDT_PA+REG_ID_02);
+        if(RegVal&0x01)
+            str += scnprintf(str, 4, "=WDT");
+        else
+        {
+            RegVal = INREG16(BASE_REG_PMPOR_PA+REG_ID_01);
+            if(RegVal&0x01)
+                str += scnprintf(str, 3, "=SW");
+            else
+                str += scnprintf(str, 3, "=HW");
+        }
+            printf("%s \n",str_reboot);
+            return 1;
+    }
 
 	/* print selected env vars */
 	env_flag &= ~H_HIDE_DOT;
@@ -686,9 +710,50 @@ ulong getenv_ulong(const char *name, int base, ulong default_val)
 
 #ifndef CONFIG_SPL_BUILD
 #if defined(CONFIG_CMD_SAVEENV) && !defined(CONFIG_ENV_IS_NOWHERE)
+
+#if (defined(CONFIG_MS_NAND) && defined(CONFIG_MS_EMMC))
+extern DEVINFO_BOOT_TYPE ms_devinfo_boot_type(void);
+extern char *nand_env_name_spec;
+extern char *mmc_env_name_spec;
+#endif
+
 static int do_env_save(cmd_tbl_t *cmdtp, int flag, int argc,
 		       char * const argv[])
 {
+#if defined(CONFIG_NAND_ONEBIN)
+#ifndef CONFIG_MS_SAVE_ENV_IN_ISP_FLASH
+#if defined(CONFIG_CMD_SAVEENV) && defined(CONFIG_CMD_NAND) && defined(CONFIG_MS_EMMC)
+    extern DEVINFO_BOOT_TYPE ms_devinfo_boot_type(void);
+    char *env_name_spec = NULL;
+    if (DEVINFO_BOOT_TYPE_EMMC==ms_devinfo_boot_type())
+    {
+        extern char *mmc_env_name_spec;
+        env_name_spec=mmc_env_name_spec;
+    }
+    else if (DEVINFO_BOOT_TYPE_NAND==ms_devinfo_boot_type())
+    {
+        extern char *nand_env_name_spec;
+        env_name_spec=nand_env_name_spec;
+    }
+#endif
+#endif
+
+#else
+
+#ifndef CONFIG_MS_SAVE_ENV_IN_ISP_FLASH
+#if defined(CONFIG_CMD_SAVEENV)
+    char *env_name_spec = NULL;
+#if defined(CONFIG_ENV_IS_IN_MMC)
+    extern char *mmc_env_name_spec;
+    env_name_spec=mmc_env_name_spec;
+#elif defined(CONFIG_ENV_IS_IN_NAND)
+    extern char *nand_env_name_spec;
+    env_name_spec=nand_env_name_spec;
+#endif
+#endif
+#endif
+
+#endif
 	printf("Saving Environment to %s...\n", env_name_spec);
 
 	return saveenv() ? 1 : 0;

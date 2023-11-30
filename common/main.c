@@ -11,6 +11,7 @@
 #include <autoboot.h>
 #include <cli.h>
 #include <version.h>
+#include <SsRecovery.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -52,6 +53,7 @@ static void run_preboot_environment_command(void)
 #endif /* CONFIG_PREBOOT */
 }
 
+
 /* We come here after U-Boot is initialised and ready to process commands */
 void main_loop(void)
 {
@@ -74,9 +76,26 @@ void main_loop(void)
 
 	run_preboot_environment_command();
 
+
+#ifdef CONFIG_AUTO_UPGRADE_SD
+    run_command("sdupgrade", 0);
+#endif
+#ifdef CONFIG_SSTAR_AUTORUN_DSTAR
+    run_command("sdstar", 0);
+#endif
+
 #if defined(CONFIG_UPDATE_TFTP)
 	update_tftp(0UL);
 #endif /* CONFIG_UPDATE_TFTP */
+
+#if defined(CONFIG_CMD_DFU)
+extern int update_dfu(void);
+	update_dfu();
+#endif /* CONFIG_CMD_DFU */
+
+#ifdef CONFIG_MS_EMMC_RECOVERY
+	RecoveryCheck();
+#endif
 
 	s = bootdelay_process();
 	if (cli_process_fdt(&s))

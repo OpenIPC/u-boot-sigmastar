@@ -99,7 +99,7 @@ typedef struct {
 } umass_bbb_csw_t;
 #define UMASS_BBB_CSW_SIZE	13
 
-#define USB_MAX_STOR_DEV 5
+//#define USB_MAX_STOR_DEV 5
 static int usb_max_devs; /* number of highest available usb device */
 
 static block_dev_desc_t usb_dev_desc[USB_MAX_STOR_DEV];
@@ -131,7 +131,11 @@ struct us_data {
 	trans_reset	transport_reset;	/* reset routine */
 	trans_cmnd	transport;		/* transport routine */
 };
+#define CONFIG_USB_EHCI
 
+#if (MP_USB_MSTAR==1)
+#define USB_MAX_XFER_BLK	256
+#else
 #ifdef CONFIG_USB_EHCI
 /*
  * The U-Boot EHCI driver can handle any transfer length as long as there is
@@ -142,7 +146,7 @@ struct us_data {
 #else
 #define USB_MAX_XFER_BLK	20
 #endif
-
+#endif /* MP_USB_MSTAR==1 */
 static struct us_data usb_stor[USB_MAX_STOR_DEV];
 
 
@@ -173,6 +177,10 @@ static void usb_show_progress(void)
 	debug(".");
 }
 
+
+#if (MP_USB_MSTAR==1)
+extern void USB_Bulk_InitEx(struct usb_device *dev, int port);
+#endif
 /*******************************************************************************
  * show info on storage devices; 'usb start/init' must be invoked earlier
  * as we only retrieve structures populated during devices initialization
@@ -213,6 +221,7 @@ static unsigned int usb_get_max_lun(struct us_data *us)
  * to the user if mode = 1
  * returns current device or -1 if no
  */
+ extern int UsbPortSelect;
 int usb_stor_scan(int mode)
 {
 	unsigned char i;
@@ -245,6 +254,11 @@ int usb_stor_scan(int mode)
 			/* OK, it's a storage device.  Iterate over its LUNs
 			 * and populate `usb_dev_desc'.
 			 */
+
+			#if (MP_USB_MSTAR==1)
+			USB_Bulk_InitEx(dev, UsbPortSelect);
+			#endif /* MP_USB_MSTAR==1 */
+
 			int lun, max_lun, start = usb_max_devs;
 
 			max_lun = usb_get_max_lun(&usb_stor[usb_max_devs]);

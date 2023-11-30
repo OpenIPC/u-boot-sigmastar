@@ -250,6 +250,8 @@ struct lmb;
 #define IH_COMP_BZIP2		2	/* bzip2 Compression Used	*/
 #define IH_COMP_LZMA		3	/* lzma  Compression Used	*/
 #define IH_COMP_LZO		4	/* lzo   Compression Used	*/
+#define IH_COMP_MZ		9	/* mz   Compression Used	*/
+#define IH_COMP_XIP     10   /* mz   Compression Used    */
 
 #define IH_MAGIC	0x27051956	/* Image Magic Number		*/
 #define IH_NMLEN		32	/* Image Name Length		*/
@@ -267,7 +269,12 @@ typedef struct image_header {
 	__be32		ih_time;	/* Image Creation Timestamp	*/
 	__be32		ih_size;	/* Image Data Size		*/
 	__be32		ih_load;	/* Data	 Load  Address		*/
+#ifdef CONFIG_SS_SMF_LOAD_64_KERNEL_ENTRY
+	__be64		ih_ep;		/* Entry Point Address		*/
+	__be64		ih_pad;		/* Pad for 16 bytes alignment header*/
+#else
 	__be32		ih_ep;		/* Entry Point Address		*/
+#endif
 	__be32		ih_dcrc;	/* Image Data CRC Checksum	*/
 	uint8_t		ih_os;		/* Operating System		*/
 	uint8_t		ih_arch;	/* CPU architecture		*/
@@ -320,8 +327,11 @@ typedef struct bootm_headers {
 
 #ifndef USE_HOSTCC
 	image_info_t	os;		/* os image info */
+#ifdef CONFIG_SS_SMF_LOAD_64_KERNEL_ENTRY
+	uint64_t	ep;		/* entry point of OS */
+#else
 	ulong		ep;		/* entry point of OS */
-
+#endif
 	ulong		rd_start, rd_end;/* ramdisk start/end */
 
 	char		*ft_addr;	/* flat dev tree address */
@@ -544,18 +554,30 @@ static inline uint32_t image_get_header_size(void)
 {
 	return (sizeof(image_header_t));
 }
-
 #define image_get_hdr_l(f) \
 	static inline uint32_t image_get_##f(const image_header_t *hdr) \
 	{ \
 		return uimage_to_cpu(hdr->ih_##f); \
 	}
+
+#ifdef CONFIG_SS_SMF_LOAD_64_KERNEL_ENTRY
+#define image_get_hdr_ll(f) \
+	static inline uint64_t image_get_##f(const image_header_t *hdr) \
+	{ \
+		return be64_to_cpu(hdr->ih_##f); \
+    }
+#endif
+
 image_get_hdr_l(magic)		/* image_get_magic */
 image_get_hdr_l(hcrc)		/* image_get_hcrc */
 image_get_hdr_l(time)		/* image_get_time */
 image_get_hdr_l(size)		/* image_get_size */
 image_get_hdr_l(load)		/* image_get_load */
-image_get_hdr_l(ep)		/* image_get_ep */
+#ifdef CONFIG_SS_SMF_LOAD_64_KERNEL_ENTRY
+image_get_hdr_ll(ep)		/* image_get_ep */
+#else
+image_get_hdr_l(ep)			/* image_get_ep */
+#endif
 image_get_hdr_l(dcrc)		/* image_get_dcrc */
 
 #define image_get_hdr_b(f) \
@@ -608,12 +630,25 @@ static inline ulong image_get_image_end(const image_header_t *hdr)
 	{ \
 		hdr->ih_##f = cpu_to_uimage(val); \
 	}
+
+#ifdef CONFIG_SS_SMF_LOAD_64_KERNEL_ENTRY
+#define image_set_hdr_ll(f) \
+	static inline void image_set_##f(image_header_t *hdr, uint64_t val) \
+	{ \
+		hdr->ih_##f = cpu_to_be64(val); \
+	}
+#endif
+
 image_set_hdr_l(magic)		/* image_set_magic */
 image_set_hdr_l(hcrc)		/* image_set_hcrc */
 image_set_hdr_l(time)		/* image_set_time */
 image_set_hdr_l(size)		/* image_set_size */
 image_set_hdr_l(load)		/* image_set_load */
+#ifdef CONFIG_SS_SMF_LOAD_64_KERNEL_ENTRY
+image_set_hdr_ll(ep)		/* image_set_ep */
+#else
 image_set_hdr_l(ep)		/* image_set_ep */
+#endif
 image_set_hdr_l(dcrc)		/* image_set_dcrc */
 
 #define image_set_hdr_b(f) \

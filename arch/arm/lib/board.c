@@ -565,8 +565,13 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #endif
 
 #if defined(CONFIG_CMD_NAND)
-	puts("NAND:  ");
-	nand_init();		/* go init the NAND */
+#if	defined(CONFIG_MS_NAND)
+	if(ms_devinfo_boot_type() == DEVINFO_BOOT_TYPE_SPI)
+	{
+		puts("NAND:  ");
+		nand_init();		/* go init the NAND */
+	}
+#endif
 #endif
 
 #if defined(CONFIG_CMD_ONENAND)

@@ -8,7 +8,7 @@
 
 #ifndef _IMAGETOOL_H_
 #define _IMAGETOOL_H_
-
+#include "../include/generated/autoconf.h"
 #include "os_support.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -46,7 +46,11 @@ struct image_tool_params {
 	int comp;
 	char *dtc;
 	unsigned int addr;
+#ifdef CONFIG_SS_SMF_LOAD_64_KERNEL_ENTRY
+	uint64_t ep;
+#else
 	unsigned int ep;
+#endif
 	char *imagename;
 	char *imagename2;
 	char *datafile;

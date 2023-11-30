@@ -68,6 +68,11 @@ static inline int fs_write_unsupported(const char *filename, void *buf,
 	return -1;
 }
 
+static inline int fs_unlink_unsupported(const char *filename)
+{
+  return -1;
+}
+
 static inline void fs_close_unsupported(void)
 {
 }
@@ -78,27 +83,28 @@ static inline int fs_uuid_unsupported(char *uuid_str)
 }
 
 struct fstype_info {
-	int fstype;
-	/*
-	 * Is it legal to pass NULL as .probe()'s  fs_dev_desc parameter? This
-	 * should be false in most cases. For "virtual" filesystems which
-	 * aren't based on a U-Boot block device (e.g. sandbox), this can be
-	 * set to true. This should also be true for the dumm entry at the end
-	 * of fstypes[], since that is essentially a "virtual" (non-existent)
-	 * filesystem.
-	 */
-	bool null_dev_desc_ok;
-	int (*probe)(block_dev_desc_t *fs_dev_desc,
-		     disk_partition_t *fs_partition);
-	int (*ls)(const char *dirname);
-	int (*exists)(const char *filename);
-	int (*size)(const char *filename, loff_t *size);
-	int (*read)(const char *filename, void *buf, loff_t offset,
-		    loff_t len, loff_t *actread);
-	int (*write)(const char *filename, void *buf, loff_t offset,
-		     loff_t len, loff_t *actwrite);
-	void (*close)(void);
-	int (*uuid)(char *uuid_str);
+    int fstype;
+    /*
+     * Is it legal to pass NULL as .probe()'s  fs_dev_desc parameter? This
+     * should be false in most cases. For "virtual" filesystems which
+     * aren't based on a U-Boot block device (e.g. sandbox), this can be
+     * set to true. This should also be true for the dumm entry at the end
+     * of fstypes[], since that is essentially a "virtual" (non-existent)
+     * filesystem.
+     */
+    bool null_dev_desc_ok;
+    int (*probe)(block_dev_desc_t *fs_dev_desc,
+             disk_partition_t *fs_partition);
+    int (*ls)(const char *dirname);
+    int (*exists)(const char *filename);
+    int (*size)(const char *filename, loff_t *size);
+    int (*read)(const char *filename, void *buf, loff_t offset,
+            loff_t len, loff_t *actread);
+    int (*write)(const char *filename, void *buf, loff_t offset,
+             loff_t len, loff_t *actwrite);
+    void (*close)(void);
+    int (*uuid)(char *uuid_str);
+    int (*unlink)(const char *filename);
 };
 
 static struct fstype_info fstypes[] = {
@@ -114,8 +120,10 @@ static struct fstype_info fstypes[] = {
 		.read = fat_read_file,
 #ifdef CONFIG_FAT_WRITE
 		.write = file_fat_write,
+		.unlink = fat_unlink,
 #else
 		.write = fs_write_unsupported,
+		.unlink = fs_unlink_unsupported,
 #endif
 		.uuid = fs_uuid_unsupported,
 	},
@@ -323,6 +331,20 @@ int fs_write(const char *filename, ulong addr, loff_t offset, loff_t len,
 	return ret;
 }
 
+ int fs_unlink(const char *filename)
+ {
+     int ret;
+
+     struct fstype_info *info = fs_get_info(fs_type);
+
+     ret = info->unlink(filename);
+
+     fs_type = FS_TYPE_ANY;
+     fs_close();
+
+     return ret;
+ }
+
 int do_size(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 		int fstype)
 {
@@ -503,3 +525,19 @@ int do_fs_uuid(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 
 	return CMD_RET_SUCCESS;
 }
+
+int do_rm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
+      int fstype)
+{
+    if (argc != 4)
+        return CMD_RET_USAGE;
+
+    if (fs_set_blk_dev(argv[1], argv[2], fstype))
+        return 1;
+
+    if (fs_unlink(argv[3]))
+        return 1;
+
+    return 0;
+}
+

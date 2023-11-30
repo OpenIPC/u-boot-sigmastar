@@ -22,6 +22,7 @@
  */
 
 #include <common.h>
+#include "asm/arch/mach/platform.h"
 
 __weak void reset_misc(void)
 {
@@ -30,6 +31,10 @@ __weak void reset_misc(void)
 int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	puts ("resetting ...\n");
+
+    /* set SW reset type */
+    SETREG16(BASE_REG_PMPOR_PA+REG_ID_01, BIT0); //assign bit to bank por, POR will be clear to 0 only when hw reset or power on
+    SETREG16(BASE_REG_WDT_PA+REG_ID_02,BIT0); //clear wdt before sw reset to recognize reset type correctly
 
 	udelay (50000);				/* wait 50 ms */
 

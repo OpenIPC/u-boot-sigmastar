@@ -48,7 +48,11 @@ void	udelay_masked		(unsigned long usec);
 /* calls to c from vectors.S */
 void bad_mode(void);
 void do_undefined_instruction(struct pt_regs *pt_regs);
-void do_software_interrupt(struct pt_regs *pt_regs);
+#ifdef CONFIG_CMD_OTPCTRL
+void do_software_interrupt(unsigned long cmd,unsigned long val,unsigned long op);
+#else
+void do_software_interrupt (struct pt_regs *pt_regs);
+#endif
 void do_prefetch_abort(struct pt_regs *pt_regs);
 void do_data_abort(struct pt_regs *pt_regs);
 void do_not_used(struct pt_regs *pt_regs);

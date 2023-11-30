@@ -11,16 +11,21 @@
 #include <common.h>
 #include <command.h>
 #include <asm/byteorder.h>
-#include <asm/unaligned.h>
 #include <part.h>
 #include <usb.h>
 
-#ifdef CONFIG_USB_STORAGE
+#if defined(CONFIG_CMD_FAT)
+//extern __u8 g_enable_fatbuf;   /* for fat.c using as fatbuf enable flag */
+#endif
+
+#if defined (CONFIG_USB_STORAGE)
 static int usb_stor_curr_dev = -1; /* current device */
 #endif
 #ifdef CONFIG_USB_HOST_ETHER
 static int usb_ether_curr_dev = -1; /* current ethernet device */
 #endif
+extern int USB3_init(void);
+extern int usb_init_exhub_port(int port, int ext_hub_port);
 
 /* some display routines (info command) */
 static char *usb_get_class_desc(unsigned char dclass)
@@ -225,7 +230,7 @@ static void usb_display_ep_desc(struct usb_endpoint_descriptor *epdesc)
 		printf("Interrupt");
 		break;
 	}
-	printf(" MaxPacket %d", get_unaligned(&epdesc->wMaxPacketSize));
+	printf(" MaxPacket %d", epdesc->wMaxPacketSize);
 	if ((epdesc->bmAttributes & 0x03) == 0x3)
 		printf(" Interval %dms", epdesc->bInterval);
 	printf("\n");
@@ -423,7 +428,7 @@ static int usb_test(struct usb_device *dev, int port, char* arg)
 /******************************************************************************
  * usb boot command intepreter. Derived from diskboot
  */
-#ifdef CONFIG_USB_STORAGE
+#if defined (CONFIG_USB_STORAGE)
 static int do_usbboot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	return common_diskboot(cmdtp, "usb", argc, argv);
@@ -448,6 +453,7 @@ static int do_usb(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 
 	int i;
+	int ext_hub_port = -1;
 	struct usb_device *dev = NULL;
 	extern char usb_started;
 #ifdef CONFIG_USB_STORAGE
@@ -457,27 +463,113 @@ static int do_usb(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	if (argc < 2)
 		return CMD_RET_USAGE;
 
+	if (argc > 3 )
+	{
+		ext_hub_port = simple_strtol(argv[3], NULL, 10);
+		printf("hello: target_ext_hub_port %d\n", ext_hub_port);
+	}
+
 	if ((strncmp(argv[1], "reset", 5) == 0) ||
 		 (strncmp(argv[1], "start", 5) == 0)) {
 		bootstage_mark_name(BOOTSTAGE_ID_USB_START, "usb_start");
 		if (do_usb_stop_keyboard(1) != 0)
 			return 1;
-		usb_stop();
-		printf("(Re)start USB...\n");
-		if (usb_init() >= 0) {
-#ifdef CONFIG_USB_STORAGE
-			/* try to recognize storage devices immediately */
-			usb_stor_curr_dev = usb_stor_scan(1);
+
+#if defined(CONFIG_CMD_FAT)
+//        g_enable_fatbuf = 0;   /* disable the buffer fat, open it in fat open */
 #endif
+
+        if(argv[2]==NULL)
+        {
+            usb_stop(USB_PORT0);
+            printf("(Re)start USB...\n");
+            if (ext_hub_port == -1)
+                i = usb_init(USB_PORT0);
+            else
+                i = usb_init_exhub_port(USB_PORT0, ext_hub_port);
+        }
+        else if(strncmp(argv[2],"0",1)==0)
+        {
+            usb_stop(USB_PORT0);
+            printf("(Re)start USB 0...\n");
+            if (ext_hub_port == -1)
+                i = usb_init(USB_PORT0);
+            else
+                i = usb_init_exhub_port(USB_PORT0, ext_hub_port);
+            //return 0;
+        }
+#if defined(ENABLE_SECOND_EHC)
+        else if(strncmp(argv[2],"1",1)==0)
+        {
+            usb_stop(USB_PORT1);
+            printf("(Re)start USB 1...\n");
+            if (ext_hub_port == -1)
+                i = usb_init(USB_PORT1);
+            else
+                i = usb_init_exhub_port(USB_PORT1, ext_hub_port);
+            //return 0;
+        }
+#endif
+#if defined(ENABLE_THIRD_EHC)
+        else if(strncmp(argv[2],"2",1)==0)
+        {
+            usb_stop(USB_PORT2);
+            printf("(Re)start USB 2...\n");
+            if (ext_hub_port == -1)
+                i = usb_init(USB_PORT2);
+            else
+                i = usb_init_exhub_port(USB_PORT2, ext_hub_port);
+            //return 0;
+        }
+#endif
+#if defined(ENABLE_FOURTH_EHC)
+        else if(strncmp(argv[2],"3",1)==0)
+        {
+            usb_stop(USB_PORT2);
+            printf("(Re)start USB 3...\n");
+            if (ext_hub_port == -1)
+                i = usb_init(USB_PORT3);
+            else
+                i = usb_init_exhub_port(USB_PORT3, ext_hub_port);
+            //return 0;
+        }
+#endif
+#if defined(CONFIG_USB_XHCI) && defined(ENABLE_XHC)
+        else if(strncmp(argv[2],"4",1)==0)
+        {
+            usb_stop_xhci(USB_PORT4, 0); //just stop usb
+            printf("(Re)start USB3 XHCI...\n");
+            if (ext_hub_port == -1)
+                i = usb_init(USB_PORT4);
+            else
+                i = usb_init_exhub_port(USB_PORT4, ext_hub_port);
+        }
+#endif
+        else
+        {
+            printf("Usb start command error..\n");
+            return 1;
+        }
+
+		if (i >= 0) {
 #ifdef CONFIG_USB_HOST_ETHER
 			/* try to recognize ethernet devices immediately */
 			usb_ether_curr_dev = usb_host_eth_scan(1);
+			if(usb_ether_curr_dev>=0)
+			{
+				return i;
+			}
 #endif
-#ifdef CONFIG_USB_KEYBOARD
-			drv_usb_kbd_init();
+#if defined (CONFIG_USB_STORAGE)
+			/* try to recognize storage devices immediately */
+			usb_stor_curr_dev = usb_stor_scan(1);
+			if (usb_stor_curr_dev < 0)
+			{
+				return 1;
+			}
 #endif
 		}
-		return 0;
+		return i;
 	}
 	if (strncmp(argv[1], "stop", 4) == 0) {
 		if (argc != 2)
@@ -485,21 +577,74 @@ static int do_usb(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		if (do_usb_stop_keyboard(0) != 0)
 			return 1;
 		printf("stopping USB..\n");
-		usb_stop();
+		usb_stop(0xff);
 		return 0;
 	}
+    if (strncmp(argv[1], "check", 5) == 0) {
+        if(argv[2]==NULL)
+        {
+            usb_stop(USB_PORT0);
+            printf("(Re)start USB...\n");
+            i = usb_post_init(USB_PORT0);
+        }
+        else if(strncmp(argv[2],"0",1)==0)
+        {
+            usb_stop(USB_PORT0);
+            printf("(Re)start USB 0...\n");
+            i = usb_post_init(USB_PORT0);
+        }
+#if defined(ENABLE_SECOND_EHC)
+        else if(strncmp(argv[2],"1",1)==0)
+        {
+            usb_stop(USB_PORT1);
+            printf("(Re)start USB 1...\n");
+            i = usb_post_init(USB_PORT1);
+        }
+#endif
+#if defined(ENABLE_THIRD_EHC)
+        else if(strncmp(argv[2],"2",1)==0)
+        {
+            usb_stop(USB_PORT2);
+            printf("(Re)start USB 2...\n");
+            i = usb_post_init(USB_PORT2);
+        }
+#endif
+#if defined(ENABLE_FOURTH_EHC)
+        else if(strncmp(argv[2],"3",1)==0)
+        {
+            usb_stop(USB_PORT3);
+            printf("(Re)start USB 3...\n");
+            i = usb_post_init(USB_PORT3);
+        }
+#endif
+        else
+        {
+            printf("Usb start command error..\n");
+            return 1;
+        }
+
+#if defined (CONFIG_USB_STORAGE)
+        /* try to recognize storage devices immediately */
+        if (i >= 0)
+            usb_stor_curr_dev = usb_stor_scan(1);
+        if (usb_stor_curr_dev < 0)
+        {
+            return 1;
+        }
+#endif
+        return 0;
+    }
 	if (!usb_started) {
 		printf("USB is stopped. Please issue 'usb start' first.\n");
 		return 1;
 	}
 	if (strncmp(argv[1], "tree", 4) == 0) {
+		struct usb_device *dev=NULL;
 		puts("USB device tree:\n");
-		for (i = 0; i < USB_MAX_DEVICE; i++) {
-			dev = usb_get_dev_index(i);
-			if (dev == NULL)
-				break;
-			if (dev->parent == NULL)
-				usb_show_tree(dev);
+		dev = usb_get_dev_index(0);
+		if(dev != NULL)
+		{
+			usb_show_tree(dev);
 		}
 		return 0;
 	}
@@ -540,7 +685,7 @@ static int do_usb(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		i = simple_strtoul(argv[3], NULL, 10);
 		return usb_test(dev, i, argv[4]);
 	}
-#ifdef CONFIG_USB_STORAGE
+#if defined (CONFIG_USB_STORAGE)
 	if (strncmp(argv[1], "stor", 4) == 0)
 		return usb_stor_info();
 
@@ -646,7 +791,7 @@ static int do_usb(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return 0;
 	}
 #endif /* CONFIG_USB_STORAGE */
-	return CMD_RET_USAGE;
+	return cmd_usage(cmdtp);
 }
 
 U_BOOT_CMD(
@@ -660,7 +805,7 @@ U_BOOT_CMD(
 	"usb test [dev] [port] [mode] - set USB 2.0 test mode\n"
 	"    (specify port 0 to indicate the device's upstream port)\n"
 	"    Available modes: J, K, S[E0_NAK], P[acket], F[orce_Enable]\n"
-#ifdef CONFIG_USB_STORAGE
+#if defined (CONFIG_USB_STORAGE)
 	"usb storage - show details of USB storage devices\n"
 	"usb dev [dev] - show or set current USB storage device\n"
 	"usb part [dev] - print partition table of one or all USB storage"

@@ -41,6 +41,7 @@ unsigned long long simple_strtoull(const char *cp, char **endp,
 long simple_strtol(const char *cp, char **endp, unsigned int base);
 void panic(const char *fmt, ...)
 		__attribute__ ((format (__printf__, 1, 2), noreturn));
+int sscanf(const char *buf, const char *fmt, ...);
 
 /**
  * Format a string and place it in a buffer

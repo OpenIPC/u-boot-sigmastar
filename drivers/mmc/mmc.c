@@ -17,9 +17,11 @@
 #include <linux/list.h>
 #include <div64.h>
 #include "mmc_private.h"
+#include <asm/arch/mach/platform.h>
 
 static struct list_head mmc_devices;
 static int cur_dev_num = -1;
+int gu32_EmmcPartitionAccess = 0;
 
 __weak int board_mmc_getwp(struct mmc *mmc)
 {
@@ -457,27 +459,33 @@ static int mmc_send_ext_csd(struct mmc *mmc, u8 *ext_csd)
 	return err;
 }
 
-
+extern U32 eMMC_SetExtCSD(U8 u8_AccessMode, U8 u8_ByteIdx, U8 u8_Value);
+extern U32 eMMC_GetExtCSD(U8* pu8_Ext_CSD);
 static int mmc_switch(struct mmc *mmc, u8 set, u8 index, u8 value)
 {
-	struct mmc_cmd cmd;
-	int timeout = 1000;
-	int ret;
+//	struct mmc_cmd cmd;
+//	int timeout = 1000;
+//	int ret;
 
-	cmd.cmdidx = MMC_CMD_SWITCH;
-	cmd.resp_type = MMC_RSP_R1b;
-	cmd.cmdarg = (MMC_SWITCH_MODE_WRITE_BYTE << 24) |
-				 (index << 16) |
-				 (value << 8);
+//	cmd.cmdidx = MMC_CMD_SWITCH;
+//	cmd.resp_type = MMC_RSP_R1b;
+//	cmd.cmdarg = (MMC_SWITCH_MODE_WRITE_BYTE << 24) |
+//				 (index << 16) |
+//				 (value << 8);
 
-	ret = mmc_send_cmd(mmc, &cmd, NULL);
+//	ret = mmc_send_cmd(mmc, &cmd, NULL);
+//
+//	/* Waiting for the ready status */
+//	if (!ret)
+//		ret = mmc_send_status(mmc, timeout);
+//
+//	return ret;
 
-	/* Waiting for the ready status */
-	if (!ret)
-		ret = mmc_send_status(mmc, timeout);
-
-	return ret;
-
+#ifdef CONFIG_MS_EMMC
+	return (int)eMMC_SetExtCSD(MMC_SWITCH_MODE_WRITE_BYTE, index, value);
+#else
+	return 0;
+#endif
 }
 
 static int mmc_change_freq(struct mmc *mmc)
@@ -552,8 +560,8 @@ static int mmc_set_capacity(struct mmc *mmc, int part_num)
 		return -1;
 	}
 
+    gu32_EmmcPartitionAccess = part_num;
 	mmc->block_dev.lba = lldiv(mmc->capacity, mmc->read_bl_len);
-
 	return 0;
 }
 
@@ -1340,7 +1348,7 @@ int mmc_start_init(struct mmc *mmc)
 		return err;
 
 	mmc->ddr_mode = 0;
-	mmc_set_bus_width(mmc, 1);
+    mmc_set_bus_width(mmc, 1); //[0:1:2]/[1x:4x:8x]
 	mmc_set_clock(mmc, 1);
 
 	/* Reset the Card */
@@ -1479,27 +1487,57 @@ static void do_preinit(void)
 	}
 }
 
+//extern int board_emmc_init(bd_t *bis);
+//extern DEVINFO_BOOT_TYPE ms_devinfo_boot_type(void);
+extern int board_emmc_init(bd_t *bis);
 
 int mmc_initialize(bd_t *bis)
 {
 	INIT_LIST_HEAD (&mmc_devices);
 	cur_dev_num = 0;
 
-	if (board_mmc_init(bis) < 0)
-		cpu_mmc_init(bis);
+    //iantest
+#ifdef CONFIG_MS_EMMC
+    //  if(ms_devinfo_boot_type() == DEVINFO_BOOT_TYPE_EMMC)
+        {
+            board_emmc_init(bis);
+            print_mmc_devices(',');
+        }
+#endif
 
+	if (board_mmc_init(bis) < 0)
+	{
+		cpu_mmc_init(bis);
+	}
 #ifndef CONFIG_SPL_BUILD
 	print_mmc_devices(',');
 #endif
 
 	do_preinit();
+//iantest
 	return 0;
 }
+
+/*
+int emmc_initialize(bd_t *bis)
+{
+	INIT_LIST_HEAD (&mmc_devices);
+	cur_dev_num = 0;
+
+	if (board_emmc_init(bis) < 0)
+		cpu_mmc_init(bis);
+
+	print_mmc_devices(',');
+
+	return 0;
+}*/
 
 #ifdef CONFIG_SUPPORT_EMMC_BOOT
 /*
  * This function changes the size of boot partition and the size of rpmb
  * partition present on EMMC devices.
+ * EXT_CSD[168] which is RPMB_SIZE_MULT
+ * EXT_CSD[226] which is BOOT_SIZE_MULT
  *
  * Input Parameters:
  * struct *mmc: pointer for the mmc device strcuture
@@ -1606,6 +1644,29 @@ int mmc_set_part_conf(struct mmc *mmc, u8 ack, u8 part_num, u8 access)
 	return 0;
 }
 
+
+int mmc_get_part_conf(void)
+{
+    U8 u8_EMMC_PartConf, boot_part, buf[512];
+    char boot_partition[2];
+
+    eMMC_GetExtCSD(buf);
+    u8_EMMC_PartConf = ((buf[EXT_CSD_PART_CONF] & BOOT_PART_ENABLE_MASK) >> BOOT_PART_OFFSET);
+
+    sprintf(boot_partition, "%02x", u8_EMMC_PartConf);
+    setenv("partconf", boot_partition);
+
+
+    if(u8_EMMC_PartConf == 1)
+        boot_part = 2;
+    else
+        boot_part = 1;
+
+    sprintf(boot_partition, "%02x", boot_part);
+    setenv("boot_part", boot_partition);
+    return 0;
+}
+
 /*
  * Modify EXT_CSD[162] which is RST_n_FUNCTION based on the given value
  * for enable.  Note that this is a write-once field for non-zero values.
@@ -1618,3 +1679,338 @@ int mmc_set_rst_n_function(struct mmc *mmc, u8 enable)
 			  enable);
 }
 #endif
+
+
+
+//======================================for emmc==========================================
+
+
+int mmc_slc_mode(struct mmc *mmc, u64 size, int reliable_write)
+{
+    int err;
+    u64 ea_size, max_ea_size;
+
+    if (!mmc->has_init)
+    {
+        err = (int)mmc_send_ext_csd(mmc, (u8 *)(mmc->ext_csd));
+        if (err)
+        {
+            printf("read ecsd fail while set slc mode, err %d\n", err);
+            return err;
+        }
+    }
+
+    if (((mmc->ext_csd[192] < 5) || ((mmc->ext_csd[160] & 0x3) != 3)) && (size != 0))
+    {
+        printf("Enhanced attribute of partition is not supported, slc size should be 0!\r\n");
+        return 0;
+    }
+    if ((reliable_write == 1) && (mmc->reliable_write == 0))
+    {
+        printf("Reliable write is not supported, should be 0!\n");
+        return 0;
+    }
+
+    if (mmc->slc_size || (mmc->reliable_write == 2) || mmc->ext_csd[EXT_CSD_PARTITION_SETTING_COMPLETED])
+    {
+        printf("SLC mode or reliable write has been set, slc size is %lld bytes\n", mmc->slc_size);
+        return 0;
+    }
+
+    if (!size && (reliable_write == 1))
+    {
+        mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_ERASE_GROUP_DEF, 1);
+        mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_WR_REL_SET, 0x1f);
+        // complete the partition configuration
+        mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_PARTITION_SETTING_COMPLETED, 0x01);
+
+        mmc->reliable_write = 2;
+
+        while (1)
+            printf("Please reset the board!!!!!! Reliable write would be active after reset!!!!!!\n");
+    }
+
+    if(size <= 0)
+    {
+        printf("Invalid slc size %llu bytes\n", size);
+        return 1;
+    }
+
+
+    ea_size = lldiv(size , (mmc->ext_csd[221] * mmc->ext_csd[224]));
+    ea_size >>= 19;
+    max_ea_size = mmc->ext_csd[157] | ((u32)(mmc->ext_csd[158]) << 8)
+    	             | ((u32)(mmc->ext_csd[159]) << 16);
+
+    // 0xffffffff indicates max slc size
+    if (size == 0xffffffff)
+    {
+        ea_size = max_ea_size;
+        size = (max_ea_size << 19) * (mmc->ext_csd[221] * mmc->ext_csd[224]);
+    }
+    else if (ea_size > max_ea_size)
+    {
+        printf("Size exceeds max enhanced area, max size is: %lldMB\r\n",
+            (max_ea_size * mmc->ext_csd[221] * mmc->ext_csd[224]) >> 1);
+        return -1;
+    }
+
+    mmc->slc_size = (ea_size << 19) * (mmc->ext_csd[221] * mmc->ext_csd[224]);
+    // slc size of input is not aligned
+    if ((size != 0xffffffff) && (size != mmc->slc_size) && (ea_size < max_ea_size))
+    {
+        ea_size++;
+        mmc->slc_size = (ea_size << 19) * (mmc->ext_csd[221] * mmc->ext_csd[224]);
+    }
+
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_ERASE_GROUP_DEF, 1);
+
+    if ((reliable_write == 1) ||
+        (((mmc->slc_size << 1) < mmc->capacity) && (mmc->reliable_write != 0)))
+    {
+        // set reliable write
+        mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_WR_REL_SET, 0x1f);
+        if (!reliable_write)
+        {
+            printf("Reliable write will be set to protect the whole emmc space!");
+        }
+    }
+
+    #if 0
+    // configure the general purpose area
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_1_0, mmc->ext_csd[157]);
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_1_1, mmc->ext_csd[158]);
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_1_2, mmc->ext_csd[159]);
+
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_2_0, 0);
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_2_1, 0);
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_2_2, 0);
+
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_3_0, 0);
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_3_1, 0);
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_3_2, 0);
+
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_4_0, 0);
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_4_1, 0);
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_GP_SIZE_MULT_4_2, 0);
+
+    // configure the enhanced area, leave it as mlc
+
+    // configure the attribute of these areas
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_PARTITIONS_ATTRIBUTE, 2);
+    #endif
+    // configure the enhanced area
+    // start address = 0
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_ENH_START_ADDR_0, 0);
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_ENH_START_ADDR_1, 0);
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_ENH_START_ADDR_2, 0);
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_ENH_START_ADDR_3, 0);
+    // set size of enhanced area
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_ENH_SIZE_MULT_0, (u8)(ea_size & 0xff));
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_ENH_SIZE_MULT_1, (u8)((ea_size & 0xff00) >> 8));
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_ENH_SIZE_MULT_2, (u8)((ea_size & 0xff0000) >> 16));
+
+    // configure the attribute of these areas
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_PARTITIONS_ATTRIBUTE, 1);
+
+    // complete the partition configuration
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_PARTITION_SETTING_COMPLETED, 1);
+
+    printf("SLC partition size is %lld\n", mmc->slc_size);
+    while (1)
+        printf("Please reset the board!!!!!! SLC mode or reliable write will be active after reset!!!!!!\n");
+
+    return 0;
+}
+
+int mmc_ecsd_read(struct mmc *mmc)
+{
+    int err;
+
+    err = (int)mmc_send_ext_csd(mmc, (u8 *)mmc->ext_csd);
+    if (err)
+    {
+        printf("read ecsd register fail, err %d\n", err);
+        return err;
+    }
+    #if 0
+    eMMC_dump_mem(mmc->ext_csd, 0x200);
+    #else
+    {
+        int i;
+        for (i = 0; i < 512; i++)
+            printf("ecsd[%d]:0x%x\r\n", i, mmc->ext_csd[i]);
+    }
+    #endif
+
+    return 0;
+}
+
+int mmc_ecsd_write(struct mmc *mmc, u8 num, u8 mask, u8 value)
+{
+    int err;
+    u8 tmp;
+
+    err = (int)mmc_send_ext_csd(mmc, (u8 *)mmc->ext_csd);
+    if (err)
+    {
+        printf("read ecsd register fail, err %d\n", err);
+        return err;
+    }
+
+    tmp = mmc->ext_csd[num];
+
+    tmp &= ~mask;
+    value &= mask;
+    tmp |= value;
+
+    mmc->ext_csd[num] = tmp;
+    mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, num, tmp);
+
+    return 0;
+}
+
+
+
+int mmc_slc_check(struct mmc *mmc)
+{
+    int slc_mode, slc_mode_env, flag = 0, err;
+    char *emmc_slc_mode = NULL;
+    char buf[4];
+
+    if (!mmc->has_init)
+    {
+        err = (int)mmc_send_ext_csd(mmc, (u8 *)mmc->ext_csd);
+        if (err)
+        {
+            printf("read ecsd fail while check slc mode, err %d\n", err);
+            return err;
+        }
+    }
+
+    slc_mode = (mmc->slc_size == 0) ? 0:1;
+    //if ((mmc->ext_csd[192] < 5) || ((mmc->ext_csd[160] & 0x3) != 3))
+    //{
+        //printf("Enhanced attribute of partition is not supported!\r\n");
+        //slc_mode = 0;
+    //}
+    emmc_slc_mode = getenv("mmcslcmode");
+
+    if (emmc_slc_mode)
+    {
+        slc_mode_env = (int)simple_strtol(emmc_slc_mode, NULL, 10);
+        if (slc_mode != slc_mode_env)
+        {
+            slc_mode_env = slc_mode;
+            flag = 1;
+        }
+    }
+    else
+    {
+        slc_mode_env = slc_mode;
+        flag = 1;
+    }
+
+    if (flag == 1)
+    {
+        sprintf(buf, "%X", slc_mode_env);
+        setenv("mmcslcmode", buf);
+        saveenv();
+    }
+
+    return 0;
+}
+
+/* EMMC reliable write check */
+int mmc_relwr_check(struct mmc *mmc)
+{
+    int reliable_write, relwr_env, flag = 0, err;
+    char *relwr_mode = NULL;
+    char buf[4];
+
+    if (!mmc->has_init)
+    {
+        err = mmc_send_ext_csd(mmc, (u8 *)mmc->ext_csd);
+        if (err)
+        {
+            printf("read ecsd fail while check slc mode, err %d\n", err);
+            return err;
+        }
+    }
+
+    reliable_write = mmc->reliable_write;
+    relwr_mode = getenv("mmcrelwr");
+
+    if (relwr_mode)
+    {
+        relwr_env = (int)simple_strtol(relwr_mode, NULL, 10);
+        if (reliable_write != relwr_env)
+        {
+            relwr_env = reliable_write;
+            flag = 1;
+        }
+    }
+    else
+    {
+        relwr_env = reliable_write;
+        flag = 1;
+    }
+
+    if (flag == 1)
+    {
+        sprintf(buf, "%X", relwr_env);
+        setenv("mmcrelwr", buf);
+        saveenv();
+    }
+
+    return 0;
+}
+
+int mmc_slc_relwr_check(struct mmc *mmc)
+{
+    int err;
+
+    err = mmc_slc_check(mmc);
+    if (err)
+    {
+        printf("eMMC slc mode check fail!!!\n");
+        return err;
+    }
+
+    err = mmc_relwr_check(mmc);
+    if (err)
+    {
+        printf("eMMC reliable write configuration check fail!!!\n");
+        return err;
+    }
+
+    if ((mmc->slc_size == 0) && (mmc->reliable_write != 2))
+    {
+        printf("Both of slc mode and reliable write are unconfigured!!!!!!\n");
+		return 1;
+    }
+    if ((mmc->slc_size < mmc->capacity) && (mmc->slc_size > 0) && (mmc->reliable_write != 2))
+    {
+        printf("Reliable write should be configured!!!!!!\n");
+		return 1;
+    }
+
+	return 0;
+}
+
+int mmc_get_alignsize(struct mmc *mmc)
+{
+    int alignsize, err;
+
+    err = (int)mmc_send_ext_csd(mmc, (u8 *)mmc->ext_csd);
+    if (err)
+    {
+        printf("read ecsd fail, err %d\n", err);
+        return err;
+    }
+
+    alignsize = mmc->ext_csd[221] * mmc->ext_csd[224] * 512;
+    printf("SLC partition size should be aligned with %dKB\n", alignsize);
+
+    return 0;
+}

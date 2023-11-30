@@ -1876,6 +1876,49 @@ static struct part_info* mtd_part_info(struct mtd_device *dev, unsigned int part
 	return NULL;
 }
 
+static int find_partition_range(char *partition, u64 *offset, u64 *size)
+{
+    struct list_head *dentry, *pentry;
+    struct part_info *part;
+    struct mtd_device *dev;
+    int part_num;
+
+    list_for_each(dentry, &devices)
+    {
+        dev = list_entry(dentry, struct mtd_device, link);
+        /* list partitions for given device */
+        part_num = 0;
+        list_for_each(pentry, &dev->parts)
+         {
+            part = list_entry(pentry, struct part_info, link);
+            if(!strcmp(partition,part->name))
+            {
+                printf("found the partition info of %s\r\n",part->name);
+                if (offset)
+                    *offset = part->offset;
+                if (size)
+                    *size = part->size;
+                return 1;
+            }
+            part_num++;
+        }
+    }
+
+    if (list_empty(&devices))
+        printf("no partitions defined\n");
+
+    printf("Not found the partition info of %s\r\n",partition);
+    return 0;
+}
+
+int get_mtdpart_range(char *partition, u64 *offset, u64 *size)
+{
+    if (mtdparts_init() != 0)
+        return 0;
+
+    return find_partition_range(partition, offset, size);
+}
+
 /***************************************************/
 /* U-boot commands				   */
 /***************************************************/

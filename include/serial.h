@@ -212,5 +212,6 @@ void sconsole_serial_initialize(void);
 void sh_serial_initialize(void);
 void uartlite_serial_initialize(void);
 void zynq_serial_initialize(void);
+void ms_serial_initialize(void);
 
 #endif

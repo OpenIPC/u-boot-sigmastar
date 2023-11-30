@@ -1,0 +1,33 @@
+if INFINITY6C
+
+config SYS_CONFIG_NAME
+    default "infinity6c"
+    ---help---
+    To load the "include/configs/infinity6c.h"
+
+
+config SYS_SOC
+    default "infinity6c"
+    ---help---
+    To generate correct  "arch/arm/include/asm/arch"
+
+config SYS_GENERIC_BOARD
+    bool
+    default y
+
+config VERSION_FPGA
+    bool "FPGA version"
+    default n
+
+config SS_BOOTING_PERF
+    bool "booting time"
+    default y
+
+config SSTAR_SPL_EARLY_BSS
+    bool "clear bss section first before run board_f"
+    default n
+
+config VERSION_PZ1
+    bool "Palladium version"
+    default n
+endif

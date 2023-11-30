@@ -156,6 +156,12 @@
 #define gadget_is_fotg210(g)        0
 #endif
 
+#ifdef CONFIG_USB_GADGET_MSB250X
+#define gadget_is_msb250x(g)         (!strcmp("msb250x_udc", (g)->name))
+#else
+#define gadget_is_msb250x(g)         0
+#endif
+
 /*
  * CONFIG_USB_GADGET_SX2
  * CONFIG_USB_GADGET_AU1X00
@@ -223,5 +229,10 @@ static inline int usb_gadget_controller_number(struct usb_gadget *gadget)
 		return 0x21;
 	else if (gadget_is_fotg210(gadget))
 		return 0x22;
+    else if (gadget_is_msb250x(gadget))
+    {
+        return 0x23;
+    }
+
 	return -ENOENT;
 }

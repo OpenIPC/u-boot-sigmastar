@@ -18,6 +18,12 @@
 #include <lzma/LzmaTypes.h>
 #include <lzma/LzmaDec.h>
 #include <lzma/LzmaTools.h>
+#ifdef CONFIG_XZ
+#include <xz/xz.h>
+#include <xz/xz_config.h>
+#include <xz/xz_lzma2.h>
+#include <xz/xz_stream.h>
+#endif
 #if defined(CONFIG_CMD_USB)
 #include <usb.h>
 #endif
@@ -30,8 +36,8 @@
 #include <image.h>
 
 #ifndef CONFIG_SYS_BOOTM_LEN
-/* use 8MByte as default max gunzip size */
-#define CONFIG_SYS_BOOTM_LEN	0x800000
+/* use 16MByte as default max gunzip size */
+#define CONFIG_SYS_BOOTM_LEN	0x1000000
 #endif
 
 #define IH_INITRD_ARCH IH_ARCH_DEFAULT
@@ -266,30 +272,24 @@ static int bootm_find_other(cmd_tbl_t *cmdtp, int flag, int argc,
 }
 #endif /* USE_HOSTCC */
 
-/**
- * decomp_image() - decompress the operating system
- *
- * @comp:	Compression algorithm that is used (IH_COMP_...)
- * @load:	Destination load address in U-Boot memory
- * @image_start Image start address (where we are decompressing from)
- * @type:	OS type (IH_OS_...)
- * @load_bug:	Place to decompress to
- * @image_buf:	Address to decompress from
- * @return 0 if OK, -ve on error (BOOTM_ERR_...)
- */
-static int decomp_image(int comp, ulong load, ulong image_start, int type,
-			void *load_buf, void *image_buf, ulong image_len,
-			ulong *load_end)
+
+int bootm_decomp_image(int comp, ulong load, ulong image_start, int type,
+                      void *load_buf, void *image_buf, ulong image_len,
+                      uint unc_len, ulong *load_end)
 {
 	const char *type_name = genimg_get_type_name(type);
-	__attribute__((unused)) uint unc_len = CONFIG_SYS_BOOTM_LEN;
+//	__attribute__((unused)) uint unc_len = CONFIG_SYS_BOOTM_LEN;
 
 	*load_end = load;
 	switch (comp) {
+	case IH_COMP_XIP:
 	case IH_COMP_NONE:
 		if (load == image_start) {
 			printf("   XIP %s ... ", type_name);
-		} else {
+		}else if(IH_COMP_XIP==comp){
+		    printf("   Force XIP %s ... ", type_name);
+		    image_start=load;
+		}else {
 			printf("   Loading %s ... ", type_name);
 			memmove_wd(load_buf, image_buf, image_len, CHUNKSZ);
 		}
@@ -297,9 +297,9 @@ static int decomp_image(int comp, ulong load, ulong image_start, int type,
 		break;
 #ifdef CONFIG_GZIP
 	case IH_COMP_GZIP:
-		printf("   Uncompressing %s ... ", type_name);
+		printf("   Uncompressing %s ... \n", type_name);
 		if (gunzip(load_buf, unc_len, image_buf, &image_len) != 0) {
-			puts("GUNZIP: uncompress, out-of-mem or overwrite error - must RESET board to recover\n");
+			puts("   GUNZIP: uncompress, out-of-mem or overwrite error - must RESET board to recover\n");
 			return BOOTM_ERR_RESET;
 		}
 
@@ -308,7 +308,7 @@ static int decomp_image(int comp, ulong load, ulong image_start, int type,
 #endif /* CONFIG_GZIP */
 #ifdef CONFIG_BZIP2
 	case IH_COMP_BZIP2:
-		printf("   Uncompressing %s ... ", type_name);
+		printf("   Uncompressing %s ... \n", type_name);
 		/*
 		 * If we've got less than 4 MB of malloc() space,
 		 * use slower decompression algorithm which requires
@@ -318,7 +318,7 @@ static int decomp_image(int comp, ulong load, ulong image_start, int type,
 			image_buf, image_len,
 			CONFIG_SYS_MALLOC_LEN < (4096 * 1024), 0);
 		if (i != BZ_OK) {
-			printf("BUNZIP2: uncompress or overwrite error %d - must RESET board to recover\n",
+			printf("   BUNZIP2: uncompress or overwrite error %d - must RESET board to recover\n",
 			       i);
 			return BOOTM_ERR_RESET;
 		}
@@ -326,24 +326,62 @@ static int decomp_image(int comp, ulong load, ulong image_start, int type,
 		*load_end = load + unc_len;
 		break;
 #endif /* CONFIG_BZIP2 */
-#ifdef CONFIG_LZMA
+#if defined CONFIG_LZMA || defined CONFIG_XZ
 	case IH_COMP_LZMA: {
+  #ifdef CONFIG_XZ
+        struct xz_buf b;
+        struct xz_dec *s;
+        enum xz_ret ret;
+
+        printf("   Uncompressing %s ... \n", type_name);
+
+        xz_crc32_init();
+
+        /*
+         * Support up to 64 MiB dictionary. The actually needed memory
+         * is allocated once the headers have been parsed.
+         */
+        s = xz_dec_init(XZ_SINGLE, 16*1024);
+        if(s==NULL)
+        {
+            printf("  xz_dec_init ERROR!!");
+        }
+        b.in = image_buf/*hardcore here*/;
+        b.in_pos = 0;
+        b.in_size = image_len;
+        b.out = load_buf;
+        b.out_pos = 0;
+        b.out_size = unc_len;
+
+        ret = xz_dec_run(s, &b);
+
+//        if(ret != XZ_OK || ret != XZ_STREAM_END)
+//            printf("\nXZ: uncompress erro %d\n", ret);
+
+        printf("   XZ: uncompressed size=0x%x, ret=%d\n",b.out_pos, ret);
+
+        xz_dec_end(s);
+
+        break;
+
+  #else
 		SizeT lzma_len = unc_len;
 		int ret;
 
-		printf("   Uncompressing %s ... ", type_name);
+		printf("   Uncompressing %s ... \n", type_name);
 
 		ret = lzmaBuffToBuffDecompress(load_buf, &lzma_len,
 					       image_buf, image_len);
 		unc_len = lzma_len;
 		if (ret != SZ_OK) {
-			printf("LZMA: uncompress or overwrite error %d - must RESET board to recover\n",
+			printf("   LZMA: uncompress or overwrite error %d - must RESET board to recover\n",
 			       ret);
 			bootstage_error(BOOTSTAGE_ID_DECOMP_IMAGE);
 			return BOOTM_ERR_RESET;
 		}
 		*load_end = load + unc_len;
 		break;
+    #endif
 	}
 #endif /* CONFIG_LZMA */
 #ifdef CONFIG_LZO
@@ -351,11 +389,11 @@ static int decomp_image(int comp, ulong load, ulong image_start, int type,
 		size_t size = unc_len;
 		int ret;
 
-		printf("   Uncompressing %s ... ", type_name);
+		printf("   Uncompressing %s ... \n", type_name);
 
 		ret = lzop_decompress(image_buf, image_len, load_buf, &size);
 		if (ret != LZO_E_OK) {
-			printf("LZO: uncompress or overwrite error %d - must RESET board to recover\n",
+			printf("   LZO: uncompress or overwrite error %d - must RESET board to recover\n",
 			       ret);
 			return BOOTM_ERR_RESET;
 		}
@@ -364,8 +402,28 @@ static int decomp_image(int comp, ulong load, ulong image_start, int type,
 		break;
 	}
 #endif /* CONFIG_LZO */
+#ifdef CONFIG_MZ
+	case IH_COMP_MZ:
+	{
+		extern size_t tinfl_decompress_mem_to_mem(void *pOut_buf, size_t out_buf_len, const void *pSrc_buf, size_t src_buf_len, int flags);
+		int ret=-1;
+		printf("   Uncompressing %s ... \n", type_name);
+//		printf("  0x%08X, 0x%08X, 0x%08X, 0x%08X\n",load_buf, unc_len, image_buf, image_len);
+		if ((ret=tinfl_decompress_mem_to_mem(load_buf, unc_len, image_buf, image_len, 0)) <0) {
+			puts("   MZ: uncompress failed - must RESET board to recover\n");
+			return BOOTM_ERR_RESET;
+		}
+		else
+		{
+			printf("   MZ: uncompressed size=0x%x\n",ret);
+		}
+
+		*load_end = load + image_len;
+		break;
+	}
+#endif /* CONFIG_MZ */
 	default:
-		printf("Unimplemented compression type %d\n", comp);
+		printf("   Unimplemented compression type %d\n", comp);
 		return BOOTM_ERR_UNIMPLEMENTED;
 	}
 
@@ -390,8 +448,8 @@ static int bootm_load_os(bootm_headers_t *images, unsigned long *load_end,
 
 	load_buf = map_sysmem(load, 0);
 	image_buf = map_sysmem(os.image_start, image_len);
-	err = decomp_image(os.comp, load, os.image_start, os.type, load_buf,
-			   image_buf, image_len, load_end);
+	err = bootm_decomp_image(os.comp, load, os.image_start, os.type, load_buf,
+			 image_buf, image_len,CONFIG_SYS_BOOTM_LEN, load_end);
 	if (err) {
 		bootstage_error(BOOTSTAGE_ID_DECOMP_IMAGE);
 		return err;
@@ -399,9 +457,9 @@ static int bootm_load_os(bootm_headers_t *images, unsigned long *load_end,
 	flush_cache(load, (*load_end - load) * sizeof(ulong));
 
 	debug("   kernel loaded at 0x%08lx, end = 0x%08lx\n", load, *load_end);
-	bootstage_mark(BOOTSTAGE_ID_KERNEL_LOADED);
+	bootstage_mark_name(BOOTSTAGE_ID_KERNEL_LOADED,__FUNCTION__);
 
-	no_overlap = (os.comp == IH_COMP_NONE && load == image_start);
+	no_overlap = (os.comp == IH_COMP_XIP || ( os.comp == IH_COMP_NONE && load == image_start ));
 
 	if (!no_overlap && (load < blob_end) && (*load_end > blob_start)) {
 		debug("images.os.start = 0x%lX, images.os.end = 0x%lx\n",
@@ -457,7 +515,33 @@ ulong bootm_disable_interrupts(void)
 	 * updated every 1 ms within the HCCA structure in SDRAM! For more
 	 * details see the OpenHCI specification.
 	 */
+#if 1//defined(CONFIG_MS_USB)
+	printf("-usb_stop(USB_PORT0)\n");
+	usb_stop(USB_PORT0);
+
+#if defined(ENABLE_SECOND_EHC)
+	printf("-usb_stop(USB_PORT1)\n");
+	usb_stop(USB_PORT1);
+#endif
+
+#if defined(ENABLE_THIRD_EHC)
+	printf("-usb_stop(USB_PORT2)\n");
+	usb_stop(USB_PORT2);
+#endif
+
+#if defined(ENABLE_FOURTH_EHC)
+	printf("-usb_stop(USB_PORT3)\n");
+	usb_stop(USB_PORT3);
+#endif
+
+#if defined(CONFIG_USB_XHCI) && defined(ENABLE_XHC)
+	printf("-usb_stop(USB_PORT4)\n");
+	usb_stop_xhci(USB_PORT4, 1); //stop and turn off power
+#endif
+
+#else
 	usb_stop();
+#endif
 #endif
 	return iflag;
 }
@@ -602,6 +686,27 @@ int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 			setenv_hex("initrd_end", images->initrd_end);
 		}
 	}
+
+    //Copy ramdisk to the address given by kernel image
+    if(!strncmp((char*)images->rd_end, "KIMG", 4))
+    {
+        ulong rd_start = images->rd_start;
+        ulong rd_len = images->rd_end - images->rd_start;
+        images->initrd_start = *(ulong*)(images->rd_end+8);
+        images->initrd_end = images->initrd_start + rd_len;
+        memcpy((ulong*)images->initrd_start, (ulong*)images->rd_start, rd_len);
+
+        //update new ramdisk address, it will pass to KERNEL later through ATAG format
+        images->rd_start = images->initrd_start;
+        images->rd_end = images->initrd_end;
+        printf("[KIMG] initrd load to 0x%08X.[0x%08X, 0x%08X]\n", (unsigned int)images->rd_start,(unsigned int)rd_start,(unsigned int)rd_len);
+    }
+    else
+    {
+        //printf("ERR: Can't find KIMG header and initrd address, 0x%08X\n",(unsigned int)images->rd_end);
+        images->rd_start = images->rd_end = 0;
+    }
+
 #endif
 #if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_LMB)
 	if (!ret && (states & BOOTM_STATE_FDT)) {
@@ -671,6 +776,72 @@ err:
 	return ret;
 }
 
+#if defined(CONFIG_CMD_BOOTMC1)
+int do_bootm_core1(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
+            int states, bootm_headers_t *images, int boot_progress)
+{
+    //boot_os_fn *boot_fn;
+    ulong iflag = 0;
+    int ret = 0;//, need_boot_fn;
+
+    images->state |= states;
+
+    /*
+     * Work through the states and see how far we get. We stop on
+     * any error.
+     */
+    if (states & BOOTM_STATE_START)
+        ret = bootm_start(cmdtp, flag, argc, argv);
+
+    if (!ret && (states & BOOTM_STATE_FINDOS))
+        ret = bootm_find_os(cmdtp, flag, argc, argv);
+
+    if (!ret && (states & BOOTM_STATE_FINDOTHER)) {
+        ret = bootm_find_other(cmdtp, flag, argc, argv);
+        argc = 0;   /* consume the args */
+    }
+
+    /* Load the OS */
+    if (!ret && (states & BOOTM_STATE_LOADOS)) {
+        ulong load_end;
+
+        iflag = bootm_disable_interrupts();
+        ret = bootm_load_os(images, &load_end, 0);
+        if (ret == 0)
+            lmb_reserve(&images->lmb, images->os.load,
+                    (load_end - images->os.load));
+        else if (ret && ret != BOOTM_ERR_OVERLAP)
+            goto err;
+        else if (ret == BOOTM_ERR_OVERLAP)
+            ret = 0;
+    #if defined(CONFIG_SILENT_CONSOLE) && !defined(CONFIG_SILENT_U_BOOT_ONLY)
+        if (images->os.os == IH_OS_LINUX)
+            fixup_silent_linux();
+    #endif
+    }
+
+    #define SECOND_START_ADDR_HI        0x1F20404C
+    #define SECOND_START_ADDR_LO        0x1F204050
+    #define SECOND_MAGIC_NUMBER_ADDR    0x1F204058
+    *(volatile unsigned short *)SECOND_START_ADDR_LO =  ((int)(images->ep) & 0xFFFF);
+    *(volatile unsigned short *)SECOND_START_ADDR_HI = ((int)(images->ep) >> 16);
+    *(volatile unsigned short *)SECOND_MAGIC_NUMBER_ADDR = 0xBABE;
+    
+    asm("dsb\n"
+        "sev\n"
+        "nop");
+    return 0;
+
+err:
+    if (iflag)
+        enable_interrupts();
+
+   return ret;
+
+}
+
+#endif
+
 #if defined(CONFIG_IMAGE_FORMAT_LEGACY)
 /**
  * image_get_kernel - verify legacy format kernel image
@@ -684,7 +855,7 @@ err:
  *     pointer to a legacy image header if valid image was found
  *     otherwise return NULL
  */
-static image_header_t *image_get_kernel(ulong img_addr, int verify)
+image_header_t *image_get_kernel(ulong img_addr, int verify)
 {
 	image_header_t *hdr = (image_header_t *)img_addr;
 
@@ -703,7 +874,7 @@ static image_header_t *image_get_kernel(ulong img_addr, int verify)
 
 	bootstage_mark(BOOTSTAGE_ID_CHECK_CHECKSUM);
 	image_print_contents(hdr);
-
+#if (!defined CONFIG_VERSION_FPGA) && (!defined CONFIG_VERSION_PZ1)
 	if (verify) {
 		puts("   Verifying Checksum ... ");
 		if (!image_check_dcrc(hdr)) {
@@ -713,6 +884,7 @@ static image_header_t *image_get_kernel(ulong img_addr, int verify)
 		}
 		puts("OK\n");
 	}
+#endif
 	bootstage_mark(BOOTSTAGE_ID_CHECK_ARCH);
 
 	if (!image_check_target_arch(hdr)) {
@@ -724,6 +896,9 @@ static image_header_t *image_get_kernel(ulong img_addr, int verify)
 }
 #endif
 
+#if defined(CONFIG_HW_WATCHDOG)
+extern void hw_watchdog_disable(void);
+#endif
 /**
  * boot_get_kernel - find kernel image
  * @os_data: pointer to a ulong variable, will hold os data start address
@@ -736,6 +911,62 @@ static image_header_t *image_get_kernel(ulong img_addr, int verify)
  *     pointer to image header if valid image was found, plus kernel start
  *     address and length, otherwise NULL
  */
+#ifdef ENABLE_DOUBLE_SYSTEM_CHECK
+extern void cli_loop(void);
+
+#define KERNEL1_START_ADDR "0x260000"
+#define KERNEL1_IMAGE_SIZE "0x210000"
+
+int check_image_hash(void)
+{
+    char * pchar = NULL;
+    char* bootcmd1 = NULL;
+
+    if(NULL == (pchar = getenv("image_index")))
+    {
+        setenv("image_index", "1");
+        printf("check the kernel hash error and start the 2nd kernel ...\n");
+        setenv("sf_kernel_start", KERNEL1_START_ADDR);
+        setenv("sf_kernel_size", KERNEL1_IMAGE_SIZE);
+        if(NULL == (bootcmd1 = getenv("bootcmd")))
+        {
+            printf("\nget bootcmd error!\n");
+            cli_loop();
+        }
+
+        printf("\n>> run \"%s\" \n", bootcmd1);
+        if (0 > run_command((const char *)bootcmd1, 0))
+        {
+            printf("\n>> run \"%s\" error!\n", bootcmd1);
+            cli_loop();
+        }
+    }
+    else
+    {
+        unsigned int image_idx = 0;
+        image_idx = simple_strtoul(pchar, NULL, 16);
+
+        if (1 == image_idx)
+        {
+            printf("check the kernel hash error and start to do netupgrade ...\n");
+
+            if(0 > run_command("net_upgrade", 0))
+            {
+                cli_loop();
+            }
+        }
+        else
+        {
+            printf("get the kernel index(%d) is valid!\n", image_idx);
+            run_command("setenv image_index", 0);
+            run_command("saveenv", 0);
+            return -1;
+        }
+    }
+
+    return 0;
+}
+#endif
 static const void *boot_get_kernel(cmd_tbl_t *cmdtp, int flag, int argc,
 				   char * const argv[], bootm_headers_t *images,
 				   ulong *os_data, ulong *os_len)
@@ -766,11 +997,21 @@ static const void *boot_get_kernel(cmd_tbl_t *cmdtp, int flag, int argc,
 	switch (genimg_get_format(buf)) {
 #if defined(CONFIG_IMAGE_FORMAT_LEGACY)
 	case IMAGE_FORMAT_LEGACY:
-		printf("## Booting kernel from Legacy Image at %08lx ...\n",
+		printf("##  Booting kernel from Legacy Image at %08lx ...\n",
 		       img_addr);
+
+#if defined(CONFIG_HW_WATCHDOG)
+		hw_watchdog_disable();
+#endif
+
 		hdr = image_get_kernel(img_addr, images->verify);
 		if (!hdr)
-			return NULL;
+		{
+ #ifdef ENABLE_DOUBLE_SYSTEM_CHECK
+            check_image_hash();
+ #endif
+            return NULL;
+		}
 		bootstage_mark(BOOTSTAGE_ID_CHECK_IMAGETYPE);
 
 		/* get os_data and os_len */
@@ -805,7 +1046,7 @@ static const void *boot_get_kernel(cmd_tbl_t *cmdtp, int flag, int argc,
 		images->legacy_hdr_os = hdr;
 
 		images->legacy_hdr_valid = 1;
-		bootstage_mark(BOOTSTAGE_ID_DECOMP_IMAGE);
+		bootstage_mark_name(BOOTSTAGE_ID_DECOMP_IMAGE, __FUNCTION__);
 		break;
 #endif
 #if defined(CONFIG_FIT)
@@ -882,8 +1123,8 @@ static int bootm_host_load_image(const void *fit, int req_image_type)
 
 	/* Allow the image to expand by a factor of 4, should be safe */
 	load_buf = malloc((1 << 20) + len * 4);
-	ret = decomp_image(imape_comp, 0, data, image_type, load_buf,
-			   (void *)data, len, &load_end);
+	ret = bootm_decomp_image(imape_comp, 0, data, image_type, load_buf,
+			   (void *)data, len,CONFIG_SYS_BOOTM_LEN, &load_end);
 	free(load_buf);
 	if (ret && ret != BOOTM_ERR_UNIMPLEMENTED)
 		return ret;

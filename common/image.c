@@ -154,6 +154,8 @@ static const table_entry_t uimage_comp[] = {
 	{	IH_COMP_GZIP,	"gzip",		"gzip compressed",	},
 	{	IH_COMP_LZMA,	"lzma",		"lzma compressed",	},
 	{	IH_COMP_LZO,	"lzo",		"lzo compressed",	},
+	{	IH_COMP_MZ,	"mz",		"mz compressed",	},
+	{   IH_COMP_XIP, "XIP",       "XIP",    },
 	{	-1,		"",		"",			},
 };
 
@@ -306,7 +308,11 @@ void image_print_contents(const void *ptr)
 	printf("%sData Size:    ", p);
 	genimg_print_size(image_get_data_size(hdr));
 	printf("%sLoad Address: %08x\n", p, image_get_load(hdr));
+#ifdef CONFIG_SS_SMF_LOAD_64_KERNEL_ENTRY
+	printf("%sEntry Point:  %llx\n", p, image_get_ep(hdr));
+#else
 	printf("%sEntry Point:  %08x\n", p, image_get_ep(hdr));
+#endif
 
 	if (image_check_type(hdr, IH_TYPE_MULTI) ||
 			image_check_type(hdr, IH_TYPE_SCRIPT)) {

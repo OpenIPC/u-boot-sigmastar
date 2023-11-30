@@ -334,6 +334,10 @@ int ubi_volume_read(char *volume, char *buf, size_t size)
 	unsigned long long tmp;
 	struct ubi_volume *vol;
 	loff_t offp = 0;
+#ifdef CONFIG_SSTAR_CMD_SPINAND
+	size_t u32TotalSize = size;
+	printf("    ");
+#endif
 
 	vol = ubi_find_volume(volume);
 	if (vol == NULL)
@@ -391,7 +395,11 @@ int ubi_volume_read(char *volume, char *buf, size_t size)
 
 		size -= len;
 		offp += len;
-
+#ifdef CONFIG_SSTAR_CMD_SPINAND
+		printf("\b\b\b\b%3d%%", ((u32TotalSize-size)/(u32TotalSize/100)) );
+		if(!size)
+			printf("\n");
+#endif
 		memcpy(buf, tbuf, len);
 
 		buf += len;
@@ -475,6 +483,7 @@ int ubi_part(char *part_name, const char *vid_header_offset)
 	if (ubi_initialized) {
 		ubi_exit();
 		del_mtd_partitions(ubi_dev.mtd_info);
+		put_mtd_device(ubi_dev.mtd_info);
 	}
 
 	/*
@@ -508,6 +517,155 @@ int ubi_part(char *part_name, const char *vid_header_offset)
 
 	return 0;
 }
+
+void ubi_dev_remove(void)
+{
+	if (ubi_initialized) {
+		ubi_exit();
+		del_mtd_partitions(ubi_dev.mtd_info);
+		put_mtd_device(ubi_dev.mtd_info);
+		ubi_initialized = 0;
+	}
+}
+
+#if 0
+extern int lzop_decompress_part(const unsigned char *src, size_t src_len,
+        unsigned char *dst, size_t *dst_len, size_t *src_alignlen, int part);
+
+
+//it will erase the whole volume
+static int ubi_unlzo_write (struct ubi_volume *volume, unsigned char *AddrSrc, size_t LengthSrc)
+{
+	int ret=0;
+	unsigned char *AddrDst=NULL;
+	size_t LengthDst=0, LenthSrcConsumed=0;
+	int full_size=(int64_t)volume->usable_leb_size* ubi->leb_size;
+	int total_size=0;
+
+	AddrDst = (unsigned char *) CONFIG_UNLZO_DST_ADDR;
+
+	printf ("	Uncompressing using address 0x%08X ...\n",CONFIG_UNLZO_DST_ADDR);
+
+	ret = lzop_decompress_part ((const unsigned char *)AddrSrc, LengthSrc,
+				(unsigned char *)AddrDst, &LengthDst, &LenthSrcConsumed, 0);
+
+	if (ret)
+	{
+		printf("LZO: uncompress, out-of-mem or overwrite error %d\n", ret);
+		return 1;
+	}
+
+	//wipe out
+	if(ubi_volume_begin_write(volume->name,AddrDst,LengthDst,0)<0)
+	{
+		printf("failed to wipe out volume=%s\n",volume->name);
+		return 1;
+	}
+
+	if(LenthSrcConsumed == LengthSrc)
+	{
+		volume->upd_bytes=(volume->upd_received+LengthDst);
+		volume->upd_ebs = div_u64(volume->upd_bytes + volume->usable_leb_size - 1,
+					volume->usable_leb_size);
+		full_size=LengthDst;
+	}
+
+
+	if(ubi_volume_begin_write(volume->name,(void *)AddrDst,LengthDst,full_size)<0)
+	{
+		printf("failed to write volume=%s\n line=%d",volume->name,__LINE__);
+		return 1;
+	}
+
+	total_size+=LengthDst;
+
+//	//n = mmc->block_dev.block_write(curr_device, blk, cnt, AddrDst);
+//	n = do_mmc_write_emptyskip(mmc, blk, cnt, AddrDst, empty_skip);
+//	if(n == cnt)
+//		cnt_total += cnt;
+//	else
+//	{
+//		printf("%d blocks written error at %d\n", cnt, blk);
+//		return 1;
+//	}
+//
+//	/* If the decompressed file is not aligned to mmc block size, we should
+//		split the not aligned tail and write it in the next loop */
+//	LenTail = LengthDst & (EMMC_BLK_SZ - 1);
+//
+//	if(LenTail)
+//	{
+//		memcpy((unsigned char *) CONFIG_UNLZO_DST_ADDR,
+//					(const unsigned char *) (AddrDst + LengthDst - LenTail), LenTail);
+//		AddrDst = (unsigned char *) (CONFIG_UNLZO_DST_ADDR + LenTail);
+//	}else
+//		AddrDst = (unsigned char *) CONFIG_UNLZO_DST_ADDR;
+
+	if(LenthSrcConsumed == LengthSrc)
+		goto done;
+
+	//Move the source address to the right offset
+	AddrSrc += LenthSrcConsumed;
+
+	printf("	Continue uncompressing and writing emmc...\n");
+
+	for(;;)
+	{
+		LengthDst = 0;
+		ret = lzop_decompress_part ((const unsigned char *)AddrSrc, LengthSrc,
+				(unsigned char *)AddrDst, &LengthDst, &LenthSrcConsumed, 1);
+		if (ret)
+		{
+			printf("LZO: uncompress, out-of-mem or overwrite error %d\n", ret);
+			return 1;
+		}
+
+		//hack for last shot
+		if(LenthSrcConsumed == LengthSrc)
+		{
+//			ol->upd_received <= vol->upd_bytes
+			volume->upd_bytes=(volume->upd_received+LengthDst);
+			volume->upd_ebs = div_u64(volume->upd_bytes + volume->usable_leb_size - 1,
+					volume->usable_leb_size);
+		}
+
+		if(ubi_volume_continue_write(volume->name,(void *)AddrDst,LengthDst)<0)
+		{
+			printf("failed to write volume=%s\n line=%d",volume->name,__LINE__);
+			return 1;
+		}
+
+		total_size+=LengthDst;
+
+		if(LenthSrcConsumed == LengthSrc)
+			break;
+
+		AddrSrc += LenthSrcConsumed;
+	}
+
+done:
+
+		ret = ubi_check_volume(ubi, volume->vol_id);
+		if ( ret < 0 )
+		{
+			return ret;
+		}
+
+		if (ret) {
+			ubi_warn("volume %s on UBI device %d is corrupted",
+					volume->name, ubi->ubi_num);
+			volume->corrupted = 1;
+		}
+
+		volume->checked = 1;
+		ubi_gluebi_updated(volume);
+
+	printf("	Decompressed OK! Write to %s volume OK!\nTotal write size: 0x%08x, 0x%08X\n",
+			volume->name, (unsigned int)total_size  ,(unsigned int)volume->used_bytes);
+
+	return 0;
+}
+#endif
 
 static int do_ubi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
@@ -631,6 +789,32 @@ static int do_ubi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return ret;
 	}
 
+	#if 0
+	if (strncmp(argv[1], "unlzo", 5) == 0) {
+		int ret;
+		struct ubi_volume *vol;
+
+		if (argc < 5) {
+			printf("Please see usage, argc=%d\n",argc);
+			return 1;
+		}
+
+		vol = ubi_find_volume(argv[4]);
+		if (vol == NULL)
+		{
+			printf("ERROR!! volume %s is not found!!\n",argv[4]);
+			return ENODEV;
+		}
+		addr = simple_strtoul(argv[2], NULL, 16);
+		size = simple_strtoul(argv[3], NULL, 16);
+
+		ret=ubi_unlzo_write(vol,(unsigned char*)addr,size);
+
+		return ret;
+	}
+	#endif
+
+
 	if (strncmp(argv[1], "read", 4) == 0) {
 		size = 0;
 
@@ -657,6 +841,81 @@ static int do_ubi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	printf("Please see usage\n");
 	return 1;
 }
+
+#if defined(CONFIG_UBI_MWRITE)
+
+int ubi_mwrite(char *volume, void *buf, size_t size, int flag)
+{
+	int i = 0, err = -1;
+	int rsvd_bytes = 0;
+	int found = 0;
+	struct ubi_volume *vol;
+
+	for (i = 0; i < ubi->vtbl_slots; i++) {
+		vol = ubi->volumes[i];
+		if (vol && !strcmp(vol->name, volume)) {
+			printf("Volume \"%s\" found at volume id %d\n", volume, i);
+			found = 1;
+			break;
+		}
+	}
+	if (!found) {
+		printf("%s volume not found\n", volume);
+		return 1;
+	}
+	rsvd_bytes = vol->reserved_pebs * (ubi->leb_size - vol->data_pad);
+	if (size < 0 || size > rsvd_bytes) {
+		printf("rsvd_bytes=%d vol->reserved_pebs=%d ubi->leb_size=%d\n",
+		     rsvd_bytes, vol->reserved_pebs, ubi->leb_size);
+		printf("vol->data_pad=%d\n", vol->data_pad);
+		printf("Size > volume size !!\n");
+		return 1;
+	}
+
+	if(flag==0)
+	{
+		err = ubi_start_update(ubi, vol, size);
+		if (err < 0) {
+			printf("Cannot start volume update\n");
+
+			return err;
+		}
+	}
+	else if(flag==1)
+	{
+
+		err = ubi_more_update_data(ubi, vol, buf, size);
+		if (err < 0) {
+			printf("Couldnt or partially wrote data \n");
+		}
+
+		// we return this to do the total updated check
+		return err;
+
+	}
+	else if(flag==2)
+	{
+		err = ubi_check_volume(ubi, vol->vol_id);
+		if ( err < 0 )
+		{
+			return err;
+		}
+
+		if (err) {
+			ubi_warn("volume %d on UBI device %d is corrupted",
+					vol->vol_id, ubi->ubi_num);
+			vol->corrupted = 1;
+		}
+
+		vol->checked = 1;
+		ubi_gluebi_updated(vol);
+
+	}
+
+	return 0;
+}
+#endif
+
 
 U_BOOT_CMD(
 	ubi, 6, 1, do_ubi,

@@ -63,6 +63,7 @@ int nand_register(int devnum)
 	 * Add MTD device so that we can reference it later
 	 * via the mtdcore infrastructure (e.g. ubi).
 	 */
+
 	add_mtd_device(mtd);
 #endif
 
@@ -82,6 +83,11 @@ static void nand_init_chip(int i)
 	ulong base_addr = base_address[i];
 	int maxchips = CONFIG_SYS_NAND_MAX_CHIPS;
 
+	if(nand_curr_device!= -1)
+	{
+		put_mtd_device(mtd);
+		del_mtd_device(mtd);
+	}
 	if (maxchips < 1)
 		maxchips = 1;
 
@@ -104,6 +110,9 @@ void nand_init(void)
 	board_nand_init();
 #else
 	int i;
+
+	if(nand_curr_device != -1)
+		total_nand_size = 0;
 
 	for (i = 0; i < CONFIG_SYS_MAX_NAND_DEVICE; i++)
 		nand_init_chip(i);

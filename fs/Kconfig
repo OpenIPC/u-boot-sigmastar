@@ -16,4 +16,9 @@ source "fs/ubifs/Kconfig"
 
 source "fs/cramfs/Kconfig"
 
+source "fs/littlefs/Kconfig"
+
+source "fs/firmwarefs/Kconfig"
+
+
 endmenu

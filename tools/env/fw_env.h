@@ -13,7 +13,7 @@
 #else
 #include <config.h>
 #endif
-
+#include <stdint.h>
 /*
  * To build the utility with the static configuration
  * comment out the next line.

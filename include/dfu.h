@@ -65,6 +65,15 @@ struct nand_internal_data {
 	unsigned int part;
 	/* for nand/ubi use */
 	unsigned int ubi;
+	/* for extend ubi */
+	char ubi_part[20];
+	char ubi_volume[20];
+	struct ubi_buf {
+#define MAX_UBI_GET_VOLUME 0xA00000
+		void *start;
+		unsigned int actual_sz;
+		unsigned int volume_sz;
+	} tmpbuf;
 };
 
 struct ram_internal_data {

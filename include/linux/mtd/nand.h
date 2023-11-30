@@ -103,6 +103,11 @@ extern int nand_unlock(struct mtd_info *mtd, loff_t ofs, uint64_t len);
 #define NAND_CMD_GET_FEATURES	0xee
 #define NAND_CMD_SET_FEATURES	0xef
 #define NAND_CMD_RESET		0xff
+#define NAND_CMD_OTP_ENABLE	0x20
+#define NAND_CMD_OTP_LOCK	0x21
+#define NAND_CMD_DO_ECC		0x22
+#define NAND_CMD_DETECT		0x26
+
 
 #define NAND_CMD_LOCK		0x2a
 #define NAND_CMD_UNLOCK1	0x23

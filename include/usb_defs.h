@@ -63,6 +63,16 @@
 #define USB_DIR_OUT           0
 #define USB_DIR_IN            0x80
 
+#if 0
+/* USB device speeds */
+#define USB_SPEED_FULL		0x0	/* 12Mbps */
+#define USB_SPEED_LOW		0x1	/* 1.5Mbps */
+#define USB_SPEED_HIGH		0x2	/* 480Mbps */
+#define USB_SPEED_RESERVED	0x3
+#define USB_SPEED_SUPER     0x4
+#define USB_SPEED_WIRELESS  0x5
+#define USB_SPEED_UNKNOWN   0xF
+#endif
 /*
  * bmRequestType: USB Device Requests, table 9.2 USB 2.0 spec.
  * (shifted) direction/type/recipient.
@@ -93,6 +103,10 @@
 #define USB_DT_REPORT       (USB_TYPE_CLASS | 0x02)
 #define USB_DT_PHYSICAL     (USB_TYPE_CLASS | 0x03)
 #define USB_DT_HUB          (USB_TYPE_CLASS | 0x09)
+
+#if 1 //MBOOT_XHCI
+#define USB_DT_SS_HUB			(USB_TYPE_CLASS | 0x0a)
+#endif
 
 /* Descriptor sizes per descriptor type */
 #define USB_DT_DEVICE_SIZE      18
@@ -186,6 +200,10 @@
 #define USB_ST_NAK_REC          0x10	/* NAK Received*/
 #define USB_ST_CRC_ERR          0x20	/* CRC/timeout Error */
 #define USB_ST_BIT_ERR          0x40	/* Bitstuff error */
+// MSTAR: added
+#define USB_ST_DISCONNECT       0x100   /* Device disconnect */
+#define USB_ST_TIMEOUT          0x200   /* Transaction timeout */
+// MSTAR: end
 #define USB_ST_NOT_PROC         0x80000000L	/* Not yet processed */
 
 

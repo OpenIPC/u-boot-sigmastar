@@ -31,6 +31,16 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#ifdef CONFIG_SS_SWITCH_AARCH64
+#define SS_SIP_BOOT_AARCH64_KERNEL_SMC32	0x82000200
+extern unsigned int smcfn(unsigned int arg0, unsigned int arg1, unsigned int arg2, unsigned int arg3);
+struct linux_args_aarch64 {
+    uint	kernel_entry_low;
+    uint	kernel_entry_high;
+    uint	dtb_addr;
+};
+#endif
+
 static struct tag *params;
 
 static ulong get_sp(void)
@@ -89,7 +99,7 @@ static void announce_and_cleanup(int fake)
 static void setup_start_tag (bd_t *bd)
 {
 	params = (struct tag *)bd->bi_boot_params;
-
+    printf("atags:0x%08X\n",(unsigned int)params);
 	params->hdr.tag = ATAG_CORE;
 	params->hdr.size = tag_size (tag_core);
 
@@ -213,7 +223,7 @@ static void boot_prep_linux(bootm_headers_t *images)
 		}
 #endif
 	} else if (BOOTM_ENABLE_TAGS) {
-		debug("using: ATAGS\n");
+		debug("using: ATAGSS\n");
 		setup_start_tag(gd->bd);
 		if (BOOTM_ENABLE_SERIAL_TAG)
 			setup_serial_tag(&params);
@@ -284,6 +294,9 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 	void (*kernel_entry)(int zero, int arch, uint params);
 	unsigned long r2;
 	int fake = (flag & BOOTM_STATE_OS_FAKE_GO);
+#ifdef CONFIG_SS_SWITCH_AARCH64
+    struct linux_args_aarch64 lx_args_64;
+#endif
 
 	kernel_entry = (void (*)(int, int, uint))images->ep;
 
@@ -311,7 +324,19 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 							  0, machid, r2);
 		} else
 #endif
+#ifdef CONFIG_SS_SWITCH_AARCH64
+            /* here is now 64-bit Linux boot param */
+            memset(&lx_args_64, 0, sizeof(lx_args_64));
+#ifdef CONFIG_SS_SMF_LOAD_64_KERNEL_ENTRY
+            memcpy(&lx_args_64, &images->ep, sizeof(uint64_t));
+#else
+            lx_args_64.kernel_entry_low = (unsigned int)kernel_entry;
+#endif
+            lx_args_64.dtb_addr = r2;  // The dtb is built in, here we pass the atags to kernel
+            smcfn(SS_SIP_BOOT_AARCH64_KERNEL_SMC32, (unsigned int)&lx_args_64, 0, 0);
+#else
 			kernel_entry(0, machid, r2);
+#endif
 	}
 #endif
 }

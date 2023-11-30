@@ -62,6 +62,11 @@ reset:
 	mcr	p15, 0, r0, c12, c0, 0	@Set VBAR
 #endif
 
+#ifdef CONFIG_USE_TOOLCHAIN_DEFAULT_FLOAT_ABI
+	mov	r0, #0x00f00000
+	mcr     p15, 0, r0, c1, c0, 2		/* Enable FP/SIMD */
+#endif
+
 	/* the mask ROM code should have PLL and others stable */
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 	bl	cpu_init_cp15

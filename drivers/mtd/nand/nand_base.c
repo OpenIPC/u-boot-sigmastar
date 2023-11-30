@@ -79,6 +79,15 @@
 static bool is_module_text_address(unsigned long addr) {return 0;}
 #endif
 
+#if !defined(CONFIG_MS_NAND_ONEBIN)
+#ifdef CONFIG_MS_NAND
+#include "../../mstar/unfd/inc/common/drvNAND.h"
+#endif
+#ifdef CONFIG_MS_SPINAND
+#include "../../mstar/spinand/inc/common/spinand.h"
+#endif
+#endif
+
 /* Define default oob placement schemes for large and small page devices */
 static struct nand_ecclayout nand_oob_8 = {
 	.eccbytes = 3,
@@ -142,7 +151,7 @@ static int check_offs_len(struct mtd_info *mtd,
 
 	/* Start address must align on block boundary */
 	if (ofs & ((1ULL << chip->phys_erase_shift) - 1)) {
-		pr_debug("%s: unaligned address\n", __func__);
+            pr_debug("%s: unaligned address\n", __func__);
 		ret = -EINVAL;
 	}
 
@@ -3966,6 +3975,122 @@ ident_done:
 	return type;
 }
 
+#if !defined(CONFIG_MS_NAND_ONEBIN)
+extern void* drvNAND_get_DrvContext_address(void);
+/*
+ * Get the flash infomation from mstar database
+ */
+static const struct nand_flash_dev *nand_get_flash_type_mstar(struct mtd_info *mtd,
+                          struct nand_chip *chip,
+                          int *maf_id, int *dev_id,
+                          const struct nand_flash_dev *type)
+{
+#if defined(CONFIG_MS_NAND)
+    NAND_DRIVER *pNandDrv = (NAND_DRIVER*)drvNAND_get_DrvContext_address();
+
+    if (!mtd->name)
+        mtd->name = "edb64M-nand";
+
+    mtd->writesize = pNandDrv->u16_PageByteCnt;
+    mtd->oobsize = pNandDrv->u16_SpareByteCnt;
+
+    mtd->erasesize = pNandDrv->u16_BlkPageCnt * pNandDrv->u16_PageByteCnt;
+
+    chip->chipsize = (uint64_t)pNandDrv->u16_BlkCnt * (uint64_t)pNandDrv->u16_BlkPageCnt * (uint64_t)pNandDrv->u16_PageByteCnt;
+
+    if(!mtd->writesize || !mtd->oobsize || !mtd->erasesize)
+    {
+        int i;
+        printf("Unsupported NAND Flash type is detected with ID");
+        for(i = 0; i < pNandDrv->u8_IDByteCnt; i++)
+            printf(" 0x%X", pNandDrv->au8_ID[i]);
+        printf("\n");
+        return  ERR_PTR(-EINVAL);
+    }
+    chip->onfi_version = 0;
+
+    //chip->cellinfo = pNandDrv->au8_ID[2];
+    chip->bits_per_cell = nand_get_bits_per_cell(pNandDrv->au8_ID[2]);
+
+    /* Get chip options */
+    chip->options = NAND_NO_SUBPAGE_WRITE;
+
+    /*
+	 ** Set chip as a default. Board drivers can override it, if necessary
+ 	**/
+
+    if(pNandDrv->u8_WordMode)
+		chip->options |= NAND_BUSWIDTH_16;
+
+#elif defined(CONFIG_MS_SPINAND)
+
+    SPI_NAND_DRIVER_t *pNandDrv = (SPI_NAND_DRIVER_t*)drvSPINAND_get_DrvContext_address();
+
+    if (!mtd->name)
+        mtd->name = "edb64M-nand";
+
+    mtd->writesize = pNandDrv->tSpinandInfo.u16_PageByteCnt;
+    mtd->oobsize = pNandDrv->tSpinandInfo.u16_SpareByteCnt;
+
+    mtd->erasesize = pNandDrv->tSpinandInfo.u16_BlkPageCnt * pNandDrv->tSpinandInfo.u16_PageByteCnt;
+
+    chip->chipsize = (uint64_t)pNandDrv->tSpinandInfo.u16_BlkCnt * (uint64_t)pNandDrv->tSpinandInfo.u16_BlkPageCnt * (uint64_t)pNandDrv->tSpinandInfo.u16_PageByteCnt;
+
+    if(!mtd->writesize || !mtd->oobsize || !mtd->erasesize)
+    {
+        int i;
+        printf("Unsupported NAND Flash type is detected with ID");
+        for(i = 0; i < pNandDrv->tSpinandInfo.u8_IDByteCnt; i++)
+            printf(" 0x%X", pNandDrv->tSpinandInfo.au8_ID[i]);
+        printf("\n");
+        return  ERR_PTR(-EINVAL);
+    }
+    chip->onfi_version = 0;
+
+    //chip->cellinfo = pNandDrv->au8_ID[2];
+    //chip->bits_per_cell = nand_get_bits_per_cell(pNandDrv->tSpinandInfo.au8_ID[2]);
+    chip->bits_per_cell = 1;
+
+    /* Get chip options */
+    chip->options = NAND_NO_SUBPAGE_WRITE;
+
+    /*
+	 ** Set chip as a default. Board drivers can override it, if necessary
+    **/
+
+    //if(pNandDrv->tSpinandInfo.u8_WordMode)
+	if(0)
+        chip->options |= NAND_BUSWIDTH_16;
+#endif
+    /* Calculate the address shift from the page size */
+    chip->page_shift = ffs(mtd->writesize) - 1;
+    /* Convert chipsize to number of pages per chip -1. */
+    chip->pagemask = (chip->chipsize >> chip->page_shift) - 1;
+
+    chip->bbt_erase_shift = chip->phys_erase_shift =
+        ffs(mtd->erasesize) - 1;
+    if (chip->chipsize & 0xffffffff)
+        chip->chip_shift = ffs((unsigned)chip->chipsize) - 1;
+    else
+        chip->chip_shift = ffs((unsigned)(chip->chipsize >> 32)) + 31;
+
+    //chip->blocknum = chip->chipsize >> chip->phys_erase_shift;
+    /* set bbt block number to 0.8% of total blocks, or blocks * (2 / 256) */
+    //mtd->bbt_block_num = ((chip->blocknum >> 8) * 2);
+
+    /* Set the bad block position */
+    chip->badblockpos = mtd->writesize > 512 ?
+        NAND_LARGE_BADBLOCK_POS : NAND_SMALL_BADBLOCK_POS;
+    chip->erase_cmd = single_erase_cmd;
+
+    chip->options |= NAND_SKIP_BBTSCAN;
+    chip->badblockbits = 8;
+
+    return 0;
+}
+
+#endif
+
 /**
  * nand_scan_ident - [NAND Interface] Scan for the NAND device
  * @mtd: MTD device structure
@@ -3982,10 +4107,23 @@ int nand_scan_ident(struct mtd_info *mtd, int maxchips,
 {
 	int i, nand_maf_id, nand_dev_id;
 	struct nand_chip *chip = mtd->priv;
-	struct nand_flash_dev *type;
+	const struct nand_flash_dev *type;
 
 	/* Set the default functions */
 	nand_set_defaults(chip, chip->options & NAND_BUSWIDTH_16);
+#if (defined(CONFIG_MS_SPINAND) || defined(CONFIG_MS_NAND)) && !defined(CONFIG_MS_NAND_ONEBIN)
+	type = nand_get_flash_type_mstar(mtd, chip, &nand_maf_id, &nand_dev_id, table);
+    if(IS_ERR(type) && type != 0)
+    {
+		type = nand_get_flash_type(mtd, chip, &nand_maf_id, &nand_dev_id, table);
+		if (IS_ERR(type))
+		{
+	        chip->select_chip(mtd, -1);
+	        return PTR_ERR(type);
+		}
+    }
+	i = 1;
+#else
 
 	/* Read the flash type */
 	type = nand_get_flash_type(mtd, chip, &nand_maf_id,
@@ -4021,6 +4159,7 @@ int nand_scan_ident(struct mtd_info *mtd, int maxchips,
 		pr_info("%d chips detected\n", i);
 #endif
 
+#endif
 	/* Store the number of chips and calc total size for mtd */
 	chip->numchips = i;
 	mtd->size = i * chip->chipsize;
@@ -4157,13 +4296,8 @@ int nand_scan_tail(struct mtd_info *mtd)
 		if (!ecc->write_oob)
 			ecc->write_oob = nand_write_oob_syndrome;
 
-		if (mtd->writesize >= ecc->size) {
-			if (!ecc->strength) {
-				pr_warn("Driver must set ecc.strength when using hardware ECC\n");
-				BUG();
-			}
+		if (mtd->writesize >= ecc->size) 
 			break;
-		}
 		pr_warn("%d byte HW ECC not possible on "
 			   "%d byte page size, fallback to SW ECC\n",
 			   ecc->size, mtd->writesize);

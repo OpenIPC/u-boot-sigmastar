@@ -34,7 +34,7 @@ static int stored_bootdelay;
 static int abortboot_keyed(int bootdelay)
 {
 	int abort = 0;
-	uint64_t etime = endtick(bootdelay);
+	uint64_t etime = bootdelay ? endtick(bootdelay) : 2;
 	struct {
 		char *str;
 		u_int len;
@@ -42,12 +42,12 @@ static int abortboot_keyed(int bootdelay)
 	}
 	delaykey[] = {
 		{ .str = getenv("bootdelaykey"),  .retry = 1 },
-		{ .str = getenv("bootdelaykey2"), .retry = 1 },
-		{ .str = getenv("bootstopkey"),   .retry = 0 },
-		{ .str = getenv("bootstopkey2"),  .retry = 0 },
+//		{ .str = getenv("bootdelaykey2"), .retry = 1 },
+//		{ .str = getenv("bootstopkey"),   .retry = 0 },
+//		{ .str = getenv("bootstopkey2"),  .retry = 0 },
 	};
 
-	char presskey[MAX_DELAY_STOP_STR];
+	char presskey[MAX_DELAY_STOP_STR]={0};
 	u_int presskey_len = 0;
 	u_int presskey_max = 0;
 	u_int i;
@@ -65,6 +65,7 @@ static int abortboot_keyed(int bootdelay)
 	if (delaykey[0].str == NULL)
 		delaykey[0].str = CONFIG_AUTOBOOT_DELAY_STR;
 #  endif
+#if 0
 #  ifdef CONFIG_AUTOBOOT_DELAY_STR2
 	if (delaykey[1].str == NULL)
 		delaykey[1].str = CONFIG_AUTOBOOT_DELAY_STR2;
@@ -77,7 +78,7 @@ static int abortboot_keyed(int bootdelay)
 	if (delaykey[3].str == NULL)
 		delaykey[3].str = CONFIG_AUTOBOOT_STOP_STR2;
 #  endif
-
+#endif
 	for (i = 0; i < sizeof(delaykey) / sizeof(delaykey[0]); i++) {
 		delaykey[i].len = delaykey[i].str == NULL ?
 				    0 : strlen(delaykey[i].str);
@@ -123,16 +124,22 @@ static int abortboot_keyed(int bootdelay)
 				abort = 1;
 			}
 		}
-	} while (!abort && get_ticks() <= etime);
+		etime--;
+	} while (!abort && etime);
 
+#if 0// if DEBUG_BOOTKEYS
 	if (!abort)
 		debug_bootkeys("key timeout\n");
+
+#endif
 
 #ifdef CONFIG_SILENT_CONSOLE
 	if (abort)
 		gd->flags &= ~GD_FLG_SILENT;
 #endif
-
+	if (tstc()) {
+	    (void) getc();  /* consume input	*/
+	}
 	return abort;
 }
 
@@ -280,19 +287,90 @@ const char *bootdelay_process(void)
 
 void autoboot_command(const char *s)
 {
+#if defined(CONFIG_MS_USB) || defined(CONFIG_MS_SDMMC) || defined(CONFIG_MS_EMMC)
+	char *env;
+#endif
 	debug("### main_loop: bootcmd=\"%s\"\n", s ? s : "<UNDEFINED>");
+
+#if defined(CONFIG_CMD_SSTAR_UFU)
+	// for empty flash, default bootcmd might undefined
+	if (stored_bootdelay != -1 && !abortboot(stored_bootdelay))
+	{
+#if !defined(CONFIG_AUTOBOOT_CMD_UFU)
+		char* env = getenv("ota_upgrade_status");
+		if(!strcmp(env, "1"))
+#endif
+		{
+			icache_enable();
+			run_command("ufu", 0);
+		}
+	}
+#endif
 
 	if (stored_bootdelay != -1 && s && !abortboot(stored_bootdelay)) {
 #if defined(CONFIG_AUTOBOOT_KEYED) && !defined(CONFIG_AUTOBOOT_KEYED_CTRLC)
 		int prev = disable_ctrlc(1);	/* disable Control C checking */
 #endif
 
+#ifdef CONFIG_CMD_NETUPGRADE
+		run_command("net_upgrade", 0);
+#endif
+#if defined(CONFIG_MS_USB)
+		env = getenv("usbautoupgrade");
+		if(!strcmp(env, "1"))
+		{
+			run_command("setenv usbautoupgrade 2", 0);
+			run_command("saveenv",0);
+			run_command("usbstar", 0);
+		}
+		if(!strcmp(env, "2"))
+		{
+			run_command("setenv usbautoupgrade 1", 0);
+			run_command("saveenv",0);
+		}
+#endif
+#if defined(CONFIG_MS_SDMMC)
+		env = getenv("sdautoupgrade");
+		if(!strcmp(env, "1"))
+		{
+			run_command("setenv sdautoupgrade 2", 0);
+			run_command("saveenv",0);
+			run_command("sdstar", 0);
+		}
+		if(!strcmp(env, "2"))
+		{
+			run_command("setenv sdautoupgrade 1", 0);
+			run_command("saveenv",0);
+		}
+#endif
+#if defined(CONFIG_MS_EMMC)
+		env = getenv("emmcautoupgrade");
+		if(!strcmp(env, "1"))
+		{
+			run_command("setenv emmcautoupgrade 2", 0);
+			run_command("saveenv",0);
+			run_command("emmcstar", 0);
+		}
+		if(!strcmp(env, "2"))
+		{
+			run_command("setenv emmcautoupgrade 1", 0);
+			run_command("saveenv",0);
+		}
+#endif
+		
+		dcache_enable();
+		icache_enable();
+
 		run_command_list(s, -1, 0);
+
+		dcache_disable();
+		icache_disable();
 
 #if defined(CONFIG_AUTOBOOT_KEYED) && !defined(CONFIG_AUTOBOOT_KEYED_CTRLC)
 		disable_ctrlc(prev);	/* restore Control C checking */
 #endif
 	}
+
 
 #ifdef CONFIG_MENUKEY
 	if (menukey == CONFIG_MENUKEY) {

@@ -18,6 +18,7 @@
 #include <linux/mtd/mtd.h>
 #include <jffs2/load_kernel.h>
 #include <nand.h>
+#include <ubi_uboot.h>
 
 static int nand_block_op(enum dfu_op op, struct dfu_entity *dfu,
 			u64 offset, void *buf, long *len)
@@ -102,6 +103,18 @@ static int dfu_write_medium_nand(struct dfu_entity *dfu,
 {
 	int ret = -1;
 
+	if (dfu->data.nand.ubi == 2)
+	{
+		if (!dfu->data.nand.tmpbuf.start)
+		{
+			dfu->data.nand.tmpbuf.actual_sz = 0;
+			return -1;
+		}
+		dfu->data.nand.tmpbuf.actual_sz += *len;
+		memcpy(dfu->data.nand.tmpbuf.start + offset, buf, *len);
+		return 0;
+	}
+
 	switch (dfu->layout) {
 	case DFU_RAW_ADDR:
 		ret = nand_block_write(dfu, offset, buf, len);
@@ -116,6 +129,29 @@ static int dfu_write_medium_nand(struct dfu_entity *dfu,
 
 long dfu_get_medium_size_nand(struct dfu_entity *dfu)
 {
+	if (dfu->data.nand.ubi == 2)
+	{
+		int ret = -1;
+		char cmd[50] = "\0";
+
+		dfu->data.nand.tmpbuf.actual_sz = dfu->data.nand.tmpbuf.volume_sz > MAX_UBI_GET_VOLUME?
+				MAX_UBI_GET_VOLUME:dfu->data.nand.tmpbuf.volume_sz;
+
+		sprintf(cmd, "ubi part %s", dfu->data.nand.ubi_part);
+		ret = run_command(cmd, 0);
+		if (ret)
+		{
+			return -1;
+		}
+		sprintf(cmd, "ubi read 0x%x %s 0x%x", (unsigned int)dfu->data.nand.tmpbuf.start,
+						dfu->data.nand.ubi_volume, dfu->data.nand.tmpbuf.actual_sz);
+		run_command(cmd, 0);
+		if (ret)
+		{
+			return -1;
+		}
+		return dfu->data.nand.tmpbuf.actual_sz;
+	}
 	return dfu->data.nand.size;
 }
 
@@ -123,6 +159,19 @@ static int dfu_read_medium_nand(struct dfu_entity *dfu, u64 offset, void *buf,
 		long *len)
 {
 	int ret = -1;
+
+	if (dfu->data.nand.ubi == 2)
+	{
+		if (dfu->data.nand.tmpbuf.actual_sz)
+		{
+			memcpy(buf, dfu->data.nand.tmpbuf.start + offset, *len);
+			if (dfu->data.nand.tmpbuf.actual_sz <= (offset+*len))
+			{
+				dfu->data.nand.tmpbuf.actual_sz = 0;
+			}
+		}
+		return 0;
+	}
 
 	switch (dfu->layout) {
 	case DFU_RAW_ADDR:
@@ -139,6 +188,31 @@ static int dfu_read_medium_nand(struct dfu_entity *dfu, u64 offset, void *buf,
 static int dfu_flush_medium_nand(struct dfu_entity *dfu)
 {
 	int ret = 0;
+
+	if (dfu->data.nand.ubi == 2)
+	{
+		char cmd[50] = "\0";
+
+		if (!dfu->data.nand.tmpbuf.start)
+			return -1;
+
+		sprintf(cmd, "ubi part %s", dfu->data.nand.ubi_part);
+		ret = run_command(cmd, 0);
+		if (ret)
+		{
+			goto done;
+		}
+
+		sprintf(cmd, "ubi write 0x%x %s 0x%x", (unsigned int)dfu->data.nand.tmpbuf.start,
+						dfu->data.nand.ubi_volume, dfu->data.nand.tmpbuf.actual_sz);
+		ret = run_command(cmd, 0);
+		if (ret)
+		{
+			goto done;
+		}
+done:
+		return ret;
+	}
 
 	/* in case of ubi partition, erase rest of the partition */
 	if (dfu->data.nand.ubi) {
@@ -219,6 +293,44 @@ int dfu_fill_entity_nand(struct dfu_entity *dfu, char *devstr, char *s)
 		dfu->data.nand.size = pi->size;
 		if (!strcmp(st, "partubi"))
 			dfu->data.nand.ubi = 1;
+	} else if (!strcmp(st, "partubi-e")) {
+		int i;
+		char cmd[50]="\0", *st;
+		struct ubi_device *ubi;
+
+		dfu->layout = DFU_RAW_ADDR;
+
+		/* check part is exist ?*/
+		st = strsep(&s, " ");
+		sprintf(cmd, "ubi part %s", st);
+		ret = run_command(cmd, 0);
+		if (ret)
+			return -1;
+		strcpy(dfu->data.nand.ubi_part, st);
+
+		st = strsep(&s, " ");
+		sprintf(cmd, "ubi check %s", st);
+		ret = run_command(cmd, 0);
+		if (ret)
+			return -1;
+		strcpy(dfu->data.nand.ubi_volume, st);
+
+		ubi = ubi_devices[0];
+		for (i = 0; i < (ubi->vtbl_slots + 1); i++) {
+			if (!ubi->volumes[i])
+				continue;   /* Empty record */
+			if (!strcmp(ubi->volumes[i]->name, dfu->data.nand.ubi_volume))
+			{
+				dfu->data.nand.tmpbuf.volume_sz = ubi->volumes[i]->used_bytes;
+				break;
+			}
+		}
+
+		dfu->data.nand.tmpbuf.start = (void*)CONFIG_DFU_BUF_ADDR;
+		dfu->data.nand.tmpbuf.actual_sz = 0;
+		dfu->data.nand.ubi = 2;
+		printf("\nFound ubi Part: %s volume: %s length %d\n", dfu->data.nand.ubi_part,
+						dfu->data.nand.ubi_volume, dfu->data.nand.tmpbuf.volume_sz);
 	} else {
 		printf("%s: Memory layout (%s) not supported!\n", __func__, st);
 		return -1;

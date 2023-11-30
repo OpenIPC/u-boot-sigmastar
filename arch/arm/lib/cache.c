@@ -48,7 +48,12 @@ __weak void flush_dcache_all(void)
  */
 __weak void enable_caches(void)
 {
-	puts("WARNING: Caches not enabled\n");
+#ifdef CONFIG_VERSION_PZ1
+    dcache_enable();
+    puts("DCaches is enabled\n");
+#else
+    puts("WARNING: Caches not enabled\n");
+#endif
 }
 
 #ifdef CONFIG_SYS_NONCACHED_MEMORY

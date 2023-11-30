@@ -21,6 +21,12 @@
  **************************************************************************
  */
 
+#if defined(CONFIG_ENV_IS_IN_SPI_FLASH)
+#  ifdef CONFIG_ENV_OFFSET_REDUND
+#   define CONFIG_SYS_REDUNDAND_ENVIRONMENT
+#  endif
+#endif
+
 #if defined(CONFIG_ENV_IS_IN_FLASH)
 # ifndef	CONFIG_ENV_ADDR
 #  define	CONFIG_ENV_ADDR	(CONFIG_SYS_FLASH_BASE + CONFIG_ENV_OFFSET)
@@ -181,12 +187,14 @@ extern void env_reloc(void);
 #endif
 
 #ifdef CONFIG_ENV_IS_IN_MMC
+#ifndef  USE_HOSTCC
 #include <mmc.h>
 
 extern int mmc_get_env_addr(struct mmc *mmc, int copy, u32 *env_addr);
 # ifdef CONFIG_SYS_MMC_ENV_PART
 extern uint mmc_get_env_part(struct mmc *mmc);
 # endif
+#endif
 #endif
 
 #ifndef DO_DEPS_ONLY

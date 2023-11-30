@@ -276,6 +276,10 @@ int ubi_more_update_data(struct ubi_device *ubi, struct ubi_volume *vol,
 	int lnum, err = 0, len, to_write = count;
 	u32 offs;
 #endif
+#ifdef CONFIG_SSTAR_CMD_SPINAND
+	size_t u32TotalSize = count;
+	printf("    ");
+#endif
 
 	dbg_gen("write %d of %lld bytes, %lld already passed",
 		count, vol->upd_bytes, vol->upd_received);
@@ -354,6 +358,11 @@ int ubi_more_update_data(struct ubi_device *ubi, struct ubi_volume *vol,
 		count -= len;
 		lnum += 1;
 		buf += len;
+#ifdef CONFIG_SSTAR_CMD_SPINAND
+		printf("\b\b\b\b%3d%%", ((u32TotalSize-count)/(u32TotalSize/100)) );
+		if(!count)
+			printf("\n");
+#endif
 	}
 
 	ubi_assert(vol->upd_received <= vol->upd_bytes);

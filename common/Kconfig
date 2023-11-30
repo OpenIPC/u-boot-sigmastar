@@ -53,6 +53,12 @@ config CMD_BOOTM
 	help
 	  Boot an application image from the memory.
 
+config CMD_BOOTMC1
+	bool "bootmc1"
+	default n
+	help
+	  Test bootm for core1.
+
 config CMD_GO
 	bool "go"
 	default y
@@ -177,7 +183,7 @@ config CMD_NAND
 	  NAND support.
 
 config CMD_SPI
-	bool "sspi"
+	bool "mspi"
 	help
 	  SPI utility command.
 
@@ -185,6 +191,27 @@ config CMD_I2C
 	bool "i2c"
 	help
 	  I2C support.
+
+config CMD_SAR
+	bool "sar"
+	help
+	  SAR support.
+
+config CMD_BOOTLOGO
+	bool "bootlogo"
+	help
+	  bootlog support.
+
+config CMD_BOOTMUSIC
+	bool "bootmusic"
+    select SSTAR_AIO
+	help
+	  bootmusic support.
+
+config CMD_CAMDRIVER
+	bool "camdriver"
+	help
+		camdrvier test support.
 
 config CMD_USB
 	bool "usb"
@@ -272,16 +299,70 @@ config CMD_DNS
 	help
 	  Lookup the IP of a hostname
 
-config CMD_DNS
-	bool "dns"
-	help
-	  Lookup the IP of a hostname
-
 config CMD_LINK_LOCAL
 	bool "linklocal"
 	help
 	  Acquire a network IP address using the link-local protocol
 
+config CMD_NETUPGRADE
+	bool "netupgrade"
+	help
+	  Auto Net upgrade on booting
+
+endmenu
+
+menu "USB commands"
+config CMD_FASTBOOT
+	bool "fastboot"
+	help
+	  This enables the command fastboot which enables the Android
+	  fastboot mode for the platform USB device. Fastboot is a USB
+	  protocol for downloading images, flashing and device control
+	  used on Android devices.
+config CMD_DFU
+	bool "dfu"
+	help
+	  This enables the command dfu which enables the Device Firmware
+ 	  Upgrade mode for the platform USB device.
+config CMD_USBSTART
+	bool "usbstart"
+	help
+	  Hook usb ether to ETHERNET
+config CMD_USB_MASS_STORAGE
+	bool "UMS usb mass storage"
+	select USB_GADGET_MASS_STORAGE
+	select USBDOWNLOAD_GADGET
+	help
+	  USB mass storage support
+config CMD_SSTAR_UFU
+	bool "UFU sigmastar usb firmware update"
+	select USB_GADGET_FIRMWARE_UPDATE
+	select SSTAR_DNL_GADGET
+	help
+	  USB firmware update support
+config AUTOBOOT_CMD_UFU
+	bool "Auto run ufu command in boot"
+	depends on CMD_SSTAR_UFU
+config USB_GADGET_MSB250X
+	def_bool y if CMD_FASTBOOT || CMD_USBSTART || CMD_USB_MASS_STORAGE || CMD_DFU || CMD_SSTAR_UFU
+config USB_GADGET
+	def_bool y if USB_GADGET_MSB250X
+config USBDOWNLOAD_GADGET
+	def_bool y if CMD_FASTBOOT
+	def_bool y if CMD_DFU
+config USB_ETHER
+	def_bool y if CMD_USBSTART
+config USB_ETH_CDC
+	def_bool y if USB_ETHER
+config USB_ETH_RNDIS
+	def_bool y if USB_ETHER
+config SSTAR_UTMI_POWERON
+	bool "Power on UTMI first"
+	depends on USB_GADGET_MSB250X
+config SSTAR_MSB250X_BULK_OUT_PATCH
+	def_bool y if CMD_SSTAR_UFU
+	bool "Patch for bulk out incorrect rx length"
+	depends on USB_GADGET_MSB250X
 endmenu
 
 menu "Misc commands"
@@ -311,6 +392,96 @@ config CMD_SETGETDCR
 	  getidcr - Get a register value via indirect DCR addressing
 	  setidcr - Set a register value via indirect DCR addressing
 
-endmenu
+config CMD_OTPCTRL
+       bool "otpctrl"
+       help
+         suppot program/read otp content.
+
+config CMD_OTPBURN
+       bool "otpburn"
+       help
+         suppot auto program otp flow.
+
+config SSTAR_CMD_SPINAND
+        bool "spinand"
+        help
+          Support copy data from the current Flash to another Flash
 
 endmenu
+endmenu
+config XZ
+	bool "XZ"
+
+config MZ
+	bool "MZ"
+
+config SS_BOARD_RAMSIZE_MB_16
+	bool "Board with 16 MB DDR"
+config SS_BOARD_RAMSIZE_MB_48
+	bool "Board with 48 MB DDR"
+config SS_BOARD_RAMSIZE_MB_64
+	bool "Board with 64 MB DDR"
+config SS_BOARD_RAMSIZE_MB_80
+        bool "Board with 80 MB DDR"
+
+choice
+	prompt "RAM chip size"
+	default SS_RAMSIZE_MB_16 if SS_BOARD_RAMSIZE_MB_16
+	default SS_RAMSIZE_MB_48 if SS_BOARD_RAMSIZE_MB_48
+	default SS_RAMSIZE_MB_64 if SS_BOARD_RAMSIZE_MB_64
+	default SS_RAMSIZE_MB_80 if SS_BOARD_RAMSIZE_MB_80
+	help
+	  Select the size of the RAM.
+
+config SS_RAMSIZE_MB_16
+	bool "16 MB"
+	help
+	  Choose this option if you have a 16 MB RAM chip.
+
+config SS_RAMSIZE_MB_48
+	bool "48 MB"
+	help
+	  Choose this option if you have a 48 MB RAM chip.
+
+config SS_RAMSIZE_MB_64
+	bool "64 MB"
+	help
+	  Choose this option if you have a 64 MB RAM chip.
+
+config SS_RAMSIZE_MB_80
+	bool "80 MB"
+	help
+	  Choose this option if you have a 80 MB RAM chip.
+
+endchoice
+
+
+config SS_RAM_SIZE
+	hex
+	default 0x01000000 if SS_RAMSIZE_MB_16
+	default 0x03000000 if SS_RAMSIZE_MB_48
+	default 0x04000000 if SS_RAMSIZE_MB_64
+	default 0x05000000 if SS_RAMSIZE_MB_80
+
+config SS_LOAD_ADDR
+	hex
+	default 0x20D00000 if SS_RAMSIZE_MB_16
+	default 0x22D00000 if SS_RAMSIZE_MB_48
+	default 0x23D00000 if SS_RAMSIZE_MB_64
+	default 0x24D00000 if SS_RAMSIZE_MB_80
+
+config SS_RUN_ADDR
+	hex
+	default 0x20E00000 if SS_RAMSIZE_MB_16
+	default 0x22E00000 if SS_RAMSIZE_MB_48
+	default 0x23E00000 if SS_RAMSIZE_MB_64
+	default 0x24E00000 if SS_RAMSIZE_MB_80
+
+config SYS_TEXT_BASE
+	hex
+	default 0x20E00000 if SS_RAMSIZE_MB_16
+	default 0x22E00000 if SS_RAMSIZE_MB_48
+	default 0x23E00000 if SS_RAMSIZE_MB_64
+	default 0x24E00000 if SS_RAMSIZE_MB_80
+
+

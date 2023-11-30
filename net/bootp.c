@@ -401,7 +401,7 @@ BootpTimeout(void)
  */
 #if defined(CONFIG_CMD_DHCP)
 static int DhcpExtended(u8 *e, int message_type, IPaddr_t ServerID,
-			IPaddr_t RequestedIP)
+			IPaddr_t RequestedIP, unsigned char* hw_addr)
 {
 	u8 *start = e;
 	u8 *cnt;
@@ -425,6 +425,16 @@ static int DhcpExtended(u8 *e, int message_type, IPaddr_t ServerID,
 	*e++ = 53;		/* DHCP Message Type */
 	*e++ = 1;
 	*e++ = message_type;
+
+	*e++ = 61;
+	*e++ = 7;
+	*e++ = 1;
+	*e++ = hw_addr[0];
+	*e++ = hw_addr[1];
+	*e++ = hw_addr[2];
+	*e++ = hw_addr[3];
+	*e++ = hw_addr[4];
+	*e++ = hw_addr[5];
 
 	*e++ = 57;		/* Maximum DHCP Message Size */
 	*e++ = 2;
@@ -716,7 +726,7 @@ BootpRequest(void)
 
 	/* Request additional information from the BOOTP/DHCP server */
 #if defined(CONFIG_CMD_DHCP)
-	extlen = DhcpExtended((u8 *)bp->bp_vend, DHCP_DISCOVER, 0, 0);
+	extlen = DhcpExtended((u8 *)bp->bp_vend, DHCP_DISCOVER, 0, 0,NetOurEther);
 #else
 	extlen = BootpExtended((u8 *)bp->bp_vend);
 #endif
@@ -920,7 +930,7 @@ static void DhcpSendRequestPkt(struct Bootp_t *bp_offer)
 	/* Copy offered IP into the parameters request list */
 	NetCopyIP(&OfferedIP, &bp_offer->bp_yiaddr);
 	extlen = DhcpExtended((u8 *)bp->bp_vend, DHCP_REQUEST,
-		NetDHCPServerIP, OfferedIP);
+		NetDHCPServerIP, OfferedIP,NetOurEther);
 
 	iplen = BOOTP_HDR_SIZE - OPT_FIELD_SIZE + extlen;
 	pktlen = eth_hdr_size + IP_UDP_HDR_SIZE + iplen;
@@ -997,6 +1007,12 @@ DhcpHandler(uchar *pkt, unsigned dest, IPaddr_t sip, unsigned src,
 			bootstage_mark_name(BOOTSTAGE_ID_BOOTP_STOP,
 				"bootp_stop");
 
+		#ifdef CONFIG_CMD_NETUPGRADE
+			extern char netupgrade_ing;
+			if (netupgrade_ing)
+				net_set_state(NETLOOP_SUCCESS);
+			else
+		#endif
 			net_auto_load();
 			return;
 		}

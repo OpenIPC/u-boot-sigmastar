@@ -78,6 +78,7 @@ static struct usb_interface_descriptor dfu_intf_runtime = {
 
 static struct usb_descriptor_header *dfu_runtime_descs[] = {
 	(struct usb_descriptor_header *) &dfu_intf_runtime,
+	(struct usb_descriptor_header *) &dfu_func,
 	NULL,
 };
 
@@ -238,6 +239,8 @@ static inline void to_runtime_mode(struct f_dfu *f_dfu)
 	f_dfu->usb_function.strings = NULL;
 	f_dfu->usb_function.hs_descriptors = dfu_runtime_descs;
 	f_dfu->usb_function.descriptors = dfu_runtime_descs;
+	run_command("set enter_dfu_mode 0", 0);
+	run_command("saveenv", 0);
 }
 
 static int handle_upload(struct usb_request *req, u16 len)
@@ -667,7 +670,7 @@ static int dfu_prepare_function(struct f_dfu *f_dfu, int n)
 	struct usb_interface_descriptor *d;
 	int i = 0;
 
-	f_dfu->function = calloc(sizeof(struct usb_descriptor_header *), n + 1);
+	f_dfu->function = calloc(sizeof(struct usb_descriptor_header *), n + 2);
 	if (!f_dfu->function)
 		goto enomem;
 
@@ -686,7 +689,8 @@ static int dfu_prepare_function(struct f_dfu *f_dfu, int n)
 
 		f_dfu->function[i] = (struct usb_descriptor_header *)d;
 	}
-	f_dfu->function[i] = NULL;
+	f_dfu->function[i] =  (struct usb_descriptor_header *)&dfu_func;
+	f_dfu->function[i+1] = NULL;
 
 	return 0;
 

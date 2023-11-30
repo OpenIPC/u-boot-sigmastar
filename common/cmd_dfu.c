@@ -37,7 +37,7 @@ static int do_dfu(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	}
 
 	int controller_index = simple_strtoul(usb_controller, NULL, 0);
-	board_usb_init(controller_index, USB_INIT_DEVICE);
+	(void)controller_index;
 	g_dnl_clear_detach();
 	g_dnl_register("usb_dnl_dfu");
 	while (1) {
@@ -87,3 +87,26 @@ U_BOOT_CMD(dfu, CONFIG_SYS_MAXARGS, 1, do_dfu,
 	"    <interface>\n"
 	"    [list] - list available alt settings\n"
 );
+
+int update_dfu(void)
+{
+	int dfu_enable = 0;
+
+	dfu_enable = getenv_ulong("enter_dfu_mode", 10, 0);
+	if (dfu_enable)
+	{
+		run_command("set enter_dfu_mode 0", 0);
+		run_command("saveenv", 0);
+
+#if defined (CONFIG_DFU_NAND) && defined (CONFIG_DFU_NAND)
+		run_command("dfu 0 nand 0", 0);
+#elif defined (CONFIG_DFU_SF)
+		run_command("dfu 0 sf 0:0", 0);
+#elif defined (CONFIG_DFU_RAM)
+		run_command("dfu 0 ram 0", 0);
+#else
+		printf("unknown dfu update type\n");
+#endif
+	}
+	return 0;
+}

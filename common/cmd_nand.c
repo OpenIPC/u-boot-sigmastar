@@ -27,6 +27,23 @@
 #include <asm/byteorder.h>
 #include <jffs2/jffs2.h>
 #include <nand.h>
+#if defined(CONFIG_MS_NAND_ONEBIN)
+#include <mdrvSpinandBbtBbm.h>
+#endif
+#define TIME_MEASUREMENT (1)
+
+//local nand commands. These commands are required only for module developers. Deault set 0 for code size.
+#define LOCAL_DBG_CMDS (1)
+#if !defined(CONFIG_MS_NAND_ONEBIN)
+#if defined(CONFIG_MS_NAND)
+#include "../drivers/mstar/unfd/inc/common/drvNAND.h"
+#endif
+#endif
+
+//	#include "../drivers/mstar/unfd/inc/common/drvNAND.h"
+#if IF_IP_VERIFY
+extern U32 drvNAND_IPVerify_Main(void);
+#endif
 
 #if defined(CONFIG_CMD_MTDPARTS)
 
@@ -35,6 +52,51 @@ int mtdparts_init(void);
 int id_parse(const char *id, const char **ret_id, u8 *dev_type, u8 *dev_num);
 int find_dev_and_part(const char *id, struct mtd_device **dev,
 		      u8 *part_num, struct part_info **part);
+#endif
+
+#if defined(CONFIG_MS_NAND_ONEBIN)
+static void set_bbm_flag(char *name,size_t size)
+{
+    char *bbm_env;
+    char bbm_str[512];
+#ifdef CONFIG_CMD_MTDPARTS
+    struct mtd_device *dev;
+    struct part_info *part;
+    u8 pnum;
+    int ret;
+
+    ret = mtdparts_init();
+    if (ret)
+        return;
+
+    ret = find_dev_and_part(name, &dev, &pnum, &part);
+    if (ret)
+        return;
+
+    if(size == part->size)
+        return;
+#else
+    return;
+#endif
+
+    if(name)
+    {
+        memset(bbm_str,'\0',sizeof(bbm_str));
+        bbm_env = getenv("bbm");
+        if (bbm_env)
+        {
+            if(strstr(bbm_env,name))
+                return;
+            else
+                sprintf(bbm_str,"%s%s,%u;",bbm_env,name,size);
+        }
+        else
+            sprintf(bbm_str,"%s,%u;",name,size);
+        printf("Find ecc corrected in %s,set bbm flag\r\n",name);
+        setenv("bbm",bbm_str);
+        saveenv();
+    }
+}
 #endif
 
 static int nand_dump(nand_info_t *nand, ulong off, int only_oob, int repeat)
@@ -295,7 +357,7 @@ unsigned long nand_env_oob_offset;
 int do_nand_env_oob(cmd_tbl_t *cmdtp, int argc, char *const argv[])
 {
 	int ret;
-	uint32_t oob_buf[ENV_OFFSET_SIZE/sizeof(uint32_t)];
+//	uint32_t oob_buf[ENV_OFFSET_SIZE/sizeof(uint32_t)];
 	nand_info_t *nand = &nand_info[0];
 	char *cmd = argv[1];
 
@@ -313,65 +375,67 @@ int do_nand_env_oob(cmd_tbl_t *cmdtp, int argc, char *const argv[])
 
 		printf("0x%08lx\n", nand_env_oob_offset);
 	} else if (!strcmp(cmd, "set")) {
-		loff_t addr;
-		loff_t maxsize;
-		struct mtd_oob_ops ops;
-		int idx = 0;
-
-		if (argc < 3)
-			goto usage;
-
-		/* We don't care about size, or maxsize. */
-		if (arg_off(argv[2], &idx, &addr, &maxsize, &maxsize)) {
-			puts("Offset or partition name expected\n");
-			return 1;
-		}
-
-		if (idx != 0) {
-			puts("Partition not on first NAND device\n");
-			return 1;
-		}
-
-		if (nand->oobavail < ENV_OFFSET_SIZE) {
-			printf("Insufficient available OOB bytes:\n"
-			       "%d OOB bytes available but %d required for "
-			       "env.oob support\n",
-			       nand->oobavail, ENV_OFFSET_SIZE);
-			return 1;
-		}
-
-		if ((addr & (nand->erasesize - 1)) != 0) {
-			printf("Environment offset must be block-aligned\n");
-			return 1;
-		}
-
-		ops.datbuf = NULL;
-		ops.mode = MTD_OOB_AUTO;
-		ops.ooboffs = 0;
-		ops.ooblen = ENV_OFFSET_SIZE;
-		ops.oobbuf = (void *) oob_buf;
-
-		oob_buf[0] = ENV_OOB_MARKER;
-		oob_buf[1] = addr / nand->erasesize;
-
-		ret = nand->write_oob(nand, ENV_OFFSET_SIZE, &ops);
-		if (ret) {
-			printf("Error writing OOB block 0\n");
-			return ret;
-		}
-
-		ret = get_nand_env_oob(nand, &nand_env_oob_offset);
-		if (ret) {
-			printf("Error reading env offset in OOB\n");
-			return ret;
-		}
-
-		if (addr != nand_env_oob_offset) {
-			printf("Verification of env offset in OOB failed: "
-			       "0x%08llx expected but got 0x%08lx\n",
-			       (unsigned long long)addr, nand_env_oob_offset);
-			return 1;
-		}
+//		loff_t addr;
+//		loff_t maxsize;
+//		struct mtd_oob_ops ops;
+//		int idx = 0;
+//
+//		if (argc < 3)
+//			goto usage;
+//
+//		/* We don't care about size, or maxsize. */
+//		if (arg_off(argv[2], &idx, &addr, &maxsize, &maxsize)) {
+//			puts("Offset or partition name expected\n");
+//			return 1;
+//		}
+//
+//		if (idx != 0) {
+//			puts("Partition not on first NAND device\n");
+//			return 1;
+//		}
+//
+//		if (nand->oobavail < ENV_OFFSET_SIZE) {
+//			printf("Insufficient available OOB bytes:\n"
+//			       "%d OOB bytes available but %d required for "
+//			       "env.oob support\n",
+//			       nand->oobavail, ENV_OFFSET_SIZE);
+//			return 1;
+//		}
+//
+//		if ((addr & (nand->erasesize - 1)) != 0) {
+//			printf("Environment offset must be block-aligned\n");
+//			return 1;
+//		}
+//
+//		ops.datbuf = NULL;
+//		ops.mode = MTD_OOB_AUTO;
+//		ops.ooboffs = 0;
+//		ops.ooblen = ENV_OFFSET_SIZE;
+//		ops.oobbuf = (void *) oob_buf;
+//
+//		oob_buf[0] = ENV_OOB_MARKER;
+//		oob_buf[1] = addr / nand->erasesize;
+//
+//		ret = nand->write_oob(nand, ENV_OFFSET_SIZE, &ops);
+//		if (ret) {
+//			printf("Error writing OOB block 0\n");
+//			return ret;
+//		}
+//
+//		ret = get_nand_env_oob(nand, &nand_env_oob_offset);
+//		if (ret) {
+//			printf("Error reading env offset in OOB\n");
+//			return ret;
+//		}
+//
+//		if (addr != nand_env_oob_offset) {
+//			printf("Verification of env offset in OOB failed: "
+//			       "0x%08llx expected but got 0x%08lx\n",
+//			       (unsigned long long)addr, nand_env_oob_offset);
+//			return 1;
+//		}
+		printf("nand env.oob set is not supportted!!\n");
+		return 1;
 	} else {
 		goto usage;
 	}
@@ -462,60 +526,942 @@ static void adjust_size_for_badblocks(loff_t *size, loff_t offset, int dev)
 	}
 }
 
+#if TIME_MEASUREMENT
+u64 _getsysts(void)
+{
+    u64 cval;
+
+    asm volatile("mrrc p15, 0, %Q0, %R0, c14" : "=r" (cval));
+    return cval;
+}
+#endif
+
+#if defined(CONFIG_MS_NAND_ONEBIN)
+int otp_access(nand_info_t *nand, char* cmd, int argc, char * const argv[])
+{//usage nand otpr|otpw 21000000 off size
+    u32 addr;
+    loff_t off = 0;
+    loff_t maxsize = 0x100;
+    loff_t size;
+    int ret = -1;
+
+    if(1) {
+        size_t rwsize;
+        ulong pagecount = 1;
+        int read;
+        char *s;
+        int dev = nand_curr_device;
+        struct nand_chip *nand_chip = nand->priv;
+        if(argc >= 3)
+            addr = (ulong)simple_strtoul(argv[2], NULL, 16);
+        else
+        {
+            printf("address must be set\n");
+            return 1;
+        }
+        if(argc >= 4)
+            off = (ulong)simple_strtoul(argv[3], NULL, 16);
+        if(argc >= 5)
+            maxsize = (ulong)simple_strtoul(argv[4], NULL, 16);
+        read = strncmp(cmd, "otpr", 4) == 0; /* 1 = read, 0 = write */
+        printf("\nOTP %s: to %X off:%llX sz:%llX\n", read ? "read" : "write", addr, off, maxsize);
+        nand_chip->cmdfunc(nand, NAND_CMD_OTP_ENABLE, 1, -1);
+
+        if (nand_chip->waitfunc(nand, nand_chip) & NAND_STATUS_FAIL)
+            printf("enable otp failed\r\n");
+        s = strchr(cmd, '.');
+        if (s && !strcmp(s, ".raw")) {
+            if (arg_off(argv[3], &dev, &off, &size, &maxsize))
+                return 1;
+
+            nand = &nand_info[dev];
+
+            if (argc > 4 && !str2long(argv[4], &pagecount)) {
+                printf("'%s' is not a number\n", argv[4]);
+                return 1;
+            }
+
+            if (pagecount * nand->writesize > size) {
+                puts("Size exceeds partition or device limit\n");
+                return -1;
+            }
+
+            rwsize = pagecount * (nand->writesize + nand->oobsize);
+        } else {
+            if (arg_off_size(argc - 3, argv + 3, &dev,
+                        &off, &size, &maxsize) != 0)
+                return 1;
+
+            /* size is unspecified */
+            if (argc < 5)
+                adjust_size_for_badblocks(&size, off, dev);
+            rwsize = size;
+        }
+        if (read)
+            ret = nand_read(nand,off,(size_t *)&rwsize,(u_char *)addr);
+        else
+        {
+            ret = nand_write(nand, off, &rwsize,(u_char *)addr);
+        }
+        if(ret)
+        {
+            printf("RW fail (%X) %d\n", ret, ret);
+            nand_chip->cmdfunc(nand, NAND_CMD_OTP_ENABLE, 0, -1);
+            return (u32)ret;
+        }
+        nand_chip->cmdfunc(nand, NAND_CMD_OTP_ENABLE, 0, -1);
+    }
+    return ret;
+}
+
 static int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
-	int i, ret = 0;
-	ulong addr;
-	loff_t off, size, maxsize;
-	char *cmd, *s;
-	nand_info_t *nand;
+    int i, ret = 0;
+    ulong addr;
+    loff_t off, size, maxsize;
+    char *cmd, *s;
+    nand_info_t *nand;
 #ifdef CONFIG_SYS_NAND_QUIET
-	int quiet = CONFIG_SYS_NAND_QUIET;
+    int quiet = CONFIG_SYS_NAND_QUIET;
 #else
-	int quiet = 0;
+    int quiet = 0;
 #endif
-	const char *quiet_str = getenv("quiet");
-	int dev = nand_curr_device;
-	int repeat = flag & CMD_FLAG_REPEAT;
+    const char *quiet_str = getenv("quiet");
+    int dev = nand_curr_device;
+    int repeat = flag & CMD_FLAG_REPEAT;
 
-	/* at least two arguments please */
-	if (argc < 2)
-		goto usage;
+    struct nand_chip *nand_chip;
 
-	if (quiet_str)
-		quiet = simple_strtoul(quiet_str, NULL, 0) != 0;
+    /* at least two arguments please */
+    if (argc < 2)
+        goto usage;
 
-	cmd = argv[1];
+    if (quiet_str)
+        quiet = simple_strtoul(quiet_str, NULL, 0) != 0;
 
-	/* Only "dump" is repeatable. */
-	if (repeat && strcmp(cmd, "dump"))
-		return 0;
+    cmd = argv[1];
 
-	if (strcmp(cmd, "info") == 0) {
+    /* Only "dump" is repeatable. */
+    if (repeat && strcmp(cmd, "dump"))
+        return 0;
 
-		putc('\n');
-		for (i = 0; i < CONFIG_SYS_MAX_NAND_DEVICE; i++) {
-			if (nand_info[i].name)
-				nand_print_and_set_info(i);
-		}
+    if (strcmp(cmd, "info") == 0) {
+
+        putc('\n');
+        for (i = 0; i < CONFIG_SYS_MAX_NAND_DEVICE; i++) {
+            if (nand_info[i].name)
+                nand_print_and_set_info(i);
+        }
+        return 0;
+    }
+    if (strcmp(cmd, "device") == 0) {
+        if (argc < 3) {
+            putc('\n');
+            if (dev < 0 || dev >= CONFIG_SYS_MAX_NAND_DEVICE)
+                puts("no devices available\n");
+            else
+                nand_print_and_set_info(dev);
+            return 0;
+        }
+
+        dev = (int)simple_strtoul(argv[2], NULL, 10);
+        set_dev(dev);
+
+        return 0;
+    }
+    
+    if (strcmp(cmd, "probe") == 0) {
+        if (argc < 3) {
+            goto usage;
+        }
+        addr = (int)simple_strtoul(argv[2], NULL, 16);
+        spi_nand_probe(addr);
+        return 0;
+    }
+
+#ifdef CONFIG_ENV_OFFSET_OOB
+	/* this command operates only on the first nand device */
+	if (strcmp(cmd, "env.oob") == 0)
+		return do_nand_env_oob(cmdtp, argc - 1, argv + 1);
+#endif
+
+	/* The following commands operate on the current device, unless
+	 * overridden by a partition specifier.  Note that if somehow the
+	 * current device is invalid, it will have to be changed to a valid
+	 * one before these commands can run, even if a partition specifier
+	 * for another device is to be used.
+	 */
+	if (dev < 0 || dev >= CONFIG_SYS_MAX_NAND_DEVICE ||
+	    !nand_info[dev].name) {
+		puts("\nno devices available\n");
+		return 1;
+	}
+	nand = &nand_info[dev];
+	nand_chip = nand->priv;
+
+	if (strcmp(cmd, "bad") == 0) {
+		printf("\nDevice %d bad blocks:\n", dev);
+		for (off = 0; off < nand->size; off += nand->erasesize)
+			if (nand_block_isbad(nand, off))
+				printf("  %08llx\n", (unsigned long long)off);
 		return 0;
 	}
 
-	if (strcmp(cmd, "device") == 0) {
-		if (argc < 3) {
-			putc('\n');
-			if (dev < 0 || dev >= CONFIG_SYS_MAX_NAND_DEVICE)
-				puts("no devices available\n");
+	/*
+	 * Syntax is:
+	 *   0    1     2       3    4
+	 *   nand erase [clean] [off size]
+	 */
+	if (strncmp(cmd, "erase", 5) == 0 || strncmp(cmd, "scrub", 5) == 0) {
+		nand_erase_options_t opts;
+		/* "clean" at index 2 means request to write cleanmarker */
+		int clean = argc > 2 && !strcmp("clean", argv[2]);
+		int scrub_yes = argc > 2 && !strcmp("-y", argv[2]);
+		int o = (clean || scrub_yes) ? 3 : 2;
+		int scrub = !strncmp(cmd, "scrub", 5);
+		int spread = 0;
+		int args = 2;
+		const char *scrub_warn =
+			"Warning: "
+			"scrub option will erase all factory set bad blocks!\n"
+			"         "
+			"There is no reliable way to recover them.\n"
+			"         "
+			"Use this command only for testing purposes if you\n"
+			"         "
+			"are sure of what you are doing!\n"
+			"\nReally scrub this NAND flash? <y/N>\n";
+
+		if (cmd[5] != 0) {
+			if (!strcmp(&cmd[5], ".spread")) {
+				spread = 1;
+			} else if (!strcmp(&cmd[5], ".part")) {
+				args = 1;
+			} else if (!strcmp(&cmd[5], ".chip")) {
+				args = 0;
+			} else {
+				goto usage;
+			}
+		}
+
+		/*
+		 * Don't allow missing arguments to cause full chip/partition
+		 * erases -- easy to do accidentally, e.g. with a misspelled
+		 * variable name.
+		 */
+		if (argc != o + args)
+			goto usage;
+
+		printf("\nNAND %s: ", cmd);
+		/* skip first two or three arguments, look for offset and size */
+		if (arg_off_size(argc - o, argv + o, &dev, &off, &size,
+				 &maxsize) != 0)
+			return 1;
+
+		nand = &nand_info[dev];
+
+		memset(&opts, 0, sizeof(opts));
+		opts.offset = off;
+		opts.length = size;
+		opts.jffs2  = clean;
+		opts.quiet  = quiet;
+		opts.spread = spread;
+
+		if (scrub) {
+			if (scrub_yes) {
+				opts.scrub = 1;
+			} else {
+				puts(scrub_warn);
+				if (confirm_yesno()) {
+					opts.scrub = 1;
+				} else {
+					puts("scrub aborted\n");
+					return 1;
+				}
+			}
+		}
+		{
+#if TIME_MEASUREMENT
+		    u64 timeStart;
+		    s32 timeDiff;
+		    u32 kBps = (u32)-1;//k bytes per seconds
+		    timeStart = _getsysts();
+#endif
+		    ret = nand_erase_opts(nand, &opts);
+#if TIME_MEASUREMENT
+		    timeDiff = ((s32)(_getsysts() - timeStart))/6;//us
+		    if(size != 0 && timeDiff != 0)
+		    {
+		        //kBps = ((u32)size * 1000)/timeDiff;//~ up to 4 seconds
+		        kBps = (size * 1000.0f)/timeDiff;
+		    }
+		    printf("Time:%d us, speed:%d KB/s\n", timeDiff, kBps);
+#endif
+		}
+		printf("%s\n", ret ? "ERROR" : "OK");
+
+		return ret == 0 ? 0 : 1;
+	}
+
+	if (strncmp(cmd, "dump", 4) == 0) {
+		if (argc < 3)
+			goto usage;
+
+		off = (int)simple_strtoul(argv[2], NULL, 16);
+		ret = nand_dump(nand, off, !strcmp(&cmd[4], ".oob"), repeat);
+
+		return ret == 0 ? 1 : 0;
+	}
+
+	if (strncmp(cmd, "read", 4) == 0 || strncmp(cmd, "write", 5) == 0) {
+		size_t rwsize;
+		ulong pagecount = 1;
+		int read;
+		int raw = 0;
+
+		if (argc < 4)
+			goto usage;
+
+		addr = (ulong)simple_strtoul(argv[2], NULL, 16);
+
+		read = strncmp(cmd, "read", 4) == 0; /* 1 = read, 0 = write */
+		printf("\nNAND %s: ", read ? "read" : "write");
+
+		s = strchr(cmd, '.');
+
+		if (s && !strcmp(s, ".raw")) {
+			raw = 1;
+
+			if (arg_off(argv[3], &dev, &off, &size, &maxsize))
+				return 1;
+
+			nand = &nand_info[dev];
+
+			if (argc > 4 && !str2long(argv[4], &pagecount)) {
+				printf("'%s' is not a number\n", argv[4]);
+				return 1;
+			}
+
+			if (pagecount * nand->writesize > size) {
+				puts("Size exceeds partition or device limit\n");
+				return -1;
+			}
+
+			rwsize = pagecount * (nand->writesize + nand->oobsize);
+		} else {
+			if (arg_off_size(argc - 3, argv + 3, &dev,
+						&off, &size, &maxsize) != 0)
+				return 1;
+
+			/* size is unspecified */
+			if (argc < 5)
+				adjust_size_for_badblocks(&size, off, dev);
+			rwsize = size;
+		}
+
+		nand = &nand_info[dev];
+
+		if (!s || !strcmp(s, ".jffs2") ||
+		    !strcmp(s, ".e") || !strcmp(s, ".i") || !strcmp(s,".1")) {
+
+#if LOCAL_DBG_CMDS
+		    if(!strcmp(s,".1")) //1 for walking 1 pattern
+		    {
+		        char *p = (char*)addr;
+		        char pat[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
+		        for(i = 0; i < 0x800; i++)
+		        {
+		            p[i] = pat[i%8];
+		        }
+		    }
+#endif
+
+#if TIME_MEASUREMENT
+                u64 timeStart;
+                s32 timeDiff;
+                u32 kBps = (u32)-1;//k bytes per seconds
+                timeStart = _getsysts();
+#endif
+                if (read) {
+                    ret = nand_read_skip_bad(nand, off, &rwsize,
+                                             NULL, maxsize,
+                                             (u_char *)addr);
+                    if((argv[3] != NULL) && (nand->ecc_stats.corrected > 0))//for bbm
+                    {
+                        if (strncmp(getenv("sstar_bbm"), "off", 3))
+                        {
+                            set_bbm_flag(argv[3],rwsize);
+                        }
+                    }
+                }
+                else {
+                    if ((!strncmp(argv[3], "IPL", 3)) || (!strncmp(argv[3], "CIS", 3)) ) {
+                        ret = 1;
+                        while (rwsize <= maxsize) {
+                            if (0 == nand_write_skip_bad(nand, off, &rwsize,
+                                                         NULL, nand->erasesize,
+                                                         (u_char *)addr, 0)) {
+                                ret = 0;
+                            }
+
+                            off += nand->erasesize;
+                            maxsize = (nand->erasesize > maxsize)? maxsize : (maxsize - nand->erasesize);
+                        }
+                    }
+                    else {
+                        loff_t partition_off = 0;
+                        if(argv[5])
+                        {
+                            partition_off = (int)simple_strtoul(argv[5], NULL, 16);
+                            if(partition_off + rwsize > maxsize)
+                            {
+                                puts("Size exceeds partition or device limit\n");
+                                return -1;
+                            }
+                        }
+                        ret = nand_write_skip_bad(nand, off + partition_off, &rwsize,
+                                                  NULL, maxsize - partition_off,
+                                                  (u_char *)addr, 0);
+                    }
+                }
+#if TIME_MEASUREMENT
+                timeDiff = ((s32)(_getsysts() - timeStart))/6;//us
+                if(rwsize != 0 && timeDiff != 0)
+                {
+                    //kBps = (rwsize * 1000)/timeDiff;//max ~ 4 seconds
+                    kBps = (rwsize * 1000.0f)/timeDiff;
+                }
+                printf("Time:%d us, speed:%d KB/s\n", timeDiff, kBps);
+#endif
+
+#ifdef CONFIG_CMD_NAND_TRIMFFS
+		} else if (!strcmp(s, ".trimffs")) {
+			if (read) {
+				printf("Unknown nand command suffix '%s'\n", s);
+				return 1;
+			}
+			ret = nand_write_skip_bad(nand, off, &rwsize, NULL,
+						maxsize, (u_char *)addr,
+						WITH_DROP_FFS);
+#endif
+#ifdef CONFIG_CMD_NAND_YAFFS
+		} else if (!strcmp(s, ".yaffs")) {
+			if (read) {
+				printf("Unknown nand command suffix '%s'.\n", s);
+				return 1;
+			}
+			ret = nand_write_skip_bad(nand, off, &rwsize, NULL,
+						maxsize, (u_char *)addr,
+						WITH_YAFFS_OOB);
+#endif
+		} else if (!strcmp(s, ".oob")) {
+			/* out-of-band data */
+			mtd_oob_ops_t ops = {
+				.oobbuf = (u8 *)addr,
+				.ooblen = rwsize,
+				.mode = MTD_OPS_RAW
+			};
+
+			if (read)
+				ret = mtd_read_oob(nand, off, &ops);
 			else
-				nand_print_and_set_info(dev);
-			return 0;
+				ret = mtd_write_oob(nand, off, &ops);
+		} else if (raw) {
+			ret = raw_access(nand, addr, off, pagecount, read);
+		} else {
+			printf("Unknown nand command suffix '%s'.\n", s);
+			return 1;
 		}
 
-		dev = (int)simple_strtoul(argv[2], NULL, 10);
-		set_dev(dev);
+		printf(" %zu bytes %s: %s\n", rwsize,
+		       read ? "read" : "written", ret ? "ERROR" : "OK");
 
+		return ret == 0 ? 0 : 1;
+	}
+
+#ifdef CONFIG_CMD_NAND_TORTURE
+	if (strcmp(cmd, "torture") == 0) {
+		if (argc < 3)
+			goto usage;
+
+		if (!str2off(argv[2], &off)) {
+			puts("Offset is not a valid number\n");
+			return 1;
+		}
+
+		printf("\nNAND torture: device %d offset 0x%llx size 0x%x\n",
+			dev, off, nand->erasesize);
+		ret = nand_torture(nand, off);
+		printf(" %s\n", ret ? "Failed" : "Passed");
+
+		return ret == 0 ? 0 : 1;
+	}
+#endif
+
+	if ((strcmp(cmd, "otpr") == 0) || (strcmp(cmd, "otpw") == 0)) {
+	    ret = otp_access(nand, cmd, argc, argv);
+	    return ret;
+	}
+
+    if (strcmp(cmd, "otplock") == 0) {
+        u8 u8_lock = 0;
+
+        if(argc == 3)
+        {
+            nand_chip->cmdfunc(nand, NAND_CMD_OTP_ENABLE, 1, -1);
+            u8_lock = (u8)simple_strtoul(argv[2], NULL, 16);
+            nand_chip->cmdfunc(nand, NAND_CMD_OTP_LOCK, u8_lock, -1);
+        }
+        else
+        {
+            printf("usage:nand optlock 1/0\r\n");
+            return 1;
+        }
+        nand_chip->cmdfunc(nand, NAND_CMD_OTP_ENABLE, 0, -1);
+        return 0;
+    }
+
+    if (strcmp(cmd, "do_ecc") == 0) {
+        u8 u8_enable = 0;
+        struct nand_chip *nand_chip = nand->priv;
+        if(argc == 3)
+        {
+            u8_enable = (u8)simple_strtoul(argv[2], NULL, 16);
+            nand_chip->cmdfunc(nand, NAND_CMD_DO_ECC, u8_enable, -1);
+            return 0;
+        }
+        else
+        {
+            printf("usage:nand do_ecc 1/0\r\n");
+            return 1;
+        }
+    }
+
+    if (strcmp(cmd, "bbtread") == 0)
+    {
+        u8 u8BlkStatus = 0;
+        if(argc == 3)
+        {
+            addr = simple_strtoul(argv[2], NULL, 16);
+            u8BlkStatus = MDRV_BBT_get_blk_info(addr);
+            printf("u8BlkStatus = 0x%x\r\n",u8BlkStatus);
+            return 0;
+        }
+        else
+        {
+            printf("usage:nand bbtread addr\r\n");
+            return 1;
+        }
+    }
+
+    if (strcmp(cmd, "bbtsave") == 0)
+    {
+        u8 u8BlkType = 0;
+        if(argc == 4)
+        {
+            addr = simple_strtoul(argv[2], NULL, 16);
+            u8BlkType = simple_strtoul(argv[3], NULL, 16);
+            MDRV_BBT_fill_blk_info(addr, u8BlkType);
+            MDRV_BBT_save_bbt(0);
+            return 0;
+        }
+        else
+        {
+            printf("usage:nand bbtsave addr block_type\r\n");
+            return 1;
+        }
+        return 0;
+    }
+
+    if ((strcmp(cmd, "echo") == 0)) {
+        printf("\n\nEnter echo\n");
+        if(argv[2]!=0)
+            printf("%s\n", argv[2]);
+        else
+            printf("null\n");
+        return 0;
+    }
+
+	if (strcmp(cmd, "markbad") == 0) {
+		argc -= 2;
+		argv += 2;
+
+		if (argc <= 0)
+			goto usage;
+
+		while (argc > 0) {
+			addr = simple_strtoul(*argv, NULL, 16);
+
+			if (mtd_block_markbad(nand, addr)) {
+				printf("block 0x%08lx NOT marked "
+					"as bad! ERROR %d\n",
+					addr, ret);
+				ret = 1;
+			} else {
+				printf("block 0x%08lx successfully "
+					"marked as bad\n",
+					addr);
+			}
+			--argc;
+			++argv;
+		}
+		return ret;
+	}
+
+	if (strcmp(cmd, "biterr") == 0) {
+		/* todo */
+		return 1;
+	}
+
+#ifdef CONFIG_CMD_NAND_LOCK_UNLOCK
+	if (strcmp(cmd, "lock") == 0) {
+		int tight = 0;
+		int status = 0;
+		if (argc == 3) {
+			if (!strcmp("tight", argv[2]))
+				tight = 1;
+			if (!strcmp("status", argv[2]))
+				status = 1;
+		}
+		if (status) {
+			do_nand_status(nand);
+		} else {
+			if (!nand_lock(nand, tight)) {
+				puts("NAND flash successfully locked\n");
+			} else {
+				puts("Error locking NAND flash\n");
+				return 1;
+			}
+		}
 		return 0;
 	}
+
+	if (strncmp(cmd, "unlock", 5) == 0) {
+		int allexcept = 0;
+
+		s = strchr(cmd, '.');
+
+		if (s && !strcmp(s, ".allexcept"))
+			allexcept = 1;
+
+		if (arg_off_size(argc - 2, argv + 2, &dev, &off, &size,
+				 &maxsize) < 0)
+			return 1;
+
+		if (!nand_unlock(&nand_info[dev], off, size, allexcept)) {
+			puts("NAND flash successfully unlocked\n");
+		} else {
+			puts("Error unlocking NAND flash, "
+			     "write and erase will probably fail\n");
+			return 1;
+		}
+		return 0;
+	}
+#endif
+
+#if IF_IP_VERIFY
+	if (strncmp(cmd, "ipverify", 8) == 0) {
+		drvNAND_IPVerify_Main();
+		return 0;
+	}
+#endif
+
+usage:
+	return CMD_RET_USAGE;
+}
+
+#ifdef CONFIG_SYS_LONGHELP
+static char nand_help_text[] =
+	"info - show available NAND devices\n"
+	"nand device [dev] - show or set current device\n"
+	"nand read - addr off|partition size\n"
+	"nand write - addr off|partition size [blocks_per_sub_partition]\n"
+	"    read/write 'size' bytes starting at offset 'off'\n"
+	"    to/from memory address 'addr', skipping bad blocks.\n"
+	"nand read.raw - addr off|partition [count]\n"
+	"nand write.raw - addr off|partition [count]\n"
+	"    Use read.raw/write.raw to avoid ECC and access the flash as-is.\n"
+#ifdef CONFIG_CMD_NAND_TRIMFFS
+	"nand write.trimffs - addr off|partition size\n"
+	"    write 'size' bytes starting at offset 'off' from memory address\n"
+	"    'addr', skipping bad blocks and dropping any pages at the end\n"
+	"    of eraseblocks that contain only 0xFF\n"
+#endif
+#ifdef CONFIG_CMD_NAND_YAFFS
+	"nand write.yaffs - addr off|partition size\n"
+	"    write 'size' bytes starting at offset 'off' with yaffs format\n"
+	"    from memory address 'addr', skipping bad blocks.\n"
+#endif
+	"nand erase[.spread] [clean] off size - erase 'size' bytes "
+	"from offset 'off'\n"
+	"    With '.spread', erase enough for given file size, otherwise,\n"
+	"    'size' includes skipped bad blocks.\n"
+	"nand erase.part [clean] partition - erase entire mtd partition'\n"
+	"nand erase.chip [clean] - erase entire chip'\n"
+	"nand bad - show bad blocks\n"
+	"nand dump[.oob] off - dump page\n"
+#ifdef CONFIG_CMD_NAND_TORTURE
+	"nand torture off - torture block at offset\n"
+#endif
+	"nand scrub [-y] off size | scrub.part partition | scrub.chip\n"
+	"    really clean NAND erasing bad blocks (UNSAFE)\n"
+	"nand markbad off [...] - mark bad block(s) at offset (UNSAFE)\n"
+	"nand biterr off - make a bit error at offset (UNSAFE)\n"
+#ifdef CONFIG_CMD_NAND_LOCK_UNLOCK
+	"\n"
+	"nand lock [tight] [status]\n"
+	"    bring nand to lock state or display locked pages\n"
+	"nand unlock[.allexcept] [offset] [size] - unlock section"
+#endif
+#ifdef CONFIG_ENV_OFFSET_OOB
+	"\n"
+	"nand env.oob - environment offset in OOB of block 0 of"
+	"    first device.\n"
+	"nand env.oob set off|partition - set enviromnent offset\n"
+	"nand env.oob get - get environment offset"
+#endif
+    "nand otpr[.raw] addr off size - Read OTP Region\n"
+    "nand otpw[.raw] addr off size - Write OTP Region\n"
+    "    read/write 'size' bytes starting at OTP offset 'off'\n"
+    "    to/from memory address 'addr'\n"
+    "nand otplock - Lock OTP Region\n"
+#if LOCAL_DBG_CMDS
+	"nand write.1 - addr off|partition size\n"
+    "    write walking 1 pattern for quad mode debugging\n"
+    "nand drv[.X] 0|1 - Set driving level. X:gd\n"
+    "nand clk [new_clk]- Show/set current possible SPI CLK\n"
+#endif
+    "nand do_ecc 1/0 - Enable or disable internal ecc. #do_ecc 0 (disable), do_ecc 1 (enable)\n"
+	 "nand bbtread address - Check the block is good or bad in bbt(0x0:factory bad,0x2:running time bad,0x0f:good)\n"
+	 "nand bbtsave address block_type- mark the block as bad to bbt(0x2:running time bad,0x0f:good)\n"
+	"";
+#endif
+
+#else
+
+#include "../drivers/mstar/spinand/inc/common/spinand.h"
+#include "../drivers/mstar/spinand/inc/common/drvSPINAND.h"
+
+int otp_access(nand_info_t *nand, char* cmd, int argc, char * const argv[])
+{//usage nand otpr|otpw 21000000 off size
+    u32 addr;
+    loff_t off = 0;
+    loff_t maxsize = 0x100;
+    loff_t size;
+    u32 u32Ret = -1;
+
+    if(1) {
+        size_t rwsize;
+        ulong pagecount = 1;
+        int read;
+        int ret;
+        char *s;
+        int dev = nand_curr_device;
+
+        if(argc >= 3)
+            addr = (ulong)simple_strtoul(argv[2], NULL, 16);
+        else
+        {
+            printf("address must be set\n");
+            return 1;
+        }
+        if(argc >= 4)
+            off = (ulong)simple_strtoul(argv[3], NULL, 16);
+        if(argc >= 5)
+            maxsize = (ulong)simple_strtoul(argv[4], NULL, 16);
+
+        read = strncmp(cmd, "otpr", 4) == 0; /* 1 = read, 0 = write */
+        printf("\nOTP %s: to %X off:%llX sz:%llX\n", read ? "read" : "write", addr, off, maxsize);
+        u32Ret = MDrv_SPINAND_EnableOtp(true);
+        s = strchr(cmd, '.');
+        if (s && !strcmp(s, ".raw")) {
+            if (arg_off(argv[3], &dev, &off, &size, &maxsize))
+                return 1;
+
+            nand = &nand_info[dev];
+
+            if (argc > 4 && !str2long(argv[4], &pagecount)) {
+                printf("'%s' is not a number\n", argv[4]);
+                return 1;
+            }
+
+            if (pagecount * nand->writesize > size) {
+                puts("Size exceeds partition or device limit\n");
+                return -1;
+            }
+
+            rwsize = pagecount * (nand->writesize + nand->oobsize);
+        } else {
+            if (arg_off_size(argc - 3, argv + 3, &dev,
+                        &off, &size, &maxsize) != 0)
+                return 1;
+
+            /* size is unspecified */
+            if (argc < 5)
+                adjust_size_for_badblocks(&size, off, dev);
+            rwsize = size;
+        }
+        if (read)
+            ret = nand_read_skip_bad(nand, off, &rwsize,
+                                     NULL, maxsize,
+                                     (u_char *)addr);
+        else
+            ret = nand_write_skip_bad(nand, off, &rwsize,
+                                      NULL, maxsize,
+                                      (u_char *)addr, 0);
+
+        if(ret)
+        {
+            printf("RW fail (%X) %d\n", ret, ret);
+            u32Ret = MDrv_SPINAND_EnableOtp(false);
+            return (U32)ret;
+        }
+        u32Ret = MDrv_SPINAND_EnableOtp(false);
+
+    }
+    return u32Ret;
+}
+
+#if LOCAL_DBG_CMDS
+//typically 0 or 1, in some platform it would up to 3
+int nand_set_driving(char * const argv[], int argc)
+{
+    ulong driving;
+    if (argc < 3 || argc > 4)
+        return 1;
+    if(!str2long(argv[2], &driving)) {
+        printf("invalid input type\n");
+        return 1;
+    }
+    if(driving < 0 || driving > 1) {
+        printf("invalid input number\n");
+        return 1;
+    }
+    if(TRUE == PalSpinand_SetDriving(0xFF, driving))
+        return 0;
+    return -1;
+}
+
+int nand_set_dev_driving(char * const argv[], int argc)
+{
+    ulong driving;
+    if (argc < 3 || argc > 4)
+        return 1;
+    driving = simple_strtoul(argv[2], NULL, 10);
+    if(ERR_SPINAND_SUCCESS == MDrv_SPINAND_SetDevDriving(driving))
+        return 0;
+    return -1;
+}
+#endif
+
+///@retval 0 Changed State
+///@retval 1 No need to change state
+int nand_set_quad_mode(int enable)
+{
+    U16 status;
+    U8 u8Data[2];
+    MDrv_SPINAND_ReadStatusRegister((U8*)&status, SPI_NAND_REG_FEAT);
+
+    MDrv_SPINAND_ReadID(2,u8Data);
+    //2c 34 flash BOh 0bit is continue read---keep close
+    if(u8Data[0] == 0x2C && (u8Data[1] == 0x34 || u8Data[1] == 0x36))
+    {
+        if((status & QUAD_ENABLE) == 0)
+            return 0;
+        status &= ~QUAD_ENABLE;
+        MDrv_SPINAND_WriteStatusRegister((U8*)&status, SPI_NAND_REG_FEAT);
+        return 0;
+    }
+
+    if(enable) {
+        if((status & QUAD_ENABLE) == 0) {
+            status |= QUAD_ENABLE;
+            MDrv_SPINAND_WriteStatusRegister((U8*)&status, SPI_NAND_REG_FEAT);
+            return 0;
+        }
+    }
+    else {
+        if((status & QUAD_ENABLE)) {
+            status &= ~QUAD_ENABLE;
+            MDrv_SPINAND_WriteStatusRegister((U8*)&status, SPI_NAND_REG_FEAT);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int i, ret = 0;
+    ulong addr;
+    loff_t off, size, maxsize;
+    char *cmd, *s;
+    nand_info_t *nand;
+#ifdef CONFIG_SYS_NAND_QUIET
+    int quiet = CONFIG_SYS_NAND_QUIET;
+#else
+    int quiet = 0;
+#endif
+    const char *quiet_str = getenv("quiet");
+    int dev = nand_curr_device;
+    int repeat = flag & CMD_FLAG_REPEAT;
+
+    /* at least two arguments please */
+    if (argc < 2)
+        goto usage;
+
+    if (quiet_str)
+        quiet = simple_strtoul(quiet_str, NULL, 0) != 0;
+
+    cmd = argv[1];
+
+    /* Only "dump" is repeatable. */
+    if (repeat && strcmp(cmd, "dump"))
+        return 0;
+
+    if (strcmp(cmd, "info") == 0) {
+
+        putc('\n');
+        for (i = 0; i < CONFIG_SYS_MAX_NAND_DEVICE; i++) {
+            if (nand_info[i].name)
+                nand_print_and_set_info(i);
+        }
+        return 0;
+    }
+
+    if (strcmp(cmd, "device") == 0) {
+        if (argc < 3) {
+            putc('\n');
+            if (dev < 0 || dev >= CONFIG_SYS_MAX_NAND_DEVICE)
+                puts("no devices available\n");
+            else
+                nand_print_and_set_info(dev);
+            return 0;
+        }
+
+        dev = (int)simple_strtoul(argv[2], NULL, 10);
+        set_dev(dev);
+
+        return 0;
+    }
+
+#if LOCAL_DBG_CMDS
+    if(strcmp(cmd, "clk") == 0) {
+        if(argc == 2)
+        {
+            HAL_SPINAND_DumpCkg();
+        }
+        else
+        {
+            int clk;
+            BOOL bRet;
+            clk = (int)simple_strtoul(argv[2], NULL, 10);
+            bRet = HAL_SPINAND_SetCKG(clk);
+            printf("ret = %d\n", bRet);
+        }
+        return 0;
+    }
+#endif
 
 #ifdef CONFIG_ENV_OFFSET_OOB
 	/* this command operates only on the first nand device */
@@ -617,7 +1563,24 @@ static int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 				}
 			}
 		}
-		ret = nand_erase_opts(nand, &opts);
+		{
+#if TIME_MEASUREMENT
+		    u64 timeStart;
+		    s32 timeDiff;
+		    u32 kBps = (u32)-1;//k bytes per seconds
+		    timeStart = _getsysts();
+#endif
+		    ret = nand_erase_opts(nand, &opts);
+#if TIME_MEASUREMENT
+		    timeDiff = ((s32)(_getsysts() - timeStart))/6;//us
+		    if(size != 0 && timeDiff != 0)
+		    {
+		        //kBps = ((u32)size * 1000)/timeDiff;//~ up to 4 seconds
+		        kBps = (size * 1000.0f)/timeDiff;
+		    }
+		    printf("Time:%d us, speed:%d KB/s\n", timeDiff, kBps);
+#endif
+		}
 		printf("%s\n", ret ? "ERROR" : "OK");
 
 		return ret == 0 ? 0 : 1;
@@ -682,15 +1645,75 @@ static int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		nand = &nand_info[dev];
 
 		if (!s || !strcmp(s, ".jffs2") ||
-		    !strcmp(s, ".e") || !strcmp(s, ".i")) {
-			if (read)
-				ret = nand_read_skip_bad(nand, off, &rwsize,
-							 NULL, maxsize,
-							 (u_char *)addr);
-			else
-				ret = nand_write_skip_bad(nand, off, &rwsize,
-							  NULL, maxsize,
-							  (u_char *)addr, 0);
+		    !strcmp(s, ".e") || !strcmp(s, ".i") || !strcmp(s,".1")) {
+
+            if(!read)
+            {
+#ifdef CONFIG_MS_SPINAND_QUAD_WRITE
+                nand_set_quad_mode(1);
+#endif
+            }
+            else
+            {
+#ifdef CONFIG_MS_SPINAND_QUAD_READ
+                nand_set_quad_mode(1);
+#endif
+            }
+
+
+#if LOCAL_DBG_CMDS
+		    if(!strcmp(s,".1")) //1 for walking 1 pattern
+		    {
+		        char *p = (char*)addr;
+		        char pat[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
+		        for(i = 0; i < 0x800; i++)
+		        {
+		            p[i] = pat[i%8];
+		        }
+		    }
+#endif
+
+#if TIME_MEASUREMENT
+                u64 timeStart;
+                s32 timeDiff;
+                u32 kBps = (u32)-1;//k bytes per seconds
+                timeStart = _getsysts();
+#endif
+                if (read) {
+                    ret = nand_read_skip_bad(nand, off, &rwsize,
+                                             NULL, maxsize,
+                                             (u_char *)addr);
+                }
+                else {
+                    if (!strncmp(argv[3], "IPL", 3)) {
+                        ret = 1;
+                        while (rwsize <= maxsize) {
+                            if (0 == nand_write_skip_bad(nand, off, &rwsize,
+                                                         NULL, nand->erasesize,
+                                                         (u_char *)addr, 0)) {
+                                ret = 0;
+                            }
+
+                            off += nand->erasesize;
+                            maxsize = (nand->erasesize > maxsize)? maxsize : (maxsize - nand->erasesize);
+                        }
+                    }
+                    else {
+                        ret = nand_write_skip_bad(nand, off, &rwsize,
+                                                  NULL, maxsize,
+                                                  (u_char *)addr, 0);
+                    }
+                }
+#if TIME_MEASUREMENT
+                timeDiff = ((s32)(_getsysts() - timeStart))/6;//us
+                if(rwsize != 0 && timeDiff != 0)
+                {
+                    //kBps = (rwsize * 1000)/timeDiff;//max ~ 4 seconds
+                    kBps = (rwsize * 1000.0f)/timeDiff;
+                }
+                printf("Time:%d us, speed:%d KB/s\n", timeDiff, kBps);
+#endif
+
 #ifdef CONFIG_CMD_NAND_TRIMFFS
 		} else if (!strcmp(s, ".trimffs")) {
 			if (read) {
@@ -735,6 +1758,22 @@ static int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 		return ret == 0 ? 0 : 1;
 	}
+#if LOCAL_DBG_CMDS
+    if (strncmp(cmd, "drv", 3) == 0) {
+        s = strchr(cmd, '.');
+        if(!strcmp(s, ".gd")) {
+            if(0 != nand_set_dev_driving(argv, argc)) {
+                goto usage;
+            }
+        }
+        else if(0 != nand_set_driving(argv, argc)) {
+            goto usage;
+        }
+        else{
+        }
+        return 0;
+    }
+#endif
 
 #ifdef CONFIG_CMD_NAND_TORTURE
 	if (strcmp(cmd, "torture") == 0) {
@@ -754,6 +1793,30 @@ static int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return ret == 0 ? 0 : 1;
 	}
 #endif
+
+	if ((strcmp(cmd, "otpr") == 0) || (strcmp(cmd, "otpw") == 0)) {
+	    ret = otp_access(nand, cmd, argc, argv);
+	    return ret;
+	}
+
+    if (strcmp(cmd, "otplock") == 0) {
+        ret = (int)MDrv_SPINAND_LockOtp();
+        if(ret == ERR_SPINAND_SUCCESS)
+        {
+            printf("OTP Region locked\n");
+            return 0;
+        }
+        return 1;
+    }
+
+    if ((strcmp(cmd, "echo") == 0)) {
+        printf("\n\nEnter echo\n");
+        if(argv[2]!=0)
+            printf("%s\n", argv[2]);
+        else
+            printf("null\n");
+        return 0;
+    }
 
 	if (strcmp(cmd, "markbad") == 0) {
 		argc -= 2;
@@ -832,6 +1895,13 @@ static int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	}
 #endif
 
+#if IF_IP_VERIFY
+	if (strncmp(cmd, "ipverify", 8) == 0) {
+		drvNAND_IPVerify_Main();
+		return 0;
+	}
+#endif
+
 usage:
 	return CMD_RET_USAGE;
 }
@@ -841,7 +1911,7 @@ static char nand_help_text[] =
 	"info - show available NAND devices\n"
 	"nand device [dev] - show or set current device\n"
 	"nand read - addr off|partition size\n"
-	"nand write - addr off|partition size\n"
+	"nand write - addr off|partition size [blocks_per_sub_partition]\n"
 	"    read/write 'size' bytes starting at offset 'off'\n"
 	"    to/from memory address 'addr', skipping bad blocks.\n"
 	"nand read.raw - addr off|partition [count]\n"
@@ -872,7 +1942,7 @@ static char nand_help_text[] =
 	"nand scrub [-y] off size | scrub.part partition | scrub.chip\n"
 	"    really clean NAND erasing bad blocks (UNSAFE)\n"
 	"nand markbad off [...] - mark bad block(s) at offset (UNSAFE)\n"
-	"nand biterr off - make a bit error at offset (UNSAFE)"
+	"nand biterr off - make a bit error at offset (UNSAFE)\n"
 #ifdef CONFIG_CMD_NAND_LOCK_UNLOCK
 	"\n"
 	"nand lock [tight] [status]\n"
@@ -886,7 +1956,20 @@ static char nand_help_text[] =
 	"nand env.oob set off|partition - set enviromnent offset\n"
 	"nand env.oob get - get environment offset"
 #endif
+    "nand otpr[.raw] addr off size - Read OTP Region\n"
+    "nand otpw[.raw] addr off size - Write OTP Region\n"
+    "    read/write 'size' bytes starting at OTP offset 'off'\n"
+    "    to/from memory address 'addr'\n"
+    "nand otplock - Lock OTP Region\n"
+#if LOCAL_DBG_CMDS
+	"nand write.1 - addr off|partition size\n"
+    "    write walking 1 pattern for quad mode debugging\n"
+    "nand drv[.X] 0|1 - Set driving level. X:gd\n"
+    "nand clk [new_clk]- Show/set current possible SPI CLK\n"
+#endif
 	"";
+#endif
+
 #endif
 
 U_BOOT_CMD(

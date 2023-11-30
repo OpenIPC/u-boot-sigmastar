@@ -342,24 +342,6 @@ struct usb_string_descriptor {
 
 /*-------------------------------------------------------------------------*/
 
-/* USB_DT_INTERFACE: Interface descriptor */
-struct usb_interface_descriptor {
-	__u8  bLength;
-	__u8  bDescriptorType;
-
-	__u8  bInterfaceNumber;
-	__u8  bAlternateSetting;
-	__u8  bNumEndpoints;
-	__u8  bInterfaceClass;
-	__u8  bInterfaceSubClass;
-	__u8  bInterfaceProtocol;
-	__u8  iInterface;
-} __attribute__ ((packed));
-
-#define USB_DT_INTERFACE_SIZE		9
-
-/*-------------------------------------------------------------------------*/
-
 /* USB_DT_ENDPOINT: Endpoint descriptor */
 struct usb_endpoint_descriptor {
 	__u8  bLength;
@@ -375,6 +357,27 @@ struct usb_endpoint_descriptor {
 	__u8  bRefresh;
 	__u8  bSynchAddress;
 } __attribute__ ((packed));
+
+/* USB_DT_INTERFACE: Interface descriptor */
+struct usb_interface_descriptor {
+	__u8  bLength;
+	__u8  bDescriptorType;
+
+	__u8  bInterfaceNumber;
+	__u8  bAlternateSetting;
+	__u8  bNumEndpoints;
+	__u8  bInterfaceClass;
+	__u8  bInterfaceSubClass;
+	__u8  bInterfaceProtocol;
+	__u8  iInterface;
+#if 1 // MSTAR
+	//struct usb_endpoint_descriptor ep_desc[16];
+#endif
+} __attribute__ ((packed));
+
+#define USB_DT_INTERFACE_SIZE		9
+
+/*-------------------------------------------------------------------------*/
 
 #define USB_DT_ENDPOINT_SIZE		7
 #define USB_DT_ENDPOINT_AUDIO_SIZE	9	/* Audio extension */

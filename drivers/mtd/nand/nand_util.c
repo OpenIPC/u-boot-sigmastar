@@ -187,7 +187,7 @@ int nand_erase_opts(nand_info_t *meminfo, const nand_erase_options_t *opts)
 
 #define NAND_CMD_LOCK_TIGHT     0x2c
 #define NAND_CMD_LOCK_STATUS    0x7a
- 
+
 /******************************************************************************
  * Support for locking / unlocking operations of some NAND devices
  *****************************************************************************/
@@ -463,6 +463,46 @@ static size_t drop_ffs(const nand_info_t *nand, const u_char *buf,
 }
 #endif
 
+#ifdef CONFIG_MS_SPINAND
+#ifndef CONFIG_MS_NAND_ONEBIN
+#include "../../mstar/spinand/inc/common/spinand.h"
+#endif
+#if 0
+static int get_part(const char *partname, int *idx, int *off, int *size,
+		int *maxsize)
+{
+#ifdef CONFIG_CMD_MTDPARTS
+	struct mtd_device *dev;
+	struct part_info *part;
+	u8 pnum;
+	int ret;
+
+	ret = mtdparts_init();
+	if (ret)
+		return ret;
+
+	ret = find_dev_and_part(partname, &dev, &pnum, &part);
+
+	if (ret)
+		return ret;
+
+	if (dev->id->type != MTD_DEV_TYPE_NAND) {
+		puts("not a NAND device\n");
+		return -1;
+	}
+
+	*off = part->offset;
+	*size = part->size;
+	*maxsize = part->size;
+	*idx = dev->id->num;
+	return 0;
+#else
+	puts("offset is not a number\n");
+	return -1;
+#endif
+}
+#endif
+#endif
 /**
  * nand_write_skip_bad:
  *
@@ -566,13 +606,13 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 	while (left_to_write > 0) {
 		size_t block_offset = offset & (nand->erasesize - 1);
 		size_t write_size, truncated_write_size;
-
 		WATCHDOG_RESET();
 
-		if (nand_block_isbad(nand, offset & ~(nand->erasesize - 1))) {
-			printf("Skip bad block 0x%08llx\n",
-				offset & ~(nand->erasesize - 1));
-			offset += nand->erasesize - block_offset;
+		if (nand_block_isbad(nand, offset & ~(nand->erasesize - 1)))
+        {
+            printf("Skip bad block 0x%08llx\n",
+				    offset & ~(nand->erasesize - 1));
+            offset += nand->erasesize - block_offset;
 			continue;
 		}
 
@@ -708,7 +748,6 @@ int nand_read_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 	while (left_to_read > 0) {
 		size_t block_offset = offset & (nand->erasesize - 1);
 		size_t read_length;
-
 		WATCHDOG_RESET();
 
 		if (nand_block_isbad(nand, offset & ~(nand->erasesize - 1))) {

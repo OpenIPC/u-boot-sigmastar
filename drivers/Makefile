@@ -23,3 +23,5 @@ obj-y += input/
 # SOC specific infrastructure drivers.
 obj-y += soc/
 obj-y += thermal/
+obj-$(CONFIG_MSTAR_DRIVERS) += mstar/ 
+obj-$(CONFIG_FASTBOOT) += fastboot/

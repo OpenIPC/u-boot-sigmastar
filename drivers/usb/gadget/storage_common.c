@@ -309,7 +309,11 @@ static struct fsg_lun *fsg_lun_from_dev(struct device *dev)
 #define FSG_NUM_BUFFERS	2
 
 /* Default size of buffer length. */
+#ifdef CONFIG_USB_GADGET_FIRMWARE_UPDATE
+#define FSG_BUFLEN	((u32)32768)
+#else
 #define FSG_BUFLEN	((u32)16384)
+#endif
 
 /* Maximal number of LUNs supported in mass storage function */
 #define FSG_MAX_LUNS	8
@@ -584,7 +588,7 @@ static void fsg_lun_close(struct fsg_lun *curlun)
 }
 
 /*-------------------------------------------------------------------------*/
-
+#ifdef CONFIG_USB_GADGET_MASS_STORAGE
 /*
  * Sync the file data, don't bother with the metadata.
  * This code was copied from fs/buffer.c:sys_fdatasync().
@@ -611,5 +615,6 @@ static void store_cdrom_address(u8 *dest, int msf, u32 addr)
 		put_unaligned_be32(addr, dest);
 	}
 }
+#endif
 
 /*-------------------------------------------------------------------------*/

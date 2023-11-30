@@ -9,15 +9,20 @@ ifndef CONFIG_STANDALONE_LOAD_ADDR
 ifneq ($(CONFIG_OMAP_COMMON),)
 CONFIG_STANDALONE_LOAD_ADDR = 0x80300000
 else
-CONFIG_STANDALONE_LOAD_ADDR = 0xc100000
+CONFIG_STANDALONE_LOAD_ADDR = 0x21000000
 endif
 endif
 
 LDFLAGS_FINAL += --gc-sections
 PLATFORM_RELFLAGS += -ffunction-sections -fdata-sections \
 		     -fno-common -ffixed-r9
-PLATFORM_RELFLAGS += $(call cc-option, -msoft-float) \
+ifdef CONFIG_USE_TOOLCHAIN_DEFAULT_FLOAT_ABI
+PLATFORM_RELFLAGS += \
       $(call cc-option,-mshort-load-bytes,$(call cc-option,-malignment-traps,))
+else
+PLATFORM_RELFLAGS += $(call cc-option, -mfloat-abi=soft) \
+      $(call cc-option,-mshort-load-bytes,$(call cc-option,-malignment-traps,))
+endif
 
 # Support generic board on ARM
 __HAVE_ARCH_GENERIC_BOARD := y
@@ -134,4 +139,9 @@ else
 ALL-y += u-boot.imx
 endif
 endif
+endif
+
+
+ifeq ($(CONFIG_SSTAR_SPL_EARLY_BSS),y)
+LDSCRIPT := $(srctree)/arch/arm/cpu/armv7/$(CONFIG_SYS_SOC:"%"=%)/u-boot.lds
 endif

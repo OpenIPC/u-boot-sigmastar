@@ -1,0 +1,56 @@
+if MERCURY6P
+
+config SYS_CONFIG_NAME
+    default "mercury6p"
+    ---help---
+    To load the "include/configs/mercury6p.h"
+
+
+config SYS_SOC
+    default "mercury6p"
+    ---help---
+    To generate correct  "arch/arm/include/asm/arch"
+
+config SYS_GENERIC_BOARD
+    bool
+    default y
+
+config VERSION_FPGA
+    bool "FPGA version"
+    default n
+
+config SS_BOOTING_PERF
+    bool "booting time"
+    default y
+
+config SSTAR_SPL_EARLY_BSS
+    bool "clear bss section first before run board_f"
+    default n
+
+config SS_SWITCH_AARCH64
+    bool "switch_aarch64"
+    default y
+
+config SS_SMF_LOAD_64_KERNEL_ENTRY
+    bool "smf load 64bit kernel-entry"
+    select SS_SWITCH_AARCH64
+    default n
+
+config VERSION_PZ1
+    bool "Palladium version"
+    default n
+    ---help---
+    This will disable some board settings.
+    And it will enable the system DCache to speed up kernel loading.
+config USE_ARCH_MEMSET
+    bool "Use arm's memset"
+    default n
+    ---help---
+    Use arm  memset implementation install of C lib.
+endif
+
+config USE_TOOLCHAIN_DEFAULT_FLOAT_ABI
+    bool "Use toolchain default float ABI"
+    default n
+    ---help---
+    Enable uboot to use the same float ABI as toolchain

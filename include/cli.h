@@ -152,6 +152,12 @@ void cli_loop(void);
 /** Set up the command line interpreter ready for action */
 void cli_init(void);
 
+#if defined(CONFIG_MSTAR_DRIVERS)
+extern unsigned int get_ms_ticks(void);
+extern unsigned int get_full_ms_ticks(void);
+#define endtick(seconds) (get_ms_ticks() + (uint64_t)(seconds) * get_full_ms_ticks())
+#else
 #define endtick(seconds) (get_ticks() + (uint64_t)(seconds) * get_tbclk())
+#endif
 
 #endif

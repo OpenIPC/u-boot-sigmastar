@@ -803,6 +803,75 @@ config ARCH_UNIPHIER
 	select SPL
 	select OF_CONTROL if !SPL_BUILD
 
+config CEDRIC
+    bool "Cedric platform"
+    select CPU_V7
+    select TARGET_CEDRIC
+
+config CHICAGO
+    bool "Chicago platform"
+    select CPU_V7
+    select TARGET_CHICAGO
+
+config INFINITY
+    bool "Infinity platform"
+    select CPU_V7
+    select TARGET_INFINITY
+
+config INFINITY3
+    bool "Infinity3 platform"
+    select CPU_V7
+    select TARGET_INFINITY3
+
+config INFINITY5
+    bool "Infinity5 platform"
+    select CPU_V7
+    select TARGET_INFINITY5
+
+config INFINITY6
+    bool "Infinity6 platform"
+    select CPU_V7
+    select TARGET_INFINITY6
+
+config INFINITY2M
+    bool "Infinity2m platform"
+    select CPU_V7
+    select TARGET_INFINITY2M
+
+config INFINITY6E
+    bool "Infinity6e platform"
+    select CPU_V7
+    select TARGET_INFINITY6E
+
+config INFINITY6B0
+    bool "Infinity6b0 platform"
+    select CPU_V7
+    select TARGET_INFINITY6B0
+
+config PIONEER3
+    bool "Pioneer3 platform"
+    select CPU_V7
+    select TARGET_PIONEER3
+
+config MERCURY6
+    bool "Mercury6 platform"
+    select CPU_V7
+    select TARGET_MERCURY6
+
+config INFINITY7
+    bool "Infinity7 platform"
+    select CPU_V7
+    select TARGET_INFINITY7
+
+config MERCURY6P
+   bool "Mercury6p platform"
+   select CPU_V7
+   select TARGET_MERCURY6P
+
+config INFINITY6C
+    bool "Infinity6c platform"
+    select CPU_V7
+    select TARGET_INFINITY6C
 endchoice
 
 source "arch/arm/cpu/arm926ejs/davinci/Kconfig"
@@ -836,6 +905,34 @@ source "arch/arm/cpu/armv7/uniphier/Kconfig"
 source "arch/arm/cpu/arm926ejs/versatile/Kconfig"
 
 source "arch/arm/cpu/armv7/zynq/Kconfig"
+
+source "arch/arm/cpu/armv7/cedric/Kconfig"
+
+source "arch/arm/cpu/armv7/chicago/Kconfig"
+
+source "arch/arm/cpu/armv7/infinity/Kconfig"
+
+source "arch/arm/cpu/armv7/infinity3/Kconfig"
+
+source "arch/arm/cpu/armv7/infinity5/Kconfig"
+
+source "arch/arm/cpu/armv7/infinity6/Kconfig"
+
+source "arch/arm/cpu/armv7/infinity2m/Kconfig"
+
+source "arch/arm/cpu/armv7/infinity6e/Kconfig"
+
+source "arch/arm/cpu/armv7/infinity6b0/Kconfig"
+
+source "arch/arm/cpu/armv7/pioneer3/Kconfig"
+
+source "arch/arm/cpu/armv7/mercury6/Kconfig"
+
+source "arch/arm/cpu/armv7/infinity7/Kconfig"
+
+source "arch/arm/cpu/armv7/mercury6p/Kconfig"
+
+source "arch/arm/cpu/armv7/infinity6c/Kconfig"
 
 source "arch/arm/cpu/armv7/Kconfig"
 
@@ -985,5 +1082,7 @@ source "board/xaeniax/Kconfig"
 source "board/zipitz2/Kconfig"
 
 source "arch/arm/Kconfig.debug"
+
+
 
 endmenu

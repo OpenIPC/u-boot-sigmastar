@@ -6,6 +6,7 @@
 #
 
 ifndef CONFIG_SPL_BUILD
+obj-$(CONFIG_XZ) += xz/
 
 obj-$(CONFIG_RSA) += rsa/
 obj-$(CONFIG_LZMA) += lzma/
@@ -67,5 +68,6 @@ obj-$(CONFIG_TRACE) += trace.o
 obj-$(CONFIG_LIB_UUID) += uuid.o
 obj-y += vsprintf.o
 obj-$(CONFIG_LIB_RAND) += rand.o
+obj-$(CONFIG_MZ) += uminiz.o
 
 subdir-ccflags-$(CONFIG_CC_OPTIMIZE_LIBS_FOR_SPEED) += -O2

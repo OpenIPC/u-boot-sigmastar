@@ -473,7 +473,7 @@ void HAL_MSPI_Init(struct mstar_spi *bs,MSPI_CH eChannel,u8 u8Mode)
     mutex_init(&hal_mspi_lock);
     if((eChannel > E_MSPI_MAX) || (u8Mode < 1))
     {
-        mspi_errmsg("mspi %d not supprted\n",eChannel);
+        mspi_errmsg("mspi %d not supported\n",eChannel);
         return;
     }
     else if((eChannel == E_MSPI0) && (u8Mode > 4))

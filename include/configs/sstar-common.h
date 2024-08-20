@@ -43,13 +43,16 @@
 	"kernsize=" __stringify(CONFIG_ENV_KERNSIZE) "\0" \
 	"rootaddr=" __stringify(CONFIG_ENV_ROOTADDR) "\0" \
 	"rootsize=" __stringify(CONFIG_ENV_ROOTSIZE) "\0" \
-	"cmdnor=sf probe 0; setenv setargs setenv bootargs ${bootargs}; run setargs; sf read ${baseaddr} ${kernaddr} ${kernsize}; bootm ${baseaddr}\0" \
-	"ubnor=sf probe 0; sf erase 0x0 ${kernaddr}; sf write ${baseaddr} 0x0 ${kernaddr}\0" \
-	"uknor=${updatetool} ${baseaddr} uImage.${soc}; sf probe 0; sf erase ${kernaddr} ${kernsize}; sf write ${baseaddr} ${kernaddr} ${filesize}\0" \
-	"urnor=${updatetool} ${baseaddr} rootfs.squashfs.${soc}; sf probe 0; sf erase ${rootaddr} ${rootsize}; sf write ${baseaddr} ${rootaddr} ${filesize}\0" \
 	"rootmtd=5120k\0" \
-	"updatetool=tftpboot\0" \
+	"cmdnor=sf probe 0; setenv setargs setenv bootargs ${bootargs}; run setargs; sf read ${baseaddr} ${kernaddr} ${kernsize}; bootm ${baseaddr}\0" \
+	"ubnor=${updatetool} ${baseaddr} u-boot-${soc}-nor.bin && run ubwrite\0" \
+	"uknor=${updatetool} ${baseaddr} uImage.${soc} && run ukwrite\0" \
+	"urnor=${updatetool} ${baseaddr} rootfs.squashfs.${soc} && run urwrite\0" \
+	"ubwrite=sf probe 0; sf erase 0x0 ${kernaddr}; sf write ${baseaddr} 0x0 ${kernaddr}\0" \
+	"ukwrite=sf probe 0; sf erase ${kernaddr} ${kernsize}; sf write ${baseaddr} ${kernaddr} ${filesize}\0" \
+	"urwrite=sf probe 0; sf erase ${rootaddr} ${rootsize}; sf write ${baseaddr} ${rootaddr} ${filesize}\0" \
 	"sdcard=setenv updatetool fatload mmc 0\0" \
+	"updatetool=tftpboot\0" \
 	"soc=" __stringify(PRODUCT_SOC)
 #endif
 
@@ -82,11 +85,13 @@
 	"baseaddr=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
 	"rootaddr=" __stringify(CONFIG_ENV_ROOTADDR) "\0" \
 	"rootsize=" __stringify(CONFIG_ENV_ROOTSIZE) "\0" \
-	"cmdnand=setenv setargs setenv bootargs ${bootargs}; run setargs; ubi part ubi; ubi read ${baseaddr} kernel; bootm ${baseaddr}\0" \
-	"ubnand=nand erase 0x0 ${rootaddr}; nand write ${baseaddr} 0x0 ${rootaddr}\0" \
-	"urnand=${updatetool} ${baseaddr} rootfs.ubi.${soc}; nand erase ${rootaddr} ${rootsize}; nand write ${baseaddr} ${rootaddr} ${filesize}\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
-	"updatetool=tftpboot\0" \
+	"cmdnand=setenv setargs setenv bootargs ${bootargs}; run setargs; ubi part ubi; ubi read ${baseaddr} kernel; bootm ${baseaddr}\0" \
+	"ubnand=${updatetool} ${baseaddr} u-boot-${soc}-nand.bin && run ubwrite\0" \
+	"urnand=${updatetool} ${baseaddr} rootfs.ubi.${soc} && run urwrite\0" \
+	"ubwrite=nand erase 0x0 ${rootaddr}; nand write ${baseaddr} 0x0 ${rootaddr}\0" \
+	"urwrite=nand erase ${rootaddr} ${rootsize}; nand write ${baseaddr} ${rootaddr} ${filesize}\0" \
 	"sdcard=setenv updatetool fatload mmc 0\0" \
+	"updatetool=tftpboot\0" \
 	"soc=" __stringify(PRODUCT_SOC)
 #endif

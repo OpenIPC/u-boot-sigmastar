@@ -42,7 +42,7 @@ for soc in ssc337de; do
 done
 
 # spinor infinity6c
-for soc in ssc377 ssc377d ssc377de ssc378de ssc378qe; do
+for soc in ssc377 ssc377d ssc377de ssc377qe ssc378de ssc378qe; do
 	spinor $soc infinity6c
 done
 

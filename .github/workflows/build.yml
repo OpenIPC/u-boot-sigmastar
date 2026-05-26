@@ -26,5 +26,5 @@ jobs:
         with:
           tag_name: latest
           files: |
-            u-boot-*/output/*-nor.bin
-            u-boot-*/output/*-nand.bin
+            output/*-nor.bin
+            output/*-nand.bin

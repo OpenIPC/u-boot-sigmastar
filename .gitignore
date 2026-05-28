@@ -18,6 +18,8 @@
 *.swp
 *.patch
 *.cfgtmp
+*.cmd
+.config*
 
 # host programs on Cygwin
 *.exe

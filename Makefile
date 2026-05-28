@@ -821,7 +821,6 @@ u-boot.bin: u-boot FORCE
 	$(call cmd,objcopy)
 	$(call DO_STATIC_RELA,$<,$@,$(CONFIG_SYS_TEXT_BASE))
 	$(BOARD_SIZE_CHECK)
-	@./create_img.sh $(CONFIG_IMAGE_POSTFIX)
 
 #ifdef CONFIG_UBOOT_PADDING_SIZE
 #	@python pad_file.py -i $(obj)/u-boot.bin -o $(obj)/UBOOT.bin -s $(CONFIG_UBOOT_PADDING_SIZE)

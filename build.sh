@@ -1,6 +1,6 @@
 #!/bin/sh
 export ARCH=arm
-export CROSS_COMPILE=arm-linux-gnueabi-
+export CROSS_COMPILE=arm-none-eabi-
 
 rm -rf output
 mkdir -p output
@@ -8,20 +8,24 @@ mkdir -p output
 spinor() {
 	make $2_defconfig
 	make -j8 KCFLAGS=-DPRODUCT_SOC=$1
+	./create_img.sh
 	sh make_boot_spinor.sh $2
 	mv BOOT.bin output/u-boot-$1-nor.bin
 	# make distclean
 }
-spinor ssc337 infinity6b0
-exit 0
 
 spinand() {
 	make $2_spinand_defconfig
 	make -j8 KCFLAGS=-DPRODUCT_SOC=$1
+	./create_img.sh
 	sh make_boot_spinand.sh $2
 	mv BOOT.bin output/u-boot-$1-nand.bin
-	make distclean
+	# make distclean
 }
+
+# FIXME
+# spinor ssc337 infinity6b0
+# exit 0
 
 # spinor infinity6
 for soc in ssc325; do

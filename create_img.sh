@@ -1,9 +1,17 @@
 #!/bin/sh
 rm -Rf u-boot.bin.mz
-rm -Rf u-boot.bin.xz
 
 ./mz c u-boot.bin u-boot.bin.mz
-xz -z -k u-boot.bin u-boot.bin.xz
+
+if grep -q ^CONFIG_OF_SEPARATE .config; then
+  uboot_bin=u-boot-dtb.bin
+else
+  uboot_bin=u-boot.bin
+fi
+rm -f $uboot_bin.xz
+xz -z -k $uboot_bin
+mv -v $uboot_bin.xz u-boot.bin.xz
+
 ms_ver="$(strings -a -T binary u-boot.bin | grep 'MVX' | grep 'UBT1501' | sed 's/\\*MVX/MVX/g' | cut -c 1-32)"
 ld_addr="$(gdb u-boot -ex 'p/x uboot_ld_addr' -ex 'quit' | grep '$1' | cut -d' ' -f3)"
 ep_addr="$(gdb u-boot -ex 'p/x uboot_ep_addr' -ex 'quit' | grep '$1' | cut -d' ' -f3)"

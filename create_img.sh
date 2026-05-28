@@ -22,8 +22,8 @@ xz -z -k $uboot_bin
 mv -v $uboot_bin.xz u-boot.bin.xz
 
 ms_ver="$(strings -a -T binary u-boot.bin | grep 'MVX' | grep 'UBT1501' | sed 's/\\*MVX/MVX/g' | cut -c 1-32)"
-ld_addr=$(gdb u-boot -ex 'p/x uboot_ld_addr' -ex 'quit' | grep "${CONFIG_IMAGE_POSTFIX}" | cut -d' ' -f3)
-ep_addr=$(gdb u-boot -ex 'p/x uboot_ep_addr' -ex 'quit' | grep "${CONFIG_IMAGE_POSTFIX}" | cut -d' ' -f3)
+ld_addr=$(gdb u-boot -ex 'p/x uboot_ld_addr' -ex 'quit' | grep '${CONFIG_IMAGE_POSTFIX}' | cut -d' ' -f3)
+ep_addr=$(gdb u-boot -ex 'p/x uboot_ep_addr' -ex 'quit' | grep '${CONFIG_IMAGE_POSTFIX}' | cut -d' ' -f3)
 
 #out_file=u-boot.img.bin
 out_file_mz=u-boot${CONFIG_IMAGE_POSTFIX}.mz.img.bin

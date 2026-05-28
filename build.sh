@@ -6,8 +6,8 @@ rm -rf output
 mkdir -p output
 
 spinor() {
-	# make $2_defconfig
-	make -j8 KCFLAGS=-DPRODUCT_SOC=$1 DEVICE_TREE=infinity6b0-ssc009a-s01a
+	make $2_defconfig
+	make -j8 KCFLAGS=-DPRODUCT_SOC=$1
 	sh make_boot_spinor.sh $2
 	mv BOOT.bin output/u-boot-$1-nor.bin
 	# make distclean

@@ -9,7 +9,7 @@ else
   uboot_bin=u-boot.bin
 fi
 rm -f $uboot_bin.xz
-xz -z -k $uboot_bin
+xz -z -k $uboot_bin || exit 1
 mv -v $uboot_bin.xz u-boot.bin.xz
 
 ms_ver="$(strings -a -T binary u-boot.bin | grep 'MVX' | grep 'UBT1501' | sed 's/\\*MVX/MVX/g' | cut -c 1-32)"

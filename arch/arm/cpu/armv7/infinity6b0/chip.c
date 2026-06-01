@@ -174,17 +174,17 @@ int checkboard(void)
         printf("* CONFIG_SYS_TEXT_BASE:   0X%08x                           \r\n",CONFIG_SYS_TEXT_BASE);
         printf("* CONFIG_SYS_SDRAM_BASE:  0X%08x                           \r\n",CONFIG_SYS_SDRAM_BASE);
         printf("* CONFIG_SYS_INIT_SP_ADDR:0X%08x  (gd_t *)pointer          \r\n",CONFIG_SYS_INIT_SP_ADDR);
-        printf("* SCFG_MEMP_START:        0X%08x                           \r\n",SCFG_MEMP_START);
-        printf("* SCFG_PNLP_START:        0X%08x                           \r\n",SCFG_PNLP_START);
+        // printf("* SCFG_MEMP_START:        0X%08x                           \r\n",SCFG_MEMP_START);
+        // printf("* SCFG_PNLP_START:        0X%08x                           \r\n",SCFG_PNLP_START);
         printf("* BOOT_PARAMS:            0X%08x                           \r\n",BOOT_PARAMS);
         printf("* CONFIG_SYS_LOAD_ADDR:   0X%08x                           \r\n",CONFIG_SYS_LOAD_ADDR);
         //printf("* KERNEL_RAM_BASE:0X%08x                                   \r\n",KERNEL_RAM_BASE);
-        printf("* CONFIG_UNLZO_DST_ADDR:  0X%08x                           \r\n",CONFIG_UNLZO_DST_ADDR);
+        // printf("* CONFIG_UNLZO_DST_ADDR:  0X%08x                           \r\n",CONFIG_UNLZO_DST_ADDR);
         printf("\r\n");
         printf("* CONFIG_ENV_SIZE:        0X%08x                           \r\n",CONFIG_ENV_SIZE);
         printf("* CONFIG_SYS_MALLOC_LEN:  0X%08x                           \r\n",CONFIG_SYS_MALLOC_LEN);
         printf("* CONFIG_STACKSIZE:       0X%08x                           \r\n",CONFIG_STACKSIZE);
-        printf("* KERNEL_IMAGE_SIZE:      0X%08x                           \r\n",KERNEL_IMAGE_SIZE);
+        // printf("* KERNEL_IMAGE_SIZE:      0X%08x                           \r\n",KERNEL_IMAGE_SIZE);
         printf("***********************************************************\r\n");
 #endif
 	return 0;

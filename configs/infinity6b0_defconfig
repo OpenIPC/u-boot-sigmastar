@@ -255,7 +255,7 @@ CONFIG_SS_BOOTING_PERF=y
 #
 # Info commands
 #
-# CONFIG_CMD_BDI is not set
+CONFIG_CMD_BDI=y
 # CONFIG_CMD_CONSOLE is not set
 # CONFIG_CMD_LICENSE is not set
 

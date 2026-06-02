@@ -102,6 +102,27 @@ DEVINFO_CHIP_TYPE ms_check_chip(void)
 	return DEVINFO_NON;
 }
 
+DEVINFO_BOOT_TYPE ms_devinfo_boot_type(void)
+{
+    //U16 hwstrap,b_extEcc;
+    //U16 bootFlow;
+    U16 u16Storage;
+    //hwstrap = INREG16( GET_REG_ADDR(MS_BASE_REG_DID_KEY_PA, 0x70));
+	//b_extEcc = INREG16( GET_REG_ADDR(REG_ADDR_BASE_PADTOP, 0x72)) & BIT0;
+	//bootFlow = INREG16( GET_REG_ADDR(REG_ADDR_BASE_PADTOP, 0x5C));
+    u16Storage = (INREG16( GET_REG_ADDR(REG_ADDR_BASE_PM_SLEEP, 0x1F) ) >> 10) & STORAGE_BOOT_TYPES;
+
+    if(u16Storage == STORAGE_SPI_NOR || u16Storage == STORAGE_SPI_NOR_SKIP_SD)
+    {
+        return DEVINFO_BOOT_TYPE_SPI;
+    }
+    else if(u16Storage == STORAGE_SPI_NAND || u16Storage == STORAGE_SPI_NAND_SKIP_SD)
+    {
+        return DEVINFO_BOOT_TYPE_SPINAND_INT_ECC;
+    }
+    return DEVINFO_BOOT_TYPE_NONE;
+}
+
 int checkboard(void)
 {
 /*
@@ -144,27 +165,31 @@ int checkboard(void)
         {
             printf("%c",UBT_VERSION.chip[i]);
         }
+        printf("-");
         for(i=0;i<8;i++)
         {
             printf("%c",UBT_VERSION.changelist[i]);
         }
         printf("\n");
-        /*
-		switch (ms_check_chip())
-		{
-			case DEVINFO_313E:
-				printf("DEVINFO: 313E\n");
-				break;
-			case DEVINFO_318:
-				printf("DEVINFO: 318\n");
-				break;
-			case DEVINFO_NON:
-				printf("DEVINFO: NON\n");
-				break;
-			default:
-				printf("DEVINFO:ERROR\n");
-		}
-        */
+
+        U16 chipType;
+	    chipType = INREG16(GET_REG_ADDR(REG_ADDR_BASE_MIU, 0x69));
+        printf("Chip type: 0x%04x\n",chipType);
+
+        switch (ms_devinfo_boot_type())
+        {
+            case DEVINFO_BOOT_TYPE_SPI:
+                printf("Boot type: SPI NOR\n");
+                break;
+            case DEVINFO_BOOT_TYPE_SPINAND_INT_ECC:
+                printf("Boot type: SPI NAND (Internal ECC)\n");
+                break;
+            case DEVINFO_BOOT_TYPE_EMMC:
+                printf("Boot type: eMMC\n");
+                break;
+            default:
+                printf("Boot type: UNKNOWN\n");
+        }
 
 #ifdef CONFIG_CMD_BDI
         printf("***********************************************************\r\n");
@@ -189,30 +214,6 @@ int checkboard(void)
 #endif
 	return 0;
 }
-
-
-
-DEVINFO_BOOT_TYPE ms_devinfo_boot_type(void)
-{
-    //U16 hwstrap,b_extEcc;
-    //U16 bootFlow;
-    U16 u16Storage;
-    //hwstrap = INREG16( GET_REG_ADDR(MS_BASE_REG_DID_KEY_PA, 0x70));
-	//b_extEcc = INREG16( GET_REG_ADDR(REG_ADDR_BASE_PADTOP, 0x72)) & BIT0;
-	//bootFlow = INREG16( GET_REG_ADDR(REG_ADDR_BASE_PADTOP, 0x5C));
-    u16Storage = (INREG16( GET_REG_ADDR(REG_ADDR_BASE_PM_SLEEP, 0x1F) ) >> 10) & STORAGE_BOOT_TYPES;
-
-    if(u16Storage == STORAGE_SPI_NOR || u16Storage == STORAGE_SPI_NOR_SKIP_SD)
-    {
-        return DEVINFO_BOOT_TYPE_SPI;
-    }
-    else if(u16Storage == STORAGE_SPI_NAND || u16Storage == STORAGE_SPI_NAND_SKIP_SD)
-    {
-        return DEVINFO_BOOT_TYPE_SPINAND_INT_ECC;
-    }
-    return DEVINFO_BOOT_TYPE_NONE;
-}
-
 
 /*
 

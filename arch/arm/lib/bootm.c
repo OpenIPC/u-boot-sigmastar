@@ -316,6 +316,11 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 	else
 		r2 = gd->bd->bi_boot_params;
 
+#ifdef CONFIG_OF_CONTROL
+    r2 += 0xc00000; // FIXME
+	memcpy((void *)r2, (void *)gd->fdt_blob, fdt_totalsize((void *)gd->fdt_blob));
+#endif
+
 	if (!fake) {
 #if defined(CONFIG_ARMV7_NONSEC) || defined(CONFIG_ARMV7_VIRT)
 		if (armv7_boot_nonsec()) {

@@ -34,8 +34,8 @@ CONFIG_ARM=y
 # CONFIG_X86 is not set
 CONFIG_SYS_ARCH="arm"
 CONFIG_SYS_CPU="armv7"
-CONFIG_SYS_SOC="infinity6b0"
-CONFIG_SYS_CONFIG_NAME="infinity6b0"
+CONFIG_SYS_SOC="infinity6"
+CONFIG_SYS_CONFIG_NAME="infinity6"
 
 #
 # ARM architecture
@@ -220,10 +220,10 @@ CONFIG_CPU_V7=y
 # CONFIG_INFINITY is not set
 # CONFIG_INFINITY3 is not set
 # CONFIG_INFINITY5 is not set
-# CONFIG_INFINITY6 is not set
+CONFIG_INFINITY6=y
 # CONFIG_INFINITY2M is not set
 # CONFIG_INFINITY6E is not set
-CONFIG_INFINITY6B0=y
+# CONFIG_INFINITY6B0 is not set
 # CONFIG_PIONEER3 is not set
 # CONFIG_MERCURY6 is not set
 # CONFIG_INFINITY7 is not set
@@ -253,7 +253,7 @@ CONFIG_SS_BOOTING_PERF=y
 #
 # Info commands
 #
-CONFIG_CMD_BDI=y
+# CONFIG_CMD_BDI is not set
 # CONFIG_CMD_CONSOLE is not set
 # CONFIG_CMD_LICENSE is not set
 
@@ -364,8 +364,6 @@ CONFIG_SUPPORT_OF_CONTROL=y
 # Device Tree Control
 #
 # CONFIG_OF_CONTROL is not set
-# CONFIG_OF_SEPARATE is not set
-# CONFIG_OF_EMBED is not set
 CONFIG_DEFAULT_DEVICE_TREE=""
 # CONFIG_NET is not set
 
@@ -441,7 +439,7 @@ CONFIG_IMAGE_POSTFIX=""
 # CONFIG_SSTAR_AUTORUN_DSTAR is not set
 # CONFIG_SSTAR_INI_PARSER is not set
 # CONFIG_MS_EMMC_RECOVERY is not set
-CONFIG_SSTAR_PWM=y
+# CONFIG_SSTAR_PWM is not set
 # CONFIG_SSTAR_SAR is not set
 # CONFIG_SSTAR_AIO is not set
 # CONFIG_SSTAR_KEYPAD is not set

@@ -1,67 +1,89 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
 export ARCH=arm
 export CROSS_COMPILE=arm-none-eabi-
 
 rm -rf output
 mkdir -p output
 
-spinor() {
-	make $2_defconfig
-	make -j8 KCFLAGS=-DPRODUCT_SOC=$1
-	./create_img.sh
-	sh make_boot_spinor.sh $2
-	mv BOOT.bin output/u-boot-$1-nor.bin
-	# make distclean
-}
+# dts_path=../output/ssc337/build/linux-custom/arch/arm/boot/dts
+# board=infinity6b0-ssc009a-s01a
 
-spinand() {
-	make $2_spinand_defconfig
-	make -j8 KCFLAGS=-DPRODUCT_SOC=$1
-	./create_img.sh
-	sh make_boot_spinand.sh $2
-	mv BOOT.bin output/u-boot-$1-nand.bin
-	# make distclean
-}
+build() {
+	soc=$1
+	flash=$2
 
-# FIXME
-# spinor ssc337 infinity6b0
-# exit 0
+	case $soc in
+		ssc325|ssc325de)
+			family=infinity6
+			;;
+		ssc333|ssc335|ssc337|ssc335de|ssc337de)
+			family=infinity6b0
+			;;
+		ssc377|ssc377d|ssc377de|ssc377qe|ssc378de|ssc378qe)
+			family=infinity6c
+			;;
+		ssc30kd|ssc30kq|ssc338q)
+			family=infinity6e
+			;;
+		*)
+			echo "Unknown SOC: $soc"
+			exit 1
+			;;
+	esac
+
+	if [ $flash == "nor" ]; then
+		board=$family
+	else
+		board=${family}_spi${flash}
+	fi
+
+	make ${board}_defconfig
+	#cp -v .config configs/${board}_defconfig
+	#return
+	make -j8 KCFLAGS=-DPRODUCT_SOC=$soc # EXT_DTB=$dts_path/$board.dtb
+	./create_img.sh
+	sh make_boot_spi${flash}.sh ${family}
+	mv BOOT.bin output/u-boot-$soc-${flash}.bin
+	make distclean
+}
 
 # spinor infinity6
 for soc in ssc325; do
-	spinor $soc infinity6
+	build $soc nor
 done
 
 # spinand infinity6
 for soc in ssc325de; do
-	spinand $soc infinity6
+	build $soc nand
 done
 
 # spinor infinity6b0
 for soc in ssc333 ssc335 ssc337 ssc335de ssc337de; do
-	spinor $soc infinity6b0
+	build $soc nor
 done
 
 # spinand infinity6b0
 for soc in ssc337de; do
-	spinand $soc infinity6b0
+	build $soc nand
 done
 
 # spinor infinity6c
 for soc in ssc377 ssc377d ssc377de ssc377qe ssc378de ssc378qe; do
-	spinor $soc infinity6c
+	build $soc nor
 done
 
 # spinor infinity6e
 for soc in ssc30kd ssc30kq ssc338q; do
-	spinor $soc infinity6e
+	build $soc nor
 done
 
 # spinand infinity6e
 for soc in ssc338q; do
-	spinand $soc infinity6e
+	build $soc nand
 done
 
+exit 0
 # initramfs infinity6e
 for soc in ssc338q; do
 	make infinity6e_spinand_defconfig

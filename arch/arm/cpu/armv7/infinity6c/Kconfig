@@ -11,6 +11,11 @@ config SYS_SOC
     ---help---
     To generate correct  "arch/arm/include/asm/arch"
 
+config PRODUCT_SOC
+    string "SoC Type"
+    ---help---
+    To generate correct  "arch/arm/include/asm/arch" 
+
 config SYS_GENERIC_BOARD
     bool
     default y

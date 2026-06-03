@@ -53,7 +53,7 @@
 	"urwrite=sf probe 0; sf erase ${rootaddr} ${rootsize}; sf write ${baseaddr} ${rootaddr} ${filesize}\0" \
 	"sdcard=setenv updatetool fatload mmc 0\0" \
 	"updatetool=tftpboot\0" \
-	"soc=" __stringify(PRODUCT_SOC)
+	"soc=" __stringify(CONFIG_PRODUCT_SOC)
 #endif
 
 #ifdef CONFIG_MS_SPINAND
@@ -93,5 +93,5 @@
 	"urwrite=nand erase ${rootaddr} ${rootsize}; nand write ${baseaddr} ${rootaddr} ${filesize}\0" \
 	"sdcard=setenv updatetool fatload mmc 0\0" \
 	"updatetool=tftpboot\0" \
-	"soc=" __stringify(PRODUCT_SOC)
+	"soc=" __stringify(CONFIG_PRODUCT_SOC)
 #endif

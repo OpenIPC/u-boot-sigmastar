@@ -718,6 +718,7 @@ void TftpStart(enum proto_t protocol)
 		TftpBlkSizeOption, TftpTimeoutMSecs);
 
 	TftpRemoteIP = NetServerIP;
+
 	if (BootFile[0] == '\0') {
 		sprintf(default_filename, "%02X%02X%02X%02X.img",
 			NetOurIP & 0xFF,
@@ -737,7 +738,9 @@ void TftpStart(enum proto_t protocol)
 			strncpy(tftp_filename, BootFile, MAX_LEN);
 			tftp_filename[MAX_LEN-1] = 0;
 		} else {
+			*p = '\0';
 			TftpRemoteIP = string_to_ip(BootFile);
+			setenv("serverip", BootFile);
 			strncpy(tftp_filename, p + 1, MAX_LEN);
 			tftp_filename[MAX_LEN-1] = 0;
 		}

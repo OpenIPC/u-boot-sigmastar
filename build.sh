@@ -70,7 +70,7 @@ do
 
 	make distclean
 	make ${board}_defconfig
-	make -j8 || continue # EXT_DTB=$dts_path/$board.dtb
+	make -j8 || exit 1
 
 	./create_img.sh
 	sh make_boot_spi${flash}.sh ${family}

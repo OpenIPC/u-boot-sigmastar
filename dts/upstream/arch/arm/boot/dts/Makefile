@@ -4,7 +4,8 @@
 # 	infinity6b0-ssc009b-s01a.dtb \
 # 	infinity6b0-ssc009d-s01a.dtb
 
-dtb-y += infinity6b0-ssc009b-s01a.dtb
+DEVICE_TREE ?= $(CONFIG_DEFAULT_DEVICE_TREE:"%"=%)
+dtb-y += $(DEVICE_TREE).dtb
 
 targets += $(dtb-y)
 

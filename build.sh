@@ -52,7 +52,7 @@ for soc in ssc30kd ssc30kq ssc338q; do
 done
 
 # spinand infinity6e
-for soc in ssc338q; do
+for soc in ssc30kq ssc338q; do
 	spinand $soc infinity6e
 done
 

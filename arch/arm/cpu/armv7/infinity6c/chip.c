@@ -304,6 +304,7 @@ int board_late_init(void)
     */
 
     char msize[32];
+    char *mma;
     u16 rsize = gd->ram_size / 1024 / 1024;
 
     sprintf(msize, "%dM", rsize);
@@ -318,6 +319,31 @@ int board_late_init(void)
     } else {
         setenv("memlx", "0x4000000");
         setenv("memsz", "0x2000000");
+    }
+
+    /*
+     * memlx and memsz are recomputed from the detected DRAM size above on every
+     * boot, and board_late_init() runs before bootcmd expands ${memsz} into
+     * bootargs -- so a size written with "fw_setenv memsz" is read back happily
+     * by fw_printenv and never reaches the kernel. Honour an explicit mma_size
+     * instead, which nothing here overwrites, so the multimedia heap can be
+     * resized from Linux without rewriting the whole bootargs string.
+     * Reported as OpenIPC/firmware#2443.
+     */
+    mma = getenv("mma_size");
+    if (mma) {
+        ulong sz = simple_strtoul(mma, NULL, 16);
+        ulong keep = 32 << 20;
+
+        /*
+         * A heap that leaves the kernel nothing gives a board that does not
+         * boot and needs serial to recover, so refuse the value rather than
+         * obey it -- the camera comes up on the default and says why.
+         */
+        if (sz == 0 || gd->ram_size <= keep || sz > gd->ram_size - keep)
+            printf("mma_size=%s ignored: out of range for %s of DRAM\n", mma, msize);
+        else
+            setenv("memsz", mma);
     }
 
     return 0;
